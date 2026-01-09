@@ -2,14 +2,13 @@
 VA: Global travel &amp; hospitality platform offering hotel reservations, tourist attractions, restaurant bookings, shopping guides, and complete city services worldwide. Features include real-time availability, secure payments, user reviews, and personalized recommendations for seamless travel experiences.
 
 Va/
-
-├── docs/           # الوثائق
-├── src/            # الكود
-│   ├── frontend/   # واجهة المستخدم
-│   ├── backend/    # السيرفر
-│   └── mobile/     # التطبيق
-├── tests/          # الاختبارات
-└── assets/         # الصور والملفات
+├── docs/           
+├── src/            
+│   ├── frontend/   
+│   ├── backend/    
+│   └── mobile/     
+├── tests/          
+└── assets/         
 
  VA - Global Travel & Hospitality Platform
 
