@@ -1,0 +1,108 @@
+// public/locales/en/common.json
+{
+  "app": {
+    "name": "Va Travel",
+    "description": "Global Travel & Booking Platform",
+    "tagline": "Travel Smarter, Experience Better"
+  },
+  "navigation": {
+    "home": "Home",
+    "hotels": "Hotels",
+    "attractions": "Attractions",
+    "restaurants": "Restaurants",
+    "cities": "Cities",
+    "bookings": "My Bookings",
+    "profile": "Profile",
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "help": "Help"
+  },
+  "buttons": {
+    "search": "Search",
+    "bookNow": "Book Now",
+    "viewDetails": "View Details",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "share": "Share",
+    "download": "Download",
+    "loadMore": "Load More",
+    "apply": "Apply",
+    "reset": "Reset",
+    "continue": "Continue",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Finish"
+  },
+  "labels": {
+    "price": "Price",
+    "rating": "Rating",
+    "reviews": "Reviews",
+    "location": "Location",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "guests": "Guests",
+    "rooms": "Rooms",
+    "dates": "Dates",
+    "filters": "Filters",
+    "sortBy": "Sort by",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "phone": "Phone",
+    "address": "Address",
+    "city": "City",
+    "country": "Country",
+    "currency": "Currency",
+    "language": "Language"
+  },
+  "auth": {
+    "loginTitle": "Welcome Back",
+    "loginSubtitle": "Enter your credentials to access your account",
+    "signupTitle": "Create Account",
+    "signupSubtitle": "Join Va Travel and start your journey",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember me",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "orContinueWith": "Or continue with",
+    "google": "Google",
+    "piNetwork": "Pi Network"
+  },
+  "errors": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "invalidPhone": "Invalid phone number",
+    "passwordLength": "Password must be at least 8 characters",
+    "passwordMatch": "Passwords do not match",
+    "generalError": "Something went wrong. Please try again."
+  },
+  "success": {
+    "bookingCreated": "Booking created successfully",
+    "paymentSuccess": "Payment completed successfully",
+    "profileUpdated": "Profile updated successfully",
+    "loggedIn": "Logged in successfully"
+  },
+  "themes": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "languages": {
+    "en": "English",
+    "ar": "Arabic",
+    "fr": "French",
+    "es": "Spanish",
+    "de": "German",
+    "zh": "Chinese",
+    "ja": "Japanese",
+    "ru": "Russian",
+    "pt": "Portuguese",
+    "hi": "Hindi"
+  }
+}
