@@ -1,22 +1,36 @@
-// src/lib/auth/options.ts
-// NextAuth.js configuration
-
 import { NextAuthOptions } from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
+import type { Adapter } from 'next-auth/adapters';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from '@/lib/db';
-import bcrypt from 'bcryptjs';
+import { compare } from 'bcryptjs';
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: PrismaAdapter(prisma) as Adapter,
+  
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60,
+  },
+
+  pages: {
+    signIn: '/auth/signin',
+    signOut: '/auth/signout',
+    error: '/auth/error',
+    verifyRequest: '/auth/verify',
+    newUser: '/onboarding',
+  },
+
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
+
     CredentialsProvider({
-      name: 'credentials',
+      name: 'Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
@@ -28,100 +42,114 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
+          include: {
+            accounts: true,
+          },
         });
 
         if (!user || !user.password) {
-          throw new Error('Invalid credentials');
+          throw new Error('User not found');
         }
 
-        const isCorrectPassword = await bcrypt.compare(
+        const isPasswordValid = await compare(
           credentials.password,
           user.password
         );
 
-        if (!isCorrectPassword) {
-          throw new Error('Invalid credentials');
+        if (!isPasswordValid) {
+          throw new Error('Invalid password');
         }
 
-        // Update last login
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { lastLoginAt: new Date() },
-        });
+        if (!user.emailVerified) {
+          throw new Error('Please verify your email first');
+        }
+
+        if (user.status === 'suspended') {
+          throw new Error('Your account has been suspended');
+        }
+
+        if (user.status === 'banned') {
+          throw new Error('Your account has been banned');
+        }
 
         return {
           id: user.id,
           email: user.email,
           name: user.name,
-          image: user.avatar,
+          image: user.image,
+          role: user.role,
         };
       },
     }),
   ],
-  session: {
-    strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
-  pages: {
-    signIn: '/auth/signin',
-    signOut: '/auth/signout',
-    error: '/auth/error',
-    verifyRequest: '/auth/verify-request',
-  },
+
   callbacks: {
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
-        token.email = user.email;
-        token.name = user.name;
-        token.picture = user.image;
+        token.role = user.role;
+        token.tier = user.tier;
       }
-      
-      if (account?.provider === 'google') {
-        token.provider = 'google';
+
+      if (account?.provider === 'pi-network') {
+        token.piAccessToken = account.access_token;
       }
-      
+
       return token;
     },
+
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.email = token.email as string;
-        session.user.name = token.name as string;
-        session.user.image = token.picture as string;
+        session.user.role = token.role as string;
+        session.user.tier = token.tier as string;
+        session.user.piAccessToken = token.piAccessToken as string;
       }
+
       return session;
     },
-    async redirect({ url, baseUrl }) {
-      // Allows relative callback URLs
-      if (url.startsWith('/')) return `${baseUrl}${url}`;
-      // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) return url;
-      return baseUrl;
-    },
-  },
-  events: {
-    async signIn({ user, account, profile, isNewUser }) {
-      if (isNewUser) {
-        // Create default preferences for new user
-        await prisma.preference.create({
+
+    async signIn({ user, account, profile }) {
+      const dbUser = await prisma.user.findUnique({
+        where: { email: user.email! },
+      });
+
+      if (dbUser && (dbUser.status === 'suspended' || dbUser.status === 'banned')) {
+        return false;
+      }
+
+      if (dbUser) {
+        await prisma.securityLog.create({
           data: {
-            userId: user.id,
+            userId: dbUser.id,
+            action: 'LOGIN',
+            ipAddress: '',
+            userAgent: '',
+            metadata: {
+              provider: account?.provider,
+            },
           },
         });
+      }
 
-        // Send welcome notification
-        await prisma.notification.create({
+      return true;
+    },
+  },
+
+  events: {
+    async signOut({ token }) {
+      if (token?.id) {
+        await prisma.securityLog.create({
           data: {
-            userId: user.id,
-            type: 'system',
-            title: 'Welcome to Va Travel!',
-            message: 'Thank you for joining us. Start exploring amazing destinations.',
+            userId: token.id as string,
+            action: 'LOGOUT',
+            ipAddress: '',
+            userAgent: '',
           },
         });
       }
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
+
   debug: process.env.NODE_ENV === 'development',
 };
