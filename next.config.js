@@ -1,26 +1,45 @@
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
 
+  // ============================================
+  // CRITICAL: Enable standalone output for Docker
+  // ============================================
+  output: 'standalone',
+
+  // ============================================
+  // Internationalization
+  // ============================================
   i18n: {
     locales: ['en', 'ar', 'fr', 'es', 'de', 'it', 'ru', 'zh', 'ja', 'ko'],
     defaultLocale: 'en',
     localeDetection: true,
   },
 
+  // ============================================
+  // Images Configuration
+  // ============================================
   images: {
     domains: [
       'localhost',
       'vatravel.com',
       'res.cloudinary.com',
       's3.amazonaws.com',
+      'images.unsplash.com',
+      'api.dicebear.com',
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 2592000,
+    minimumCacheTTL: 2592000, // 30 days
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
+  // ============================================
+  // Security Headers
+  // ============================================
   async headers() {
     return [
       {
@@ -59,6 +78,9 @@ const nextConfig = {
     ];
   },
 
+  // ============================================
+  // Redirects
+  // ============================================
   async redirects() {
     return [
       {
@@ -69,31 +91,88 @@ const nextConfig = {
     ];
   },
 
+  // ============================================
+  // Webpack Configuration
+  // ============================================
   webpack: (config, { isServer }) => {
+    // SVG support
     config.module.rules.push({
       test: /\.svg$/,
       use: ['@svgr/webpack'],
     });
 
+    // Production optimizations
+    if (!isServer && process.env.NODE_ENV === 'production') {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          default: false,
+          vendors: false,
+          commons: {
+            name: 'commons',
+            chunks: 'all',
+            minChunks: 2,
+          },
+          lib: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'lib',
+            chunks: 'all',
+            priority: 10,
+          },
+        },
+      };
+    }
+
     return config;
   },
 
+  // ============================================
+  // Experimental Features
+  // ============================================
   experimental: {
-    serverActions: true,
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
     optimizeCss: true,
     scrollRestoration: true,
   },
 
-  output: 'standalone',
-
+  // ============================================
+  // Compiler Options
+  // ============================================
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn', 'info'],
+    } : false,
   },
 
+  // ============================================
+  // Environment Variables (Public)
+  // ============================================
   env: {
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
   },
+
+  // ============================================
+  // Build Configuration
+  // ============================================
+  eslint: {
+    ignoreDuringBuilds: false,
+    dirs: ['src'],
+  },
+
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+
+  // ============================================
+  // Production Optimizations
+  // ============================================
+  poweredByHeader: false,
+  compress: true,
+  generateEtags: true,
+  productionBrowserSourceMaps: false,
 };
 
 module.exports = nextConfig;
