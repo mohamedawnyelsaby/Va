@@ -1,32 +1,26 @@
-/** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    formats: ['image/webp'],
-  },
+
   i18n: {
-    locales: ['en', 'ar', 'fr', 'es', 'de', 'zh', 'ja', 'ru', 'pt', 'hi'],
+    locales: ['en', 'ar', 'fr', 'es', 'de', 'it', 'ru', 'zh', 'ja', 'ko'],
     defaultLocale: 'en',
     localeDetection: true,
   },
-  experimental: {
-    serverActions: true,
+
+  images: {
+    domains: [
+      'localhost',
+      'vatravel.com',
+      'res.cloudinary.com',
+      's3.amazonaws.com',
+    ],
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 2592000,
   },
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
-  eslint: {
-    dirs: ['src'],
-  },
+
   async headers() {
     return [
       {
@@ -41,12 +35,12 @@ const nextConfig = {
             value: 'max-age=63072000; includeSubDomains; preload',
           },
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
           },
           {
-            key: 'X-Frame-Options',
-            value: 'DENY',
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
           },
           {
             key: 'X-XSS-Protection',
@@ -54,11 +48,51 @@ const nextConfig = {
           },
           {
             key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
           },
         ],
       },
     ];
+  },
+
+  async redirects() {
+    return [
+      {
+        source: '/home',
+        destination: '/',
+        permanent: true,
+      },
+    ];
+  },
+
+  webpack: (config, { isServer }) => {
+    config.module.rules.push({
+      test: /\.svg$/,
+      use: ['@svgr/webpack'],
+    });
+
+    return config;
+  },
+
+  experimental: {
+    serverActions: true,
+    optimizeCss: true,
+    scrollRestoration: true,
+  },
+
+  output: 'standalone',
+
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  env: {
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
 };
 
