@@ -1,64 +1,126 @@
-// src/app/api/payments/pi/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/options';
+import { prisma } from '@/lib/db';
+import { PiBackend } from '@/lib/pi-network/backend';
+import { z } from 'zod';
 
-export async function POST(request: NextRequest) {
+const PaymentSchema = z.object({
+  paymentId: z.string(),
+  bookingId: z.string(),
+  amount: z.number().positive(),
+});
+
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json();
-    const { paymentId, transactionId, amount, currency, userId } = body;
+    const session = await getServerSession(authOptions);
 
-    // Verify Pi Network payment
-    const isValid = await verifyPiPayment(paymentId, transactionId);
-
-    if (!isValid) {
+    if (!session?.user) {
       return NextResponse.json(
-        { error: 'Invalid payment' },
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const body = await req.json();
+    const { paymentId, bookingId, amount } = PaymentSchema.parse(body);
+
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        user: true,
+        hotel: true,
+      },
+    });
+
+    if (!booking) {
+      return NextResponse.json(
+        { error: 'Booking not found' },
+        { status: 404 }
+      );
+    }
+
+    if (booking.userId !== session.user.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      );
+    }
+
+    const piPayment = await PiBackend.getPayment(paymentId);
+
+    if (!piPayment) {
+      return NextResponse.json(
+        { error: 'Pi payment not found' },
+        { status: 404 }
+      );
+    }
+
+    if (piPayment.amount !== amount) {
+      return NextResponse.json(
+        { error: 'Amount mismatch' },
         { status: 400 }
       );
     }
 
-    // Create payment record
     const payment = await prisma.payment.create({
       data: {
-        userId,
+        bookingId,
+        userId: session.user.id,
         amount,
-        currency,
-        paymentMethod: 'pi_network',
+        currency: 'PI',
+        status: 'pending',
+        method: 'pi_network',
         piPaymentId: paymentId,
-        transactionId,
-        status: 'completed',
-        metadata: { verifiedAt: new Date().toISOString() }
-      }
+        metadata: {
+          piUser: piPayment.user_uid,
+          memo: piPayment.memo,
+        },
+      },
+    });
+
+    await PiBackend.approvePayment(paymentId);
+
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: { status: 'processing' },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: 'PAYMENT_CREATED',
+        entityType: 'Payment',
+        entityId: payment.id,
+        changes: {
+          amount,
+          currency: 'PI',
+          method: 'pi_network',
+        },
+      },
     });
 
     return NextResponse.json({
       success: true,
-      paymentId: payment.id,
-      message: 'Payment completed successfully'
+      payment: {
+        id: payment.id,
+        status: payment.status,
+        amount: payment.amount,
+      },
     });
   } catch (error) {
     console.error('Pi payment error:', error);
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: error.errors },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { error: 'Payment processing failed' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
-}
-
-async function verifyPiPayment(paymentId: string, transactionId: string) {
-  // Implement Pi Network payment verification
-  const piApiUrl = process.env.PI_NETWORK_API_URL || 'https://api.minepi.com';
-  const apiKey = process.env.PI_API_KEY;
-
-  const response = await fetch(`${piApiUrl}/v2/payments/${paymentId}`, {
-    headers: {
-      'Authorization': `Key ${apiKey}`,
-      'Content-Type': 'application/json'
-    }
-  });
-
-  if (!response.ok) return false;
-
-  const data = await response.json();
-  return data.status === 'completed' && data.transaction_id === transactionId;
 }
