@@ -1,25 +1,13 @@
-# ============================================
-# VA TRAVEL - Docker Ignore Configuration
-# Files and directories to exclude from Docker build context
-# ============================================
-
-# Dependencies
 node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-
-# Next.js build output
 .next
 out
 .swc
-
-# Production build
 /build
 dist
-
-# Testing
 coverage
 .nyc_output
 *.test.ts
@@ -30,8 +18,6 @@ __tests__
 __mocks__
 jest.config.js
 jest.setup.js
-
-# Environment files (NEVER include in Docker image)
 .env
 .env.*
 .env.local
@@ -40,14 +26,10 @@ jest.setup.js
 .env.production.local
 .env.development.local
 .env.test.local
-
-# Local development files
 .DS_Store
 *.pem
 Thumbs.db
 .cache
-
-# IDE and editor files
 .vscode
 .idea
 *.swp
@@ -57,21 +39,15 @@ Thumbs.db
 .classpath
 .settings
 .metadata
-
-# Git files
 .git
 .gitignore
 .gitattributes
 .github
-
-# Docker files
 Dockerfile
 Dockerfile.*
 .dockerignore
 docker-compose.yml
 docker-compose.*.yml
-
-# Documentation
 README.md
 README.*.md
 CHANGELOG.md
@@ -79,45 +55,26 @@ CONTRIBUTING.md
 LICENSE
 *.md
 docs/
-
-# CI/CD
 .gitlab-ci.yml
 .travis.yml
 azure-pipelines.yml
 .circleci
-.github
-
-# Database files
 *.db
 *.sqlite
 *.sqlite3
-
-# Logs
 logs
 *.log
-
-# Temporary files
 tmp
 temp
 *.tmp
 *.temp
-
-# Prisma (migrations not needed in production)
 prisma/migrations
-
-# Storybook
 storybook-static
 .storybook
-
-# Cypress
 cypress/videos
 cypress/screenshots
 cypress.config.ts
-
-# Vercel
 .vercel
-
-# Miscellaneous
 .turbo
 .eslintcache
 tsconfig.tsbuildinfo
