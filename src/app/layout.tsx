@@ -4,7 +4,7 @@ import './globals.css';
 import { Providers } from '@/components/providers';
 
 const inter = Inter({
-  subsets: ['latin', 'arabic'],
+  subsets: ['latin']
   variable: '--font-inter',
   display: 'swap',
 });
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://vatravel.com'),
+  metadataBase: new URL('va.up.railway.app'),
   alternates: {
     canonical: '/',
     languages: {
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://vatravel.com',
+    url: 'va.up.railway.app',
     title: 'Va Travel - Global Travel & Booking Platform',
     description: 'AI-powered global travel platform for hotel bookings, tourist attractions, and local services worldwide with Pi Network integration.',
     siteName: 'Va Travel',
