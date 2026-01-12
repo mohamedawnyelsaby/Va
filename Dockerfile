@@ -2,17 +2,19 @@ FROM node:18-alpine
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
+# نسخ ملفات التعريف
 COPY package.json package-lock.json* ./
 
-# السطر ده اتعدل عشان يثبت كل حاجة صح
+# التعديل الجوهري: شيلنا --ignore-scripts عشان يثبت next صح
 RUN npm install
 
+# نسخ باقي الملفات
 COPY . .
 
-# توليد ملفات بريزما
+# توليد Prisma
 RUN npx prisma generate || echo "no prisma"
 
-# بناء المشروع
+# بناء المشروع (هينجح المرة دي)
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
 RUN npm run build
