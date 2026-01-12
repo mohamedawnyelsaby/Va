@@ -52,3 +52,4 @@ For inquiries: mohamed.awny.00000@gmail.com
 
 ---
 Made with ❤️ by Mohamed Awny
+# Auto deploy test
