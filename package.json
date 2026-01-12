@@ -23,6 +23,6 @@
     "docker:run": "docker run -p 3000:3000 --env-file .env.local va-travel",
     "docker:compose": "docker-compose up -d",
     "docker:compose:down": "docker-compose down",
-    "prepare": "husky install"
+    "prepare": "husky install || true"
   }
 }
