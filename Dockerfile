@@ -3,7 +3,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json ./
-RUN npm install && npm cache clean --force
+RUN npm install --ignore-scripts && npm cache clean --force
 
 FROM node:18-alpine AS builder
 WORKDIR /app
