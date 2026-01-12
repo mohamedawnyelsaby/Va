@@ -2,19 +2,19 @@ FROM node:18-alpine
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# نسخ ملفات التعريف
+# 1. Copy package files
 COPY package.json package-lock.json* ./
 
-# التعديل الجوهري: شيلنا --ignore-scripts عشان يثبت next صح
-RUN npm install
+# 2. Install dependencies (ignoring postinstall for now)
+RUN npm install --ignore-scripts
 
-# نسخ باقي الملفات
+# 3. Copy the rest of your code
 COPY . .
 
-# توليد Prisma
+# 4. NOW generate prisma (after files are copied)
 RUN npx prisma generate || echo "no prisma"
 
-# بناء المشروع (هينجح المرة دي)
+# 5. Build the project
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
 RUN npm run build
