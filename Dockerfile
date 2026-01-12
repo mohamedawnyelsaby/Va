@@ -2,7 +2,12 @@ FROM node:18-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl python3 make g++
 WORKDIR /app
 COPY package.json ./
-RUN npm install --legacy-peer-deps
+# Skip postinstall scripts during npm install
+RUN npm install --legacy-peer-deps --ignore-scripts
+# Copy prisma schema
+COPY prisma ./prisma
+# Now run prisma generate
+RUN npx prisma generate
 
 FROM node:18-alpine AS builder
 WORKDIR /app
