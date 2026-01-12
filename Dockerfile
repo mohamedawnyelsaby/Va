@@ -1,24 +1,26 @@
-FROM node:18-alpine AS deps
+FROM node:18-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
+# Copy configuration files
 COPY package.json ./
-# We add a trailing slash to ensuring the directory exists
+COPY prisma ./prisma/
+
+# Install dependencies AND generate prisma in one stage to avoid path issues
 RUN npm install --ignore-scripts && npm cache clean --force
 
-FROM node:18-alpine AS builder
-WORKDIR /app
-
-# Using ./ instead of full path to avoid reference errors
-COPY --from=deps /app/node_modules ./node_modules
+# Copy the rest of the application
 COPY . .
 
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Build the application
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
-
-RUN npx prisma generate || echo "Prisma not configured yet"
 RUN npm run build
 
+# Stage 3: Runner
 FROM node:18-alpine AS runner
 WORKDIR /app
 
