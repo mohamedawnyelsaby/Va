@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { 
   Search, 
-  Filter, 
   MapPin, 
   Star,
   Heart,
@@ -37,6 +36,7 @@ export default function HotelsPage() {
 
   useEffect(() => {
     fetchHotels();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filters]);
 
   const fetchHotels = async () => {
