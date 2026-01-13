@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
+  // CHANGED: Disable SWC minify to avoid android-arm64 issues
+  swcMinify: false,
 
   // ============================================
   // CRITICAL: Enable standalone output for Docker
