@@ -34,7 +34,6 @@ export default function HotelsPage() {
 
   useEffect(() => {
     fetchHotels();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filters]);
 
   const fetchHotels = async () => {
@@ -50,7 +49,7 @@ export default function HotelsPage() {
         params.append('search', searchTerm);
       }
 
-      const response = await fetch(\`/api/hotels?\${params}\`);
+      const response = await fetch('/api/hotels?' + params);
       const data = await response.json();
 
       setHotels(data.hotels || []);
@@ -191,7 +190,7 @@ export default function HotelsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {hotels.map((hotel) => (
                 <Card key={hotel.id} className="group overflow-hidden hover:shadow-xl transition-all">
-                  <Link href={\`/hotels/\${hotel.id}\`}>
+                  <Link href={'/hotels/' + hotel.id}>
                     <div className="relative h-48 overflow-hidden">
                       <Image
                         src={hotel.thumbnail || '/placeholder-hotel.jpg'}
