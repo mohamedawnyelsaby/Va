@@ -1,7 +1,7 @@
 // src/app/[locale]/hotels/[id]/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,30 +25,82 @@ import {
 import Image from 'next/image';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
+// TypeScript Interfaces
+interface City {
+  name: string;
+  country: string;
+}
+
+interface User {
+  name: string;
+  avatar?: string;
+}
+
+interface Review {
+  id: string;
+  user: User;
+  rating: number;
+  title?: string;
+  comment: string;
+  createdAt: string;
+}
+
+interface RoomType {
+  type: string;
+  description: string;
+  price: number;
+}
+
+interface Hotel {
+  id: string;
+  name: string;
+  city: City;
+  starRating: number;
+  rating: number;
+  reviewCount: number;
+  images: string[];
+  thumbnail: string;
+  description: string;
+  amenities: string[];
+  roomTypes: RoomType[];
+  reviews?: Review[];
+  currency: string;
+  pricePerNight: number;
+}
+
+interface BookingData {
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+  rooms: number;
+}
+
 export default function HotelDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const [hotel, setHotel] = useState<any>(null);
+  const [hotel, setHotel] = useState<Hotel | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [selectedRoom, setSelectedRoom] = useState<any>(null);
-  const [bookingData, setBookingData] = useState({
+  const [selectedRoom, setSelectedRoom] = useState<RoomType | null>(null);
+  const [bookingData, setBookingData] = useState<BookingData>({
     checkIn: '',
     checkOut: '',
     guests: 1,
     rooms: 1,
   });
 
-  useEffect(() => {
-    fetchHotelDetails();
-  }, [params.id]);
-
-  const fetchHotelDetails = async () => {
+  const fetchHotelDetails = useCallback(async () => {
     try {
       const response = await fetch(`/api/hotels/${params.id}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch hotel');
+      }
+      
       const data = await response.json();
       setHotel(data);
+      
       if (data.roomTypes?.length > 0) {
         setSelectedRoom(data.roomTypes[0]);
       }
@@ -62,13 +114,26 @@ export default function HotelDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, toast]);
+
+  useEffect(() => {
+    fetchHotelDetails();
+  }, [fetchHotelDetails]);
 
   const handleBooking = () => {
     if (!bookingData.checkIn || !bookingData.checkOut) {
       toast({
         title: 'Required Fields',
         description: 'Please select check-in and check-out dates',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!hotel || !selectedRoom) {
+      toast({
+        title: 'Error',
+        description: 'Please select a room',
         variant: 'destructive',
       });
       return;
@@ -85,6 +150,16 @@ export default function HotelDetailPage() {
       rooms: bookingData.rooms.toString(),
     });
     router.push(`/booking?${query}`);
+  };
+
+  const handlePreviousImage = () => {
+    if (!hotel?.images) return;
+    setCurrentImageIndex(i => (i === 0 ? hotel.images.length - 1 : i - 1));
+  };
+
+  const handleNextImage = () => {
+    if (!hotel?.images) return;
+    setCurrentImageIndex(i => (i === hotel.images.length - 1 ? 0 : i + 1));
   };
 
   if (loading) {
@@ -108,11 +183,15 @@ export default function HotelDetailPage() {
     );
   }
 
-  const amenityIcons: Record<string, any> = {
+  const amenityIcons: Record<string, typeof Wifi> = {
     WiFi: Wifi,
     Pool: Coffee,
     Gym: Dumbbell,
     Restaurant: Utensils,
+  };
+
+  const getTodayDate = () => {
+    return new Date().toISOString().split('T')[0];
   };
 
   return (
@@ -122,7 +201,7 @@ export default function HotelDetailPage() {
         <div className="mb-8">
           <div className="relative h-[500px] rounded-2xl overflow-hidden">
             <Image
-              src={hotel.images[currentImageIndex] || hotel.thumbnail}
+              src={hotel.images?.[currentImageIndex] || hotel.thumbnail}
               alt={hotel.name}
               fill
               className="object-cover"
@@ -130,17 +209,19 @@ export default function HotelDetailPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             
             {/* Gallery Controls */}
-            {hotel.images.length > 1 && (
+            {(hotel.images?.length ?? 0) > 1 && (
               <>
                 <button
-                  onClick={() => setCurrentImageIndex(i => (i === 0 ? hotel.images.length - 1 : i - 1))}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full hover:bg-white"
+                  onClick={handlePreviousImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full hover:bg-white transition-colors"
+                  aria-label="Previous image"
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </button>
                 <button
-                  onClick={() => setCurrentImageIndex(i => (i === hotel.images.length - 1 ? 0 : i + 1))}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full hover:bg-white"
+                  onClick={handleNextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full hover:bg-white transition-colors"
+                  aria-label="Next image"
                 >
                   <ChevronRight className="h-6 w-6" />
                 </button>
@@ -199,104 +280,110 @@ export default function HotelDetailPage() {
             </Card>
 
             {/* Amenities */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Amenities</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {hotel.amenities.map((amenity: string) => {
-                    const Icon = amenityIcons[amenity] || Wifi;
-                    return (
-                      <div key={amenity} className="flex items-center gap-2">
-                        <Icon className="h-5 w-5 text-primary" />
-                        <span>{amenity}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+            {hotel.amenities?.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Amenities</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {hotel.amenities.map((amenity: string) => {
+                      const Icon = amenityIcons[amenity] || Wifi;
+                      return (
+                        <div key={amenity} className="flex items-center gap-2">
+                          <Icon className="h-5 w-5 text-primary" />
+                          <span>{amenity}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Room Types */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Select Your Room</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {hotel.roomTypes.map((room: any) => (
-                    <div
-                      key={room.type}
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                        selectedRoom?.type === room.type
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                      onClick={() => setSelectedRoom(room)}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-semibold text-lg">{room.type}</h4>
-                          <p className="text-sm text-muted-foreground">{room.description}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold">
-                            {formatCurrency(room.price, hotel.currency)}
-                          </p>
-                          <p className="text-sm text-muted-foreground">per night</p>
+            {hotel.roomTypes?.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Select Your Room</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {hotel.roomTypes.map((room: RoomType) => (
+                      <div
+                        key={room.type}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          selectedRoom?.type === room.type
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                        onClick={() => setSelectedRoom(room)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-semibold text-lg">{room.type}</h4>
+                            <p className="text-sm text-muted-foreground">{room.description}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-2xl font-bold">
+                              {formatCurrency(room.price, hotel.currency)}
+                            </p>
+                            <p className="text-sm text-muted-foreground">per night</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Reviews */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Guest Reviews</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {hotel.reviews?.slice(0, 5).map((review: any) => (
-                    <div key={review.id} className="border-b pb-6 last:border-0">
-                      <div className="flex items-start gap-4">
-                        <Avatar>
-                          <AvatarImage src={review.user?.avatar} />
-                          <AvatarFallback>
-                            {review.user?.name?.charAt(0) || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <p className="font-semibold">{review.user?.name}</p>
-                              <div className="flex">
-                                {Array.from({ length: review.rating }).map((_, i) => (
-                                  <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                ))}
+            {hotel.reviews && hotel.reviews.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Guest Reviews</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {hotel.reviews.slice(0, 5).map((review: Review) => (
+                      <div key={review.id} className="border-b pb-6 last:border-0">
+                        <div className="flex items-start gap-4">
+                          <Avatar>
+                            <AvatarImage src={review.user?.avatar} />
+                            <AvatarFallback>
+                              {review.user?.name?.charAt(0) || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <div>
+                                <p className="font-semibold">{review.user?.name}</p>
+                                <div className="flex">
+                                  {Array.from({ length: review.rating }).map((_, i) => (
+                                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                  ))}
+                                </div>
                               </div>
+                              <p className="text-sm text-muted-foreground">
+                                {formatDate(new Date(review.createdAt), 'en-US', {
+                                  month: 'short',
+                                  year: 'numeric'
+                                })}
+                              </p>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                              {formatDate(new Date(review.createdAt), 'en-US', {
-                                month: 'short',
-                                year: 'numeric'
-                              })}
-                            </p>
+                            {review.title && (
+                              <h4 className="font-semibold mb-1">{review.title}</h4>
+                            )}
+                            <p className="text-muted-foreground">{review.comment}</p>
                           </div>
-                          {review.title && (
-                            <h4 className="font-semibold mb-1">{review.title}</h4>
-                          )}
-                          <p className="text-muted-foreground">{review.comment}</p>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Booking Card */}
@@ -312,6 +399,7 @@ export default function HotelDetailPage() {
                     <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <input
                       type="date"
+                      min={getTodayDate()}
                       value={bookingData.checkIn}
                       onChange={(e) => setBookingData({ ...bookingData, checkIn: e.target.value })}
                       className="w-full pl-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -325,6 +413,7 @@ export default function HotelDetailPage() {
                     <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <input
                       type="date"
+                      min={bookingData.checkIn || getTodayDate()}
                       value={bookingData.checkOut}
                       onChange={(e) => setBookingData({ ...bookingData, checkOut: e.target.value })}
                       className="w-full pl-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -341,7 +430,7 @@ export default function HotelDetailPage() {
                         type="number"
                         min="1"
                         value={bookingData.guests}
-                        onChange={(e) => setBookingData({ ...bookingData, guests: parseInt(e.target.value) })}
+                        onChange={(e) => setBookingData({ ...bookingData, guests: parseInt(e.target.value) || 1 })}
                         className="w-full pl-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                       />
                     </div>
@@ -353,7 +442,7 @@ export default function HotelDetailPage() {
                       type="number"
                       min="1"
                       value={bookingData.rooms}
-                      onChange={(e) => setBookingData({ ...bookingData, rooms: parseInt(e.target.value) })}
+                      onChange={(e) => setBookingData({ ...bookingData, rooms: parseInt(e.target.value) || 1 })}
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     />
                   </div>
