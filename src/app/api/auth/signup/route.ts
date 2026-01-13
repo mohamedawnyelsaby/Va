@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
         piBalance: referredById ? 5 : 2, // Bonus for referrals
         loyaltyTier: 'bronze',
         isActive: true,
-        emailVerified: false,
+        emailVerified: null,
       },
     });
 
