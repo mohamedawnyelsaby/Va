@@ -1,4 +1,3 @@
-// src/app/[locale]/hotels/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -6,11 +5,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { 
-  Search, 
+import {
+  Search,
+  MapPin,
   Star,
   Heart,
   SlidersHorizontal
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
@@ -49,7 +50,7 @@ export default function HotelsPage() {
         params.append('search', searchTerm);
       }
 
-      const response = await fetch(`/api/hotels?${params}`);
+      const response = await fetch(\`/api/hotels?\${params}\`);
       const data = await response.json();
 
       setHotels(data.hotels || []);
@@ -70,7 +71,6 @@ export default function HotelsPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Find Your Perfect Hotel</h1>
           <p className="text-muted-foreground">
@@ -78,7 +78,6 @@ export default function HotelsPage() {
           </p>
         </div>
 
-        {/* Search & Filters */}
         <Card className="mb-8">
           <CardContent className="pt-6">
             <form onSubmit={handleSearch} className="space-y-4">
@@ -105,7 +104,6 @@ export default function HotelsPage() {
                 </Button>
               </div>
 
-              {/* Advanced Filters */}
               {showFilters && (
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t">
                   <div>
@@ -178,7 +176,6 @@ export default function HotelsPage() {
           </CardContent>
         </Card>
 
-        {/* Results */}
         {loading ? (
           <div className="flex justify-center py-12">
             <LoadingSpinner size="lg" />
@@ -194,7 +191,7 @@ export default function HotelsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {hotels.map((hotel) => (
                 <Card key={hotel.id} className="group overflow-hidden hover:shadow-xl transition-all">
-                  <Link href={`/hotels/${hotel.id}`}>
+                  <Link href={\`/hotels/\${hotel.id}\`}>
                     <div className="relative h-48 overflow-hidden">
                       <Image
                         src={hotel.thumbnail || '/placeholder-hotel.jpg'}
@@ -206,7 +203,6 @@ export default function HotelsPage() {
                         className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100"
                         onClick={(e) => {
                           e.preventDefault();
-                          // Handle favorite
                         }}
                       >
                         <Heart className="h-4 w-4" />
@@ -264,7 +260,6 @@ export default function HotelsPage() {
               ))}
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center gap-2 mt-8">
                 <Button
