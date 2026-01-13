@@ -15,7 +15,7 @@ export async function GET(
     const hotel = await prisma.hotel.findUnique({
       where: { id: params.id },
       include: {
-        city: true,
+        // city: true,
         reviews: {
           take: 10,
           orderBy: { createdAt: 'desc' },
@@ -80,7 +80,7 @@ export async function PATCH(
         updatedAt: new Date(),
       },
       include: {
-        city: true,
+        // city: true,
       },
     });
 
