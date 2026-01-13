@@ -21,12 +21,10 @@ import {
   Pi
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { formatCurrency } from '@/lib/utils';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
-  const router = useRouter();
   const [userData, setUserData] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
