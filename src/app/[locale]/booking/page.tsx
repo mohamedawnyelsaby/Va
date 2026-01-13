@@ -15,7 +15,6 @@ import { useToast } from '@/components/ui/use-toast';
 import {
   CreditCard,
   Pi,
-  Wallet,
   Calendar,
   Users,
   MapPin,
