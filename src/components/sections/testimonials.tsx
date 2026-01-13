@@ -1,5 +1,4 @@
 // src/components/sections/testimonials.tsx
-import { getTranslations } from '@/lib/i18n/server';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
@@ -22,7 +21,7 @@ const testimonials = [
     name: 'Awny',
     role: 'Business Traveler',
     avatar: '/avatars/ahmed.jpg',
-    fallback: 'Aw',
+    fallback: 'aw',
     rating: 5,
     text: 'Professional service and great prices. The virtual assistant made booking so easy and quick.',
   },
@@ -37,18 +36,17 @@ const testimonials = [
   },
 ];
 
-export async function Testimonials({ locale }: TestimonialsProps) {
-  const t = await getTranslations(locale, 'home');
+export function Testimonials({ locale }: TestimonialsProps) {
 
   return (
     <section className="py-20 bg-gradient-to-b from-background to-muted/20">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            {t?.testimonials?.title || 'What Our Customers Say'}
+            What Our Customers Say
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            {t?.testimonials?.subtitle || 'Real experiences from travelers who used our platform'}
+            Real experiences from travelers who used our platform
           </p>
         </div>
 
