@@ -4,7 +4,7 @@ import './globals.css';
 import { Providers } from '@/components/providers';
 
 const inter = Inter({
-  subsets: ['latin']
+  subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
 });
