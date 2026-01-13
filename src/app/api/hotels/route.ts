@@ -92,13 +92,6 @@ export async function GET(req: NextRequest) {
         rating: true,
         reviewCount: true,
         amenities: true,
-        city: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            country: true,
-          },
         },
         _count: {
           select: {
