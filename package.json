@@ -69,7 +69,6 @@
     "zod": "3.23.8"
   },
   "devDependencies": {
-    "@next/swc-android-arm64": "^13.2.4",
     "@playwright/test": "1.49.0",
     "@svgr/webpack": "8.1.0",
     "@testing-library/jest-dom": "6.6.3",
