@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
         amount,
         currency: 'PI',
         status: 'pending',
-        method: 'pi_network',
+        // method: 'pi_network',
         piPaymentId: paymentId,
         metadata: {
           piUser: piPayment.user_uid,
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
         changes: {
           amount,
           currency: 'PI',
-          method: 'pi_network',
+          // method: 'pi_network',
         },
       },
     });
