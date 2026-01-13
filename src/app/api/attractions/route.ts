@@ -57,15 +57,6 @@ export async function GET(request: NextRequest) {
         skip: (page - 1) * limit,
         take: limit,
         include: {
-          city: {
-            select: {
-              id: true,
-              name: true,
-              country: true,
-            },
-          },
-          _count: {
-            select: {
               reviews: true,
               bookings: true,
             },
@@ -147,8 +138,3 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Create attraction error:', error);
     return NextResponse.json(
-      { error: 'Failed to create attraction' },
-      { status: 500 }
-    );
-  }
-}
