@@ -36,6 +36,12 @@ export default function DashboardPage() {
     }
   }, [status]);
 
+  useEffect(() => {
+    if (session?.user) {
+      setUserData(session.user);
+    }
+  }, [session]);
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
