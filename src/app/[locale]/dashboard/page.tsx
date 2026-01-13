@@ -21,10 +21,12 @@ import {
   Pi
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { formatCurrency } from '@/lib/utils';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [userData, setUserData] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
@@ -177,12 +179,12 @@ export default function DashboardPage() {
                     Your latest travel reservations
                   </CardDescription>
                 </div>
-                <Button variant="outline" asChild>
-                  <Link href="/bookings">
+                <Link href="/bookings">
+                  <Button variant="outline">
                     View All
                     <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
               </div>
             </CardHeader>
             <CardContent>
@@ -190,9 +192,9 @@ export default function DashboardPage() {
                 <div className="text-center py-12">
                   <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground">No bookings yet</p>
-                  <Button className="mt-4" asChild>
-                    <Link href="/hotels">Start Exploring</Link>
-                  </Button>
+                  <Link href="/hotels">
+                    <Button className="mt-4">Start Exploring</Button>
+                  </Link>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -242,30 +244,30 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full justify-start" variant="outline" asChild>
-                <Link href="/hotels">
+              <Link href="/hotels">
+                <Button className="w-full justify-start" variant="outline">
                   <MapPin className="mr-2 h-4 w-4" />
                   Find Hotels
-                </Link>
-              </Button>
-              <Button className="w-full justify-start" variant="outline" asChild>
-                <Link href="/attractions">
+                </Button>
+              </Link>
+              <Link href="/attractions">
+                <Button className="w-full justify-start" variant="outline">
                   <Star className="mr-2 h-4 w-4" />
                   Explore Attractions
-                </Link>
-              </Button>
-              <Button className="w-full justify-start" variant="outline" asChild>
-                <Link href="/bookings">
+                </Button>
+              </Link>
+              <Link href="/bookings">
+                <Button className="w-full justify-start" variant="outline">
                   <Calendar className="mr-2 h-4 w-4" />
                   My Bookings
-                </Link>
-              </Button>
-              <Button className="w-full justify-start" variant="outline" asChild>
-                <Link href="/profile">
+                </Button>
+              </Link>
+              <Link href="/profile">
+                <Button className="w-full justify-start" variant="outline">
                   <TrendingUp className="mr-2 h-4 w-4" />
                   Edit Profile
-                </Link>
-              </Button>
+                </Button>
+              </Link>
               <Button className="w-full justify-start bg-pi hover:bg-pi-dark text-white">
                 <Wallet className="mr-2 h-4 w-4" />
                 Top Up Pi Wallet
