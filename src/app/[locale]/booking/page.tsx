@@ -96,8 +96,8 @@ export default function BookingPage() {
       : 1;
     
     const subtotal = basePrice * nights * (bookingData.rooms || 1);
-    const tax = subtotal * 0.1;
-    const serviceFee = subtotal * 0.05;
+    const tax = subtotal * 0.1; // 10% tax
+    const serviceFee = subtotal * 0.05; // 5% service fee
     const total = subtotal + tax + serviceFee;
 
     return { subtotal, tax, serviceFee, total, nights };
@@ -120,6 +120,7 @@ export default function BookingPage() {
     try {
       const { total } = calculatePricing();
 
+      // Create booking
       const bookingResponse = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -147,6 +148,7 @@ export default function BookingPage() {
 
       const booking = await bookingResponse.json();
 
+      // Process payment based on method
       if (paymentMethod === 'pi_network') {
         await handlePiPayment(booking.id, total);
       } else {
@@ -158,6 +160,7 @@ export default function BookingPage() {
         description: `Your booking code is: ${booking.bookingCode}`,
       });
 
+      // Redirect to booking details
       router.push(`/bookings/${booking.id}`);
     } catch (error) {
       console.error('Booking error:', error);
@@ -192,7 +195,10 @@ export default function BookingPage() {
   };
 
   const handleCreditCardPayment = async (bookingId: string, amount: number) => {
+    // Use the parameters to avoid TypeScript error
     console.log('Processing credit card payment for booking:', bookingId, 'Amount:', amount);
+    
+    // Implement Stripe payment
     toast({
       title: 'Payment Processing',
       description: 'Credit card payment will be processed...',
@@ -240,7 +246,9 @@ export default function BookingPage() {
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
+              {/* Booking Details */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -312,6 +320,7 @@ export default function BookingPage() {
                 </CardContent>
               </Card>
 
+              {/* Guest Information */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -376,6 +385,7 @@ export default function BookingPage() {
                 </CardContent>
               </Card>
 
+              {/* Payment Method */}
               <Card>
                 <CardHeader>
                   <CardTitle>Payment Method</CardTitle>
@@ -408,12 +418,14 @@ export default function BookingPage() {
               </Card>
             </div>
 
+            {/* Sidebar - Booking Summary */}
             <div className="lg:col-span-1">
               <Card className="sticky top-24">
                 <CardHeader>
                   <CardTitle>Booking Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Item Details */}
                   <div>
                     <h3 className="font-semibold text-lg mb-2">{item.name}</h3>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
@@ -433,6 +445,7 @@ export default function BookingPage() {
 
                   <Separator />
 
+                  {/* Dates */}
                   {bookingData.checkIn && bookingData.checkOut && (
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
@@ -464,6 +477,7 @@ export default function BookingPage() {
 
                   <Separator />
 
+                  {/* Pricing */}
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal:</span>
