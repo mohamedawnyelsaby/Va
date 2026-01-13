@@ -76,9 +76,13 @@ export default function HotelDetailPage() {
 
     // Navigate to booking page with data
     const query = new URLSearchParams({
-      hotelId: hotel.id,
+      itemId: hotel.id,
+      itemType: 'Hotel',
       roomType: selectedRoom.type,
-      ...bookingData,
+      checkIn: bookingData.checkIn,
+      checkOut: bookingData.checkOut,
+      guests: bookingData.guests.toString(),
+      rooms: bookingData.rooms.toString(),
     });
     router.push(`/booking?${query}`);
   };
