@@ -8,11 +8,9 @@ import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { 
   Search, 
-  MapPin, 
   Star,
   Heart,
   SlidersHorizontal
-} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';

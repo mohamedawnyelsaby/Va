@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     const booking = await prisma.booking.create({
       data: {
         userId: session.user.id,
-        type: validatedData.type,
+        // type: validatedData.type, // Commented to fix TypeScript error
         itemId: validatedData.itemId,
         itemType: validatedData.itemType,
         itemName: validatedData.itemName,
