@@ -1,49 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { CacheService } from '@/lib/cache/redis';
-import { z } from 'zod';
 
-const HotelsQuerySchema = z.object({
-  cityId: z.string().optional(),
-  minPrice: z.string().transform(Number).optional(),
-  maxPrice: z.string().transform(Number).optional(),
-  rating: z.string().transform(Number).optional(),
-  amenities: z.string().optional(),
-  page: z.string().transform(Number).default('1'),
-  limit: z.string().transform(Number).default('20'),
-  sortBy: z.enum(['price', 'rating', 'popular']).default('popular'),
-  order: z.enum(['asc', 'desc']).default('desc'),
-});
-
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const query = HotelsQuerySchema.parse(
-      Object.fromEntries(searchParams.entries())
-    );
-
-    const cacheKey = `hotels:${JSON.stringify(query)}`;
-
-    const cachedData = await CacheService.get<{
-      hotels: any[];
-      total: number;
-      page: number;
-      totalPages: number;
-    }>(cacheKey);
-
-    if (cachedData) {
-      return NextResponse.json({
-        ...cachedData,
-        cached: true,
-      });
-    }
-
-    const where: any = {
-      status: 'published',
+    const { searchParams } = new URL(request.url);
+    
+    const query = {
+      page: parseInt(searchParams.get('page') || '1'),
+      limit: parseInt(searchParams.get('limit') || '12'),
+      cityId: searchParams.get('cityId') || undefined,
+      minPrice: searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : undefined,
+      maxPrice: searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : undefined,
+      starRating: searchParams.get('starRating') ? parseInt(searchParams.get('starRating')!) : undefined,
+      sortBy: searchParams.get('sortBy') || 'rating',
+      order: (searchParams.get('order') || 'desc') as 'asc' | 'desc',
+      search: searchParams.get('search') || undefined,
     };
+
+    const where: any = { isActive: true };
 
     if (query.cityId) {
       where.cityId = query.cityId;
+    }
+
+    if (query.starRating) {
+      where.starRating = { gte: query.starRating };
     }
 
     if (query.minPrice || query.maxPrice) {
@@ -52,83 +33,61 @@ export async function GET(req: NextRequest) {
       if (query.maxPrice) where.pricePerNight.lte = query.maxPrice;
     }
 
-    if (query.rating) {
-      where.rating = { gte: query.rating };
-    }
-
-    if (query.amenities) {
-      const amenitiesList = query.amenities.split(',');
-      where.amenities = {
-        hasEvery: amenitiesList,
-      };
+    if (query.search) {
+      where.OR = [
+        { name: { contains: query.search, mode: 'insensitive' } },
+        { description: { contains: query.search, mode: 'insensitive' } },
+        { address: { contains: query.search, mode: 'insensitive' } },
+      ];
     }
 
     const orderBy: any = {};
-    if (query.sortBy === 'price') {
-      orderBy.pricePerNight = query.order;
-    } else if (query.sortBy === 'rating') {
-      orderBy.rating = query.order;
-    } else {
-      orderBy.viewCount = 'desc';
-    }
+    orderBy[query.sortBy] = query.order;
 
-    const total = await prisma.hotel.count({ where });
-
-    const skip = (query.page - 1) * query.limit;
-
-    const hotels = await prisma.hotel.findMany({
-      where,
-      orderBy,
-      skip,
-      take: query.limit,
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
-        thumbnail: true,
-        pricePerNight: true,
-        currency: true,
-        rating: true,
-        reviewCount: true,
-        amenities: true,
+    const [hotels, total] = await Promise.all([
+      prisma.hotel.findMany({
+        where,
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
+        orderBy,
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          shortDescription: true,
+          address: true,
+          latitude: true,
+          longitude: true,
+          starRating: true,
+          rating: true,
+          reviewCount: true,
+          pricePerNight: true,
+          currency: true,
+          thumbnail: true,
+          images: true,
+          amenities: true,
+          cityId: true,
+          isActive: true,
+          isFeatured: true,
         },
-        _count: {
-          select: {
-            bookings: true,
-          },
-        },
-      },
-    });
-
-    const totalPages = Math.ceil(total / query.limit);
-
-    const response = {
-      hotels,
-      total,
-      page: query.page,
-      totalPages,
-      hasMore: query.page < totalPages,
-    };
-
-    await CacheService.set(cacheKey, response, 1800);
+      }),
+      prisma.hotel.count({ where }),
+    ]);
 
     return NextResponse.json({
-      ...response,
-      cached: false,
+      hotels,
+      pagination: {
+        page: query.page,
+        limit: query.limit,
+        total,
+        totalPages: Math.ceil(total / query.limit),
+      },
     });
   } catch (error) {
     console.error('Hotels API error:', error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid query parameters', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch hotels' },
       { status: 500 }
     );
   }
