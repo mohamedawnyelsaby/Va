@@ -122,9 +122,9 @@ export async function POST(request: NextRequest) {
       data: {
         userId: session.user.id,
         // type: validatedData.type, // Commented to fix TypeScript error
-        itemId: validatedData.itemId,
-        itemType: validatedData.itemType,
-        itemName: validatedData.itemName,
+        // itemId: validatedData.itemId,
+        // itemType: validatedData.itemType,
+        // itemName: validatedData.itemName,
         startDate: new Date(validatedData.startDate),
         endDate: validatedData.endDate ? new Date(validatedData.endDate) : undefined,
         checkInDate: validatedData.checkInDate ? new Date(validatedData.checkInDate) : undefined,
