@@ -1,5 +1,5 @@
 // src/lib/pi-network/service.ts
-import PiNetwork from 'minepi-sdk';
+import PiNetwork from '@pi-network/sdk';
 
 export class PiNetworkService {
   private pi: PiNetwork;
@@ -52,7 +52,6 @@ export class PiNetworkService {
         memo: options.memo,
         metadata: options.metadata || {},
       });
-
       return payment;
     } catch (error) {
       console.error('Pi Network payment creation failed:', error);
