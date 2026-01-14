@@ -10,6 +10,7 @@ declare module 'next-auth' {
       name: string;
       image?: string;
       role?: string;
+      tier?: string;
       piWalletId?: string;
       piUsername?: string;
     } & DefaultSession['user'];
@@ -22,6 +23,7 @@ declare module 'next-auth' {
     image?: string;
     password?: string;
     role?: string;
+    tier?: string;
     piWalletId?: string;
     piUsername?: string;
   }
@@ -34,6 +36,7 @@ declare module 'next-auth/jwt' {
     name?: string;
     picture?: string;
     role?: string;
+    tier?: string;
     provider?: string;
   }
 }
