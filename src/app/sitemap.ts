@@ -36,7 +36,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   });
 
   const hotels = await prisma.hotel.findMany({
-    where: { status: 'published' },
     select: {
       id: true,
       slug: true,
