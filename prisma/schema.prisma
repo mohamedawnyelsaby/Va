@@ -1,591 +1,631 @@
-// prisma/schema.prisma
-// ✅ COMPLETE DATABASE SCHEMA
+// prisma/seed.ts
+// 🌟 PROFESSIONAL DATABASE SEEDING - PRODUCTION READY
+// This seed file populates the database with initial data for cities, hotels, attractions, and restaurants
 
-generator client {
-  provider = "prisma-client-js"
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+/**
+ * Utility function to generate URL-friendly slugs from city names
+ * @param name - City name
+ * @returns URL-friendly slug
+ */
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '');
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+async function main() {
+  console.log('🚀 Starting database seed...');
+
+  // ========================================
+  // SEED CITIES
+  // ========================================
+  console.log('📍 Seeding cities...');
+
+  const cities = await Promise.all([
+    prisma.city.create({
+      data: {
+        name: 'Paris',
+        slug: 'paris',
+        country: 'France',
+        countryCode: 'FR',
+        description: 'The City of Light, famous for its art, culture, and iconic Eiffel Tower.',
+        latitude: 48.8566,
+        longitude: 2.3522,
+        timezone: 'Europe/Paris',
+        currency: 'EUR',
+        language: 'fr',
+        isPopular: true,
+        images: [
+          'https://images.unsplash.com/photo-1502602898657-3e91760cbb34',
+          'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34',
+      },
+    }),
+    prisma.city.create({
+      data: {
+        name: 'London',
+        slug: 'london',
+        country: 'United Kingdom',
+        countryCode: 'GB',
+        description: 'A vibrant metropolis blending history with modern culture.',
+        latitude: 51.5074,
+        longitude: -0.1278,
+        timezone: 'Europe/London',
+        currency: 'GBP',
+        language: 'en',
+        isPopular: true,
+        images: [
+          'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad',
+          'https://images.unsplash.com/photo-1486299267070-83823f5448dd',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad',
+      },
+    }),
+    prisma.city.create({
+      data: {
+        name: 'Dubai',
+        slug: 'dubai',
+        country: 'United Arab Emirates',
+        countryCode: 'AE',
+        description: 'A futuristic city known for luxury shopping, ultramodern architecture, and vibrant nightlife.',
+        latitude: 25.2048,
+        longitude: 55.2708,
+        timezone: 'Asia/Dubai',
+        currency: 'AED',
+        language: 'ar',
+        isPopular: true,
+        images: [
+          'https://images.unsplash.com/photo-1512453979798-5ea266f8880c',
+          'https://images.unsplash.com/photo-1518684079-3c830dcef090',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c',
+      },
+    }),
+    prisma.city.create({
+      data: {
+        name: 'Tokyo',
+        slug: 'tokyo',
+        country: 'Japan',
+        countryCode: 'JP',
+        description: 'A mesmerizing blend of traditional culture and cutting-edge technology.',
+        latitude: 35.6762,
+        longitude: 139.6503,
+        timezone: 'Asia/Tokyo',
+        currency: 'JPY',
+        language: 'ja',
+        isPopular: true,
+        images: [
+          'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf',
+          'https://images.unsplash.com/photo-1513407030348-c983a97b98d8',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf',
+      },
+    }),
+    prisma.city.create({
+      data: {
+        name: 'New York',
+        slug: 'new-york',
+        country: 'United States',
+        countryCode: 'US',
+        description: 'The Big Apple - a global hub for art, culture, fashion, and finance.',
+        latitude: 40.7128,
+        longitude: -74.006,
+        timezone: 'America/New_York',
+        currency: 'USD',
+        language: 'en',
+        isPopular: true,
+        images: [
+          'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9',
+          'https://images.unsplash.com/photo-1490644658840-3f2e3f8c5625',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9',
+      },
+    }),
+    prisma.city.create({
+      data: {
+        name: 'Barcelona',
+        slug: 'barcelona',
+        country: 'Spain',
+        countryCode: 'ES',
+        description: 'A Mediterranean gem famous for Gaudí architecture and vibrant street life.',
+        latitude: 41.3851,
+        longitude: 2.1734,
+        timezone: 'Europe/Madrid',
+        currency: 'EUR',
+        language: 'es',
+        isPopular: true,
+        images: [
+          'https://images.unsplash.com/photo-1583422409516-2895a77efded',
+          'https://images.unsplash.com/photo-1562883676-8c7feb83f09b',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1583422409516-2895a77efded',
+      },
+    }),
+    prisma.city.create({
+      data: {
+        name: 'Rome',
+        slug: 'rome',
+        country: 'Italy',
+        countryCode: 'IT',
+        description: 'The Eternal City, where ancient history meets modern Italian culture.',
+        latitude: 41.9028,
+        longitude: 12.4964,
+        timezone: 'Europe/Rome',
+        currency: 'EUR',
+        language: 'it',
+        isPopular: true,
+        images: [
+          'https://images.unsplash.com/photo-1552832230-c0197dd311b5',
+          'https://images.unsplash.com/photo-1525874684015-58379d421a52',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5',
+      },
+    }),
+    prisma.city.create({
+      data: {
+        name: 'Istanbul',
+        slug: 'istanbul',
+        country: 'Turkey',
+        countryCode: 'TR',
+        description: 'A transcontinental city bridging Europe and Asia with rich Ottoman heritage.',
+        latitude: 41.0082,
+        longitude: 28.9784,
+        timezone: 'Europe/Istanbul',
+        currency: 'TRY',
+        language: 'tr',
+        isPopular: true,
+        images: [
+          'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200',
+          'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200',
+      },
+    }),
+    prisma.city.create({
+      data: {
+        name: 'Singapore',
+        slug: 'singapore',
+        country: 'Singapore',
+        countryCode: 'SG',
+        description: 'A modern city-state known for its cleanliness, efficiency, and cultural diversity.',
+        latitude: 1.3521,
+        longitude: 103.8198,
+        timezone: 'Asia/Singapore',
+        currency: 'SGD',
+        language: 'en',
+        isPopular: true,
+        images: [
+          'https://images.unsplash.com/photo-1525625293386-3f8f99389edd',
+          'https://images.unsplash.com/photo-1496939376851-89342e90adcd',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd',
+      },
+    }),
+    prisma.city.create({
+      data: {
+        name: 'Sydney',
+        slug: 'sydney',
+        country: 'Australia',
+        countryCode: 'AU',
+        description: 'A harbour city famous for its Opera House, beaches, and outdoor lifestyle.',
+        latitude: -33.8688,
+        longitude: 151.2093,
+        timezone: 'Australia/Sydney',
+        currency: 'AUD',
+        language: 'en',
+        isPopular: true,
+        images: [
+          'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9',
+          'https://images.unsplash.com/photo-1523059623039-a9ed027e7fad',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9',
+      },
+    }),
+    prisma.city.create({
+      data: {
+        name: 'Cairo',
+        slug: 'cairo',
+        country: 'Egypt',
+        countryCode: 'EG',
+        description: 'Home to the ancient Pyramids of Giza and the treasure-filled Egyptian Museum.',
+        latitude: 30.0444,
+        longitude: 31.2357,
+        timezone: 'Africa/Cairo',
+        currency: 'EGP',
+        language: 'ar',
+        isPopular: true,
+        images: [
+          'https://images.unsplash.com/photo-1572252009286-268acec5ca0a',
+          'https://images.unsplash.com/photo-1539768942893-daf53e448371',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1572252009286-268acec5ca0a',
+      },
+    }),
+    prisma.city.create({
+      data: {
+        name: 'Bangkok',
+        slug: 'bangkok',
+        country: 'Thailand',
+        countryCode: 'TH',
+        description: 'A vibrant capital known for ornate shrines, bustling markets, and street food.',
+        latitude: 13.7563,
+        longitude: 100.5018,
+        timezone: 'Asia/Bangkok',
+        currency: 'THB',
+        language: 'th',
+        isPopular: true,
+        images: [
+          'https://images.unsplash.com/photo-1508009603885-50cf7c579365',
+          'https://images.unsplash.com/photo-1519451241324-20b4ea2c4220',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365',
+      },
+    }),
+  ]);
+
+  console.log(`✅ Created ${cities.length} cities`);
+
+  // ========================================
+  // SEED HOTELS
+  // ========================================
+  console.log('🏨 Seeding hotels...');
+
+  const hotels = await Promise.all([
+    prisma.hotel.create({
+      data: {
+        name: 'Grand Hotel Paris',
+        description: 'Luxury 5-star hotel in the heart of Paris with stunning Eiffel Tower views.',
+        shortDescription: 'Elegant Parisian luxury with iconic views',
+        address: '15 Avenue des Champs-Élysées',
+        city: 'Paris',
+        cityId: cities[0].id,
+        country: 'France',
+        postalCode: '75008',
+        latitude: 48.8698,
+        longitude: 2.3078,
+        starRating: 5,
+        amenities: ['Free WiFi', 'Pool', 'Spa', 'Gym', 'Restaurant', 'Bar', 'Concierge', 'Room Service'],
+        roomTypes: [
+          { type: 'Deluxe Room', price: 350, capacity: 2 },
+          { type: 'Executive Suite', price: 650, capacity: 4 },
+          { type: 'Presidential Suite', price: 1200, capacity: 6 },
+        ],
+        pricePerNight: 350,
+        currency: 'EUR',
+        images: [
+          'https://images.unsplash.com/photo-1566073771259-6a8506099945',
+          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1566073771259-6a8506099945',
+        isFeatured: true,
+        rating: 4.8,
+        reviewCount: 1250,
+        discountRate: 10,
+      },
+    }),
+    prisma.hotel.create({
+      data: {
+        name: 'The Ritz London',
+        description: 'Iconic luxury hotel offering opulent accommodations in the heart of London.',
+        shortDescription: 'Timeless British elegance and sophistication',
+        address: '150 Piccadilly',
+        city: 'London',
+        cityId: cities[1].id,
+        country: 'United Kingdom',
+        postalCode: 'W1J 9BR',
+        latitude: 51.5074,
+        longitude: -0.1419,
+        starRating: 5,
+        amenities: ['Free WiFi', 'Spa', 'Gym', 'Fine Dining', 'Butler Service', 'Casino'],
+        roomTypes: [
+          { type: 'Classic Room', price: 450, capacity: 2 },
+          { type: 'Deluxe Suite', price: 850, capacity: 3 },
+          { type: 'Royal Suite', price: 2000, capacity: 4 },
+        ],
+        pricePerNight: 450,
+        currency: 'GBP',
+        images: [
+          'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb',
+          'https://images.unsplash.com/photo-1590490360182-c33d57733427',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb',
+        isFeatured: true,
+        rating: 4.9,
+        reviewCount: 2100,
+        discountRate: 15,
+      },
+    }),
+    prisma.hotel.create({
+      data: {
+        name: 'Burj Al Arab',
+        description: 'The worlds most luxurious hotel, standing on its own artificial island.',
+        shortDescription: '7-star luxury on a private island',
+        address: 'Jumeirah Beach Road',
+        city: 'Dubai',
+        cityId: cities[2].id,
+        country: 'United Arab Emirates',
+        postalCode: '00000',
+        latitude: 25.1413,
+        longitude: 55.1853,
+        starRating: 5,
+        amenities: ['Private Beach', 'Helipad', 'Chauffeur Service', 'Spa', 'Multiple Restaurants', 'Gold iPads'],
+        roomTypes: [
+          { type: 'Deluxe Suite', price: 1500, capacity: 2 },
+          { type: 'Panoramic Suite', price: 3000, capacity: 4 },
+          { type: 'Royal Suite', price: 24000, capacity: 6 },
+        ],
+        pricePerNight: 1500,
+        currency: 'AED',
+        images: [
+          'https://images.unsplash.com/photo-1582719508461-905c673771fd',
+          'https://images.unsplash.com/photo-1571896349842-33c89424de2d',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1582719508461-905c673771fd',
+        isFeatured: true,
+        rating: 5.0,
+        reviewCount: 3500,
+        discountRate: 0,
+      },
+    }),
+  ]);
+
+  console.log(`✅ Created ${hotels.length} hotels`);
+
+  // ========================================
+  // SEED ATTRACTIONS
+  // ========================================
+  console.log('🎭 Seeding attractions...');
+
+  const attractions = await Promise.all([
+    prisma.attraction.create({
+      data: {
+        name: 'Eiffel Tower',
+        description: 'Iconic iron lattice tower and symbol of Paris, offering breathtaking city views.',
+        shortDescription: 'Paris iconic landmark',
+        category: 'Landmark',
+        subcategory: 'Monument',
+        address: 'Champ de Mars, 5 Avenue Anatole',
+        city: 'Paris',
+        cityId: cities[0].id,
+        country: 'France',
+        latitude: 48.8584,
+        longitude: 2.2945,
+        ticketPrice: 26.1,
+        currency: 'EUR',
+        openingHours: {
+          monday: '09:30-23:45',
+          tuesday: '09:30-23:45',
+          wednesday: '09:30-23:45',
+          thursday: '09:30-23:45',
+          friday: '09:30-23:45',
+          saturday: '09:30-23:45',
+          sunday: '09:30-23:45',
+        },
+        duration: '2-3 hours',
+        bestTimeToVisit: 'Sunset for magical views',
+        accessibility: ['Elevator Access', 'Wheelchair Accessible'],
+        images: [
+          'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f',
+          'https://images.unsplash.com/photo-1502602898657-3e91760cbb34',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f',
+        isPopular: true,
+        rating: 4.7,
+        reviewCount: 45000,
+      },
+    }),
+    prisma.attraction.create({
+      data: {
+        name: 'British Museum',
+        description: 'World-famous museum showcasing human history, art and culture from around the globe.',
+        shortDescription: 'Treasures of world civilization',
+        category: 'Museum',
+        subcategory: 'History',
+        address: 'Great Russell Street',
+        city: 'London',
+        cityId: cities[1].id,
+        country: 'United Kingdom',
+        latitude: 51.5194,
+        longitude: -0.127,
+        ticketPrice: 0,
+        currency: 'GBP',
+        openingHours: {
+          monday: '10:00-17:00',
+          tuesday: '10:00-17:00',
+          wednesday: '10:00-17:00',
+          thursday: '10:00-17:00',
+          friday: '10:00-20:30',
+          saturday: '10:00-17:00',
+          sunday: '10:00-17:00',
+        },
+        duration: '3-4 hours',
+        bestTimeToVisit: 'Weekday mornings',
+        accessibility: ['Wheelchair Accessible', 'Audio Guides'],
+        images: [
+          'https://images.unsplash.com/photo-1529260830199-42c24126f198',
+          'https://images.unsplash.com/photo-1580674285054-bed31e145f59',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1529260830199-42c24126f198',
+        isPopular: true,
+        rating: 4.6,
+        reviewCount: 32000,
+      },
+    }),
+    prisma.attraction.create({
+      data: {
+        name: 'Burj Khalifa',
+        description: 'The tallest building in the world with observation decks on the 124th and 148th floors.',
+        shortDescription: 'Touch the sky at 828 meters',
+        category: 'Landmark',
+        subcategory: 'Skyscraper',
+        address: '1 Sheikh Mohammed bin Rashid Boulevard',
+        city: 'Dubai',
+        cityId: cities[2].id,
+        country: 'United Arab Emirates',
+        latitude: 25.1972,
+        longitude: 55.2744,
+        ticketPrice: 149,
+        currency: 'AED',
+        openingHours: {
+          monday: '08:30-23:00',
+          tuesday: '08:30-23:00',
+          wednesday: '08:30-23:00',
+          thursday: '08:30-23:00',
+          friday: '08:30-23:00',
+          saturday: '08:30-23:00',
+          sunday: '08:30-23:00',
+        },
+        duration: '1-2 hours',
+        bestTimeToVisit: 'Sunset or night',
+        accessibility: ['Elevator Access', 'Wheelchair Accessible'],
+        images: [
+          'https://images.unsplash.com/photo-1512632578888-169bbbc64f33',
+          'https://images.unsplash.com/photo-1580837119756-563d608dd119',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1512632578888-169bbbc64f33',
+        isPopular: true,
+        rating: 4.8,
+        reviewCount: 52000,
+      },
+    }),
+  ]);
+
+  console.log(`✅ Created ${attractions.length} attractions`);
+
+  // ========================================
+  // SEED RESTAURANTS
+  // ========================================
+  console.log('🍽️  Seeding restaurants...');
+
+  const restaurants = await Promise.all([
+    prisma.restaurant.create({
+      data: {
+        name: 'Le Jules Verne',
+        description: 'Michelin-starred restaurant located on the second floor of the Eiffel Tower.',
+        cuisine: ['French', 'Fine Dining', 'Contemporary'],
+        priceRange: '$$$$',
+        address: 'Avenue Gustave Eiffel',
+        city: 'Paris',
+        cityId: cities[0].id,
+        country: 'France',
+        latitude: 48.8583,
+        longitude: 2.2945,
+        openingHours: {
+          monday: 'Closed',
+          tuesday: '12:00-13:30, 19:00-21:00',
+          wednesday: '12:00-13:30, 19:00-21:00',
+          thursday: '12:00-13:30, 19:00-21:00',
+          friday: '12:00-13:30, 19:00-21:00',
+          saturday: '12:00-13:30, 19:00-21:00',
+          sunday: '12:00-13:30, 19:00-21:00',
+        },
+        reservationRequired: true,
+        dressCode: 'Smart Casual / Formal',
+        features: ['Michelin Star', 'Romantic', 'Panoramic Views', 'Wine Cellar'],
+        images: [
+          'https://images.unsplash.com/photo-1414235077428-338989a2e8c0',
+          'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0',
+        isFeatured: true,
+        rating: 4.7,
+        reviewCount: 3200,
+      },
+    }),
+    prisma.restaurant.create({
+      data: {
+        name: 'Dishoom',
+        description: 'Popular Bombay-style café serving delicious Indian cuisine in a vintage setting.',
+        cuisine: ['Indian', 'Asian', 'Breakfast'],
+        priceRange: '$$',
+        address: '12 Upper St Martins Lane',
+        city: 'London',
+        cityId: cities[1].id,
+        country: 'United Kingdom',
+        latitude: 51.5117,
+        longitude: -0.1269,
+        openingHours: {
+          monday: '08:00-23:00',
+          tuesday: '08:00-23:00',
+          wednesday: '08:00-23:00',
+          thursday: '08:00-23:00',
+          friday: '08:00-00:00',
+          saturday: '09:00-00:00',
+          sunday: '09:00-22:00',
+        },
+        reservationRequired: false,
+        dressCode: 'Casual',
+        features: ['Vegetarian Options', 'Vegan Options', 'Outdoor Seating', 'Cocktails'],
+        images: [
+          'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
+          'https://images.unsplash.com/photo-1552566626-52f8b828add9',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
+        isFeatured: true,
+        rating: 4.5,
+        reviewCount: 8500,
+      },
+    }),
+    prisma.restaurant.create({
+      data: {
+        name: 'Pierchic',
+        description: 'Romantic overwater seafood restaurant with stunning views of the Arabian Gulf.',
+        cuisine: ['Seafood', 'Mediterranean', 'Fine Dining'],
+        priceRange: '$$$$',
+        address: 'Al Qasr, Madinat Jumeirah',
+        city: 'Dubai',
+        cityId: cities[2].id,
+        country: 'United Arab Emirates',
+        latitude: 25.1324,
+        longitude: 55.1863,
+        openingHours: {
+          monday: '12:30-15:00, 18:30-23:30',
+          tuesday: '12:30-15:00, 18:30-23:30',
+          wednesday: '12:30-15:00, 18:30-23:30',
+          thursday: '12:30-15:00, 18:30-23:30',
+          friday: '12:30-15:00, 18:30-23:30',
+          saturday: '12:30-15:00, 18:30-23:30',
+          sunday: '12:30-15:00, 18:30-23:30',
+        },
+        reservationRequired: true,
+        dressCode: 'Smart Casual',
+        features: ['Ocean Views', 'Romantic', 'Fresh Seafood', 'Wine Pairing'],
+        images: [
+          'https://images.unsplash.com/photo-1559339352-11d035aa65de',
+          'https://images.unsplash.com/photo-1544025162-d76694265947',
+        ],
+        thumbnail: 'https://images.unsplash.com/photo-1559339352-11d035aa65de',
+        isFeatured: true,
+        rating: 4.8,
+        reviewCount: 4200,
+      },
+    }),
+  ]);
+
+  console.log(`✅ Created ${restaurants.length} restaurants`);
+
+  console.log('');
+  console.log('🎉 Database seeding completed successfully!');
+  console.log('');
+  console.log('📊 Summary:');
+  console.log(`   ├─ Cities: ${cities.length}`);
+  console.log(`   ├─ Hotels: ${hotels.length}`);
+  console.log(`   ├─ Attractions: ${attractions.length}`);
+  console.log(`   └─ Restaurants: ${restaurants.length}`);
+  console.log('');
 }
 
-// ========================================
-// USER MANAGEMENT
-// ========================================
-
-model User {
-  id                       String    @id @default(cuid())
-  email                    String    @unique
-  password                 String?
-  name                     String?
-  phone                    String?   @unique
-  avatar                   String?
-  bio                      String?
-  locale                   String    @default("en")
-  theme                    String    @default("system")
-  timezone                 String    @default("UTC")
-  
-  // Email Verification
-  isVerified               Boolean   @default(false)
-  emailVerified            DateTime?
-  emailVerificationToken   String?   @unique
-  emailVerificationExpiry  DateTime?
-  
-  // Password Reset
-  passwordResetToken       String?   @unique
-  passwordResetExpiry      DateTime?
-  
-  // Security
-  isActive                 Boolean   @default(true)
-  lastLoginAt              DateTime?
-  lastLoginIp              String?
-  loginAttempts            Int       @default(0)
-  lockedUntil              DateTime?
-  
-  // Two-Factor Authentication
-  twoFactorEnabled         Boolean   @default(false)
-  twoFactorSecret          String?
-  backupCodes              String?
-  
-  // Pi Network
-  piWalletId               String?   @unique
-  piUsername               String?
-  piBalance                Float     @default(0)
-  
-  // Loyalty Program
-  loyaltyPoints            Int       @default(0)
-  loyaltyTier              String    @default("bronze") // bronze, silver, gold, platinum
-  
-  // Referral System
-  referralCode             String    @unique @default(cuid())
-  referredById             String?
-  
-  // Timestamps
-  createdAt                DateTime  @default(now())
-  updatedAt                DateTime  @updatedAt
-  
-  // Relations
-  referredBy               User?                @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
-  referrals                User[]               @relation("Referrals")
-  sessions                 Session[]
-  accounts                 Account[]
-  bookings                 Booking[]
-  reviews                  Review[]
-  favorites                Favorite[]
-  preferences              Preference?
-  notifications            Notification[]
-  payments                 Payment[]
-  piTransactions           PiTransaction[]
-  apiKeys                  ApiKey[]
-  auditLogs                AuditLog[]
-  securityLogs             SecurityLog[]
-
-  @@index([email])
-  @@index([piWalletId])
-  @@index([referralCode])
-  @@index([isActive])
-  @@index([createdAt])
-  @@map("users")
-}
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-  @@index([userId])
-  @@map("accounts")
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@map("sessions")
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-  @@map("verification_tokens")
-}
-
-model Preference {
-  id                    String   @id @default(cuid())
-  userId                String   @unique
-  currency              String   @default("USD")
-  language              String   @default("en")
-  notificationsEnabled  Boolean  @default(true)
-  emailNotifications    Boolean  @default(true)
-  pushNotifications     Boolean  @default(true)
-  smsNotifications      Boolean  @default(false)
-  marketingEmails       Boolean  @default(true)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("preferences")
-}
-
-// ========================================
-// LOCATION & GEOGRAPHY
-// ========================================
-
-model City {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  country     String
-  countryCode String
-  description String?
-  latitude    Float
-  longitude   Float
-  timezone    String   @default("UTC")
-  currency    String   @default("USD")
-  language    String   @default("en")
-  isPopular   Boolean  @default(false)
-  isActive    Boolean  @default(true)
-  images      String[]
-  thumbnail   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  hotels      Hotel[]
-  attractions Attraction[]
-  restaurants Restaurant[]
-  services    Service[]
-
-  @@unique([name, country])
-  @@index([slug])
-  @@index([isPopular])
-  @@index([country])
-  @@map("cities")
-}
-
-// ========================================
-// HOTELS
-// ========================================
-
-model Hotel {
-  id               String   @id @default(cuid())
-  name             String
-  description      String
-  shortDescription String?
-  address          String
-  city             String
-  cityId           String
-  country          String
-  postalCode       String?
-  latitude         Float
-  longitude        Float
-  starRating       Int      @default(3)
-  amenities        String[]
-  roomTypes        Json[]
-  pricePerNight    Float
-  currency         String   @default("USD")
-  checkInTime      String   @default("14:00")
-  checkOutTime     String   @default("12:00")
-  cancellationPolicy String?
-  images           String[]
-  thumbnail        String?
-  isFeatured       Boolean  @default(false)
-  isActive         Boolean  @default(true)
-  rating           Float?   @default(0)
-  reviewCount      Int      @default(0)
-  discountRate     Float?   @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  cityRelation City       @relation(fields: [cityId], references: [id])
-  bookings     Booking[]
-  reviews      Review[]
-  favorites    Favorite[]
-
-  @@index([cityId])
-  @@index([isFeatured])
-  @@index([rating])
-  @@index([pricePerNight])
-  @@map("hotels")
-}
-
-// ========================================
-// ATTRACTIONS
-// ========================================
-
-model Attraction {
-  id               String   @id @default(cuid())
-  name             String
-  description      String
-  shortDescription String?
-  category         String
-  subcategory      String?
-  address          String
-  city             String
-  cityId           String
-  country          String
-  latitude         Float
-  longitude        Float
-  ticketPrice      Float?
-  currency         String   @default("USD")
-  openingHours     Json?
-  duration         String?
-  bestTimeToVisit  String?
-  accessibility    String[]
-  images           String[]
-  thumbnail        String?
-  isPopular        Boolean  @default(false)
-  isActive         Boolean  @default(true)
-  rating           Float?   @default(0)
-  reviewCount      Int      @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  cityRelation City       @relation(fields: [cityId], references: [id])
-  bookings     Booking[]
-  reviews      Review[]
-  favorites    Favorite[]
-
-  @@index([cityId])
-  @@index([category])
-  @@index([isPopular])
-  @@index([rating])
-  @@map("attractions")
-}
-
-// ========================================
-// RESTAURANTS
-// ========================================
-
-model Restaurant {
-  id               String   @id @default(cuid())
-  name             String
-  description      String
-  cuisine          String[]
-  priceRange       String   // $, $$, $$$, $$$$
-  address          String
-  city             String
-  cityId           String
-  country          String
-  latitude         Float
-  longitude        Float
-  openingHours     Json?
-  reservationRequired Boolean @default(false)
-  dressCode        String?
-  features         String[]
-  images           String[]
-  thumbnail        String?
-  isFeatured       Boolean  @default(false)
-  isActive         Boolean  @default(true)
-  rating           Float?   @default(0)
-  reviewCount      Int      @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  cityRelation City       @relation(fields: [cityId], references: [id])
-  bookings     Booking[]
-  reviews      Review[]
-  favorites    Favorite[]
-
-  @@index([cityId])
-  @@index([isFeatured])
-  @@index([rating])
-  @@map("restaurants")
-}
-
-// ========================================
-// SERVICES
-// ========================================
-
-model Service {
-  id               String   @id @default(cuid())
-  name             String
-  description      String
-  category         String   // Transport, Tour, Activity, etc.
-  price            Float
-  currency         String   @default("USD")
-  duration         String?
-  city             String
-  cityId           String
-  images           String[]
-  thumbnail        String?
-  isActive         Boolean  @default(true)
-  rating           Float?   @default(0)
-  reviewCount      Int      @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  cityRelation City       @relation(fields: [cityId], references: [id])
-  bookings     Booking[]
-  reviews      Review[]
-
-  @@index([cityId])
-  @@index([category])
-  @@map("services")
-}
-
-// ========================================
-// BOOKINGS
-// ========================================
-
-model Booking {
-  id               String    @id @default(cuid())
-  bookingCode      String    @unique @default(cuid())
-  userId           String
-  itemType         String    // Hotel, Attraction, Restaurant, Service
-  hotelId          String?
-  attractionId     String?
-  restaurantId     String?
-  serviceId        String?
-  itemName         String
-  startDate        DateTime
-  endDate          DateTime?
-  checkInDate      DateTime?
-  checkOutDate     DateTime?
-  guests           Int?      @default(1)
-  rooms            Int?      @default(1)
-  totalPrice       Float
-  currency         String    @default("USD")
-  piAmount         Float?
-  discount         Float?    @default(0)
-  tax              Float?    @default(0)
-  serviceFee       Float?    @default(0)
-  notes            String?
-  specialRequests  String?
-  status           String    @default("pending") // pending, confirmed, cancelled, completed
-  paymentStatus    String    @default("pending") // pending, paid, refunded, failed
-  paymentMethod    String?
-  paymentId        String?
-  piPaymentId      String?
-  cancellationReason String?
-  cancelledAt      DateTime?
-  completedAt      DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  
-  user             User      @relation(fields: [userId], references: [id])
-  hotel            Hotel?    @relation(fields: [hotelId], references: [id])
-  attraction       Attraction? @relation(fields: [attractionId], references: [id])
-  restaurant       Restaurant? @relation(fields: [restaurantId], references: [id])
-  service          Service?  @relation(fields: [serviceId], references: [id])
-  payments         Payment[]
-
-  @@index([userId])
-  @@index([bookingCode])
-  @@index([status])
-  @@index([userId, status])
-  @@index([createdAt])
-  @@map("bookings")
-}
-
-// ========================================
-// REVIEWS
-// ========================================
-
-model Review {
-  id           String   @id @default(cuid())
-  userId       String
-  itemType     String   // Hotel, Attraction, Restaurant, Service
-  hotelId      String?
-  attractionId String?
-  restaurantId String?
-  serviceId    String?
-  rating       Int      // 1-5
-  title        String?
-  comment      String
-  images       String[]
-  likes        Int      @default(0)
-  isVerified   Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  user       User         @relation(fields: [userId], references: [id])
-  hotel      Hotel?       @relation(fields: [hotelId], references: [id])
-  attraction Attraction?  @relation(fields: [attractionId], references: [id])
-  restaurant Restaurant?  @relation(fields: [restaurantId], references: [id])
-  service    Service?     @relation(fields: [serviceId], references: [id])
-
-  @@index([userId])
-  @@index([rating])
-  @@index([createdAt])
-  @@map("reviews")
-}
-
-// ========================================
-// FAVORITES
-// ========================================
-
-model Favorite {
-  id           String   @id @default(cuid())
-  userId       String
-  itemType     String
-  hotelId      String?
-  attractionId String?
-  restaurantId String?
-  createdAt    DateTime @default(now())
-
-  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  hotel      Hotel?       @relation(fields: [hotelId], references: [id])
-  attraction Attraction?  @relation(fields: [attractionId], references: [id])
-  restaurant Restaurant?  @relation(fields: [restaurantId], references: [id])
-
-  @@unique([userId, itemType, hotelId])
-  @@unique([userId, itemType, attractionId])
-  @@unique([userId, itemType, restaurantId])
-  @@index([userId])
-  @@map("favorites")
-}
-
-// ========================================
-// PAYMENTS
-// ========================================
-
-model Payment {
-  id                    String   @id @default(cuid())
-  userId                String
-  bookingId             String?
-  amount                Float
-  currency              String   @default("USD")
-  piAmount              Float?
-  paymentMethod         String   // credit_card, pi_network, paypal
-  status                String   @default("pending") // pending, completed, failed, refunded
-  transactionId         String?  @unique
-  piPaymentId           String?  @unique
-  stripePaymentIntentId String?  @unique
-  errorMessage          String?
-  metadata              Json?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  
-  user                  User     @relation(fields: [userId], references: [id])
-  booking               Booking? @relation(fields: [bookingId], references: [id])
-
-  @@index([userId])
-  @@index([bookingId])
-  @@index([status])
-  @@index([createdAt])
-  @@map("payments")
-}
-
-model PiTransaction {
-  id            String   @id @default(cuid())
-  userId        String
-  type          String   // referral, cashback, purchase, withdrawal
-  amount        Float
-  description   String
-  balanceAfter  Float
-  status        String   @default("completed")
-  piPaymentId   String?
-  metadata      Json?
-  createdAt     DateTime @default(now())
-  
-  user          User     @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([createdAt])
-  @@index([type])
-  @@map("pi_transactions")
-}
-
-// ========================================
-// NOTIFICATIONS
-// ========================================
-
-model Notification {
-  id        String   @id @default(cuid())
-  userId    String
-  type      String   // booking, payment, review, system, promotion
-  title     String
-  message   String
-  data      Json?
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, isRead])
-  @@index([createdAt])
-  @@map("notifications")
-}
-
-// ========================================
-// API & SECURITY
-// ========================================
-
-model ApiKey {
-  id          String   @id @default(cuid())
-  userId      String
-  key         String   @unique
-  name        String
-  permissions String[]
-  lastUsedAt  DateTime?
-  expiresAt   DateTime?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([key])
-  @@index([userId])
-  @@map("api_keys")
-}
-
-model AuditLog {
-  id         String   @id @default(cuid())
-  userId     String?
-  action     String
-  entityType String?
-  entityId   String?
-  changes    String?
-  ipAddress  String?
-  userAgent  String?
-  createdAt  DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([action])
-  @@index([createdAt])
-  @@map("audit_logs")
-}
-
-model SecurityLog {
-  id             String   @id @default(cuid())
-  userId         String?
-  action         String
-  success        Boolean
-  failureReason  String?
-  ipAddress      String
-  userAgent      String
-  metadata       Json?
-  createdAt      DateTime @default(now())
-  
-  user           User?    @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([action])
-  @@index([success])
-  @@index([createdAt])
-  @@index([ipAddress])
-  @@map("security_logs")
-}
+main()
+  .catch((e) => {
+    console.error('❌ Error seeding database:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
