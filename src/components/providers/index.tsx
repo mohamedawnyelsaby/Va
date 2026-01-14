@@ -1,5 +1,4 @@
 'use client';
-
 import { ThemeProvider } from './theme-provider';
 import { QueryProvider } from './query-provider';
 import { I18nProvider } from './i18n-provider';
@@ -10,9 +9,10 @@ import { TooltipProvider } from './tooltip-provider';
 
 interface ProvidersProps {
   children: React.ReactNode;
+  locale?: string; // إضافة locale كـ optional prop
 }
 
-export function Providers({ children }: ProvidersProps) {
+export function Providers({ children, locale = 'en' }: ProvidersProps) {
   return (
     <ThemeProvider
       attribute="class"
@@ -21,7 +21,7 @@ export function Providers({ children }: ProvidersProps) {
       disableTransitionOnChange
     >
       <QueryProvider>
-        <I18nProvider>
+        <I18nProvider locale={locale}>
           <PiProvider>
             <TooltipProvider>
               <ToastProvider>
