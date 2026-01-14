@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/db';
 
-const BASE_URL = 'https://vatravel.com';
+const BASE_URL = 'https://va-pied.vercel.app';
 const LOCALES = ['en', 'ar', 'fr', 'es', 'de', 'it', 'ru', 'zh', 'ja', 'ko'];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -29,34 +29,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         alternates: {
           languages: Object.fromEntries(
             LOCALES.map((l) => [l, `${BASE_URL}/${l}${page}`])
-          ),
-        },
-      });
-    });
-  });
-
-  const hotels = await prisma.hotel.findMany({
-    select: {
-      id: true,
-      slug: true,
-      updatedAt: true,
-    },
-    take: 50000,
-  });
-
-  hotels.forEach((hotel) => {
-    LOCALES.forEach((locale) => {
-      sitemap.push({
-        url: `${BASE_URL}/${locale}/hotels/${hotel.slug}`,
-        lastModified: hotel.updatedAt,
-        changeFrequency: 'weekly',
-        priority: 0.9,
-        alternates: {
-          languages: Object.fromEntries(
-            LOCALES.map((l) => [
-              l,
-              `${BASE_URL}/${l}/hotels/${hotel.slug}`,
-            ])
           ),
         },
       });
