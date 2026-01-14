@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CreditCard, Pi, Paypal, Wallet } from 'lucide-react';
+import { CreditCard, Pi, Wallet, Banknote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -123,7 +123,7 @@ export function PaymentMethods({ amount, currency, onSuccess, onError }: Payment
           <div className="flex items-center space-x-3 border p-4 rounded-lg">
             <RadioGroupItem value="paypal" id="paypal" />
             <Label htmlFor="paypal" className="flex-1 flex items-center cursor-pointer">
-              <Paypal className="mr-3 h-5 w-5 text-blue-600" />
+              <Banknote className="mr-3 h-5 w-5 text-blue-600" />
               <div>
                 <div className="font-medium">PayPal</div>
                 <div className="text-sm text-gray-500">Pay with your PayPal account</div>
