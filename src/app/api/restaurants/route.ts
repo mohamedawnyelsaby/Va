@@ -17,16 +17,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'City not found' }, { status: 404 });
     }
     
-    // استخرج cityId من validatedData
-    const { cityId, ...restaurantData } = validatedData;
+    // استخرج cityId والباقي من validatedData
+    const { cityId, images, ...restaurantData } = validatedData;
     
     const restaurant = await prisma.restaurant.create({
       data: {
         ...restaurantData,
-        cityId: validatedData.cityId,
         city: city.name,
         country: city.country,
-        thumbnail: validatedData.images[0],
+        thumbnail: images[0],
+        images: images,
+        cityRelation: {
+          connect: { id: cityId }
+        }
       },
       include: { cityRelation: true },
     });
