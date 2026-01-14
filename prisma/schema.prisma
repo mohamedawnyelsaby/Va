@@ -155,6 +155,7 @@ model Preference {
 model City {
   id          String   @id @default(cuid())
   name        String
+  slug        String   @unique
   country     String
   countryCode String
   description String?
@@ -176,6 +177,7 @@ model City {
   services    Service[]
 
   @@unique([name, country])
+  @@index([slug])
   @@index([isPopular])
   @@index([country])
   @@map("cities")
