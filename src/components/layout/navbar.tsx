@@ -96,11 +96,11 @@ export function Navbar({ locale, session }: NavbarProps) {
           {/* Right Section */}
           <div className="flex items-center gap-2">
             {/* Search */}
-            <Button variant="ghost" size="icon" asChild>
-              <Link href={`/${locale}/search`}>
+            <Link href={`/${locale}/search`}>
+              <Button variant="ghost" size="icon">
                 <Search className="h-5 w-5" />
-              </Link>
-            </Button>
+              </Button>
+            </Link>
 
             {/* Theme Toggle */}
             <Button
@@ -200,12 +200,12 @@ export function Navbar({ locale, session }: NavbarProps) {
               </DropdownMenu>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href={`/${locale}/auth/signin`}>Sign In</Link>
-                </Button>
-                <Button size="sm" asChild>
-                  <Link href={`/${locale}/auth/signup`}>Sign Up</Link>
-                </Button>
+                <Link href={`/${locale}/auth/signin`}>
+                  <Button variant="ghost" size="sm">Sign In</Button>
+                </Link>
+                <Link href={`/${locale}/auth/signup`}>
+                  <Button size="sm">Sign Up</Button>
+                </Link>
               </div>
             )}
 
@@ -244,12 +244,12 @@ export function Navbar({ locale, session }: NavbarProps) {
               {!session?.user && (
                 <>
                   <DropdownMenuSeparator />
-                  <Button variant="outline" asChild>
-                    <Link href={`/${locale}/auth/signin`}>Sign In</Link>
-                  </Button>
-                  <Button asChild>
-                    <Link href={`/${locale}/auth/signup`}>Sign Up</Link>
-                  </Button>
+                  <Link href={`/${locale}/auth/signin`}>
+                    <Button variant="outline" className="w-full">Sign In</Button>
+                  </Link>
+                  <Link href={`/${locale}/auth/signup`}>
+                    <Button className="w-full">Sign Up</Button>
+                  </Link>
                 </>
               )}
             </div>
