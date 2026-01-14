@@ -1,20 +1,26 @@
 // src/lib/pi-network/service.ts
-import PiNetwork from '@pi-network/sdk';
+
+declare global {
+  interface Window {
+    Pi?: any;
+  }
+}
 
 export class PiNetworkService {
-  private pi: PiNetwork;
+  private pi: any;
   private isInitialized = false;
 
   constructor() {
-    this.pi = new PiNetwork({
-      sandbox: process.env.NODE_ENV === 'development',
-      apiKey: process.env.PI_API_KEY!,
-    });
+    if (typeof window !== 'undefined') {
+      this.pi = window.Pi;
+    }
   }
 
   async initialize(): Promise<void> {
     try {
-      await this.pi.init();
+      if (!this.pi) {
+        throw new Error('Pi SDK not loaded. Make sure you are running in Pi Browser.');
+      }
       this.isInitialized = true;
       console.log('Pi Network SDK initialized');
     } catch (error) {
@@ -29,7 +35,9 @@ export class PiNetworkService {
     }
 
     try {
-      const user = await this.pi.authenticate(scopes);
+      const user = await this.pi.authenticate(scopes, (payment: any) => {
+        console.log('Payment callback:', payment);
+      });
       return user;
     } catch (error) {
       console.error('Pi Network authentication failed:', error);
@@ -51,6 +59,19 @@ export class PiNetworkService {
         amount: options.amount,
         memo: options.memo,
         metadata: options.metadata || {},
+      }, {
+        onReadyForServerApproval: (paymentId: string) => {
+          console.log('Payment ready for approval:', paymentId);
+        },
+        onReadyForServerCompletion: (paymentId: string, txid: string) => {
+          console.log('Payment ready for completion:', paymentId, txid);
+        },
+        onCancel: (paymentId: string) => {
+          console.log('Payment cancelled:', paymentId);
+        },
+        onError: (error: any, payment: any) => {
+          console.error('Payment error:', error, payment);
+        },
       });
       return payment;
     } catch (error) {
@@ -60,30 +81,16 @@ export class PiNetworkService {
   }
 
   async getPayment(paymentId: string): Promise<any> {
-    if (!this.isInitialized) {
-      await this.initialize();
-    }
-
-    try {
-      const payment = await this.pi.getPayment(paymentId);
-      return payment;
-    } catch (error) {
-      console.error('Failed to get Pi payment:', error);
-      throw error;
-    }
+    // This would be handled by your backend API
+    const response = await fetch(`/api/pi/payments/${paymentId}`);
+    return response.json();
   }
 
   async completePayment(paymentId: string): Promise<void> {
-    if (!this.isInitialized) {
-      await this.initialize();
-    }
-
-    try {
-      await this.pi.completePayment(paymentId);
-    } catch (error) {
-      console.error('Failed to complete Pi payment:', error);
-      throw error;
-    }
+    // This would be handled by your backend API
+    await fetch(`/api/pi/payments/${paymentId}/complete`, {
+      method: 'POST',
+    });
   }
 }
 
