@@ -9,10 +9,10 @@ import { TooltipProvider } from './tooltip-provider';
 
 interface ProvidersProps {
   children: React.ReactNode;
-  locale?: string; // إضافة locale كـ optional prop
+  locale?: string; 
 }
 
-export function Providers({ children, locale = 'en' }: ProvidersProps) {
+export function Providers({ children, locale = 'en' }: ProvidersProps) { // 👈 وده
   return (
     <ThemeProvider
       attribute="class"
@@ -21,7 +21,7 @@ export function Providers({ children, locale = 'en' }: ProvidersProps) {
       disableTransitionOnChange
     >
       <QueryProvider>
-        <I18nProvider locale={locale}>
+        <I18nProvider locale={locale}> {/* 👈 وده المهم جداً */}
           <PiProvider>
             <TooltipProvider>
               <ToastProvider>
