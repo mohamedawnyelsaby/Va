@@ -7,6 +7,7 @@ const LOCALES = ['en', 'ar', 'fr', 'es', 'de', 'it', 'ru', 'zh', 'ja', 'ko'];
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const sitemap: MetadataRoute.Sitemap = [];
 
+  // Static pages
   const staticPages = [
     '',
     '/about',
@@ -35,6 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   });
 
+  // Dynamic city pages
   const cities = await prisma.city.findMany({
     select: {
       id: true,
