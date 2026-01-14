@@ -1,7 +1,7 @@
 // src/lib/errors/handler.ts
 import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
-import { Prisma } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 export class AppError extends Error {
   constructor(
@@ -77,7 +77,7 @@ export function handleError(error: unknown): NextResponse {
   }
 
   // Prisma Errors
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+  if (error instanceof PrismaClientKnownRequestError) {
     // Unique constraint violation
     if (error.code === 'P2002') {
       return NextResponse.json(
