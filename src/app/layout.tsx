@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
+import Script from 'next/script';
 
 const inter = Inter({
-  subsets: ['latin'],  // ← أضفت الفاصلة هنا
+  subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
 });
@@ -35,7 +36,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://va.up.railway.app'),  // ← أضفت https://
+  metadataBase: new URL('https://va.up.railway.app'),
   alternates: {
     canonical: '/',
     languages: {
@@ -54,7 +55,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://va.up.railway.app',  // ← أضفت https://
+    url: 'https://va.up.railway.app',
     title: 'Va Travel - Global Travel & Booking Platform',
     description: 'AI-powered global travel platform for hotel bookings, tourist attractions, and local services worldwide with Pi Network integration.',
     siteName: 'Va Travel',
@@ -125,6 +126,12 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
+        {/* Pi Network SDK */}
+        <Script 
+          src="https://sdk.minepi.com/pi-sdk.js" 
+          strategy="beforeInteractive"
+        />
+        
         <Providers>
           {children}
         </Providers>
