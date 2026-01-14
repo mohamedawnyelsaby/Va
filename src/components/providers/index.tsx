@@ -1,10 +1,11 @@
+
 'use client';
 import { ThemeProvider } from './theme-provider';
 import { QueryProvider } from './query-provider';
 import { I18nProvider } from './i18n-provider';
 import { PiProvider } from './pi-provider';
 import ToastProvider from './toast-provider';
-import { ModalProvider } from './modal-provider';
+import ModalProvider from './modal-provider';
 import { TooltipProvider } from './tooltip-provider';
 
 interface ProvidersProps {
@@ -24,9 +25,8 @@ export function Providers({ children, locale = 'en' }: ProvidersProps) {
         <I18nProvider locale={locale}>
           <PiProvider>
             <TooltipProvider>
-              <ModalProvider>
-                {children}
-              </ModalProvider>
+              {children}
+              <ModalProvider />
               <ToastProvider />
             </TooltipProvider>
           </PiProvider>
