@@ -1,18 +1,12 @@
 // src/lib/pi-network/service.ts
 
-declare global {
-  interface Window {
-    Pi?: any;
-  }
-}
-
 export class PiNetworkService {
   private pi: any;
   private isInitialized = false;
 
   constructor() {
-    if (typeof window !== 'undefined') {
-      this.pi = window.Pi;
+    if (typeof window !== 'undefined' && (window as any).Pi) {
+      this.pi = (window as any).Pi;
     }
   }
 
