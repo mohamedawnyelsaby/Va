@@ -1,21 +1,37 @@
-// src/components/providers/toast-provider.tsx
 'use client';
+import { ThemeProvider } from './theme-provider';
+import { QueryProvider } from './query-provider';
+import { I18nProvider } from './i18n-provider';
+import { PiProvider } from './pi-provider';
+import { ToastProvider } from './toast-provider';
+import { ModalProvider } from './modal-provider';
+import { TooltipProvider } from './tooltip-provider';
 
-import { Toaster } from 'sonner';
+interface ProvidersProps {
+  children: React.ReactNode;
+  locale?: string;
+}
 
-export function ToastProvider() {
+export function Providers({ children, locale = 'en' }: ProvidersProps) {
   return (
-    <Toaster
-      position="top-right"
-      toastOptions={{
-        className: 'toast',
-        duration: 4000,
-        style: {
-          background: 'hsl(var(--background))',
-          color: 'hsl(var(--foreground))',
-          border: '1px solid hsl(var(--border))',
-        },
-      }}
-    />
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <QueryProvider>
+        <I18nProvider locale={locale}>
+          <PiProvider>
+            <TooltipProvider>
+              <ModalProvider>
+                {children}
+              </ModalProvider>
+              <ToastProvider />
+            </TooltipProvider>
+          </PiProvider>
+        </I18nProvider>
+      </QueryProvider>
+    </ThemeProvider>
   );
 }
