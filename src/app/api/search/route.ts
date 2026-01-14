@@ -221,5 +221,6 @@ async function generateSuggestions(query: string): Promise<string[]> {
   
   suggestions.push(...matchingSearches);
   
-  return [...new Set(suggestions)].slice(0, 5);
+  return Array.from(new Set(suggestions)).slice(0, 5);
+
 }
