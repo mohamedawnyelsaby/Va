@@ -1,5 +1,4 @@
 // src/lib/pi-network/service.ts
-
 export class PiNetworkService {
   private pi: any;
   private isInitialized = false;
@@ -27,7 +26,6 @@ export class PiNetworkService {
     if (!this.isInitialized) {
       await this.initialize();
     }
-
     try {
       const user = await this.pi.authenticate(scopes, (payment: any) => {
         console.log('Payment callback:', payment);
@@ -47,7 +45,6 @@ export class PiNetworkService {
     if (!this.isInitialized) {
       await this.initialize();
     }
-
     try {
       const payment = await this.pi.createPayment({
         amount: options.amount,
@@ -75,13 +72,11 @@ export class PiNetworkService {
   }
 
   async getPayment(paymentId: string): Promise<any> {
-    // This would be handled by your backend API
     const response = await fetch(`/api/pi/payments/${paymentId}`);
     return response.json();
   }
 
   async completePayment(paymentId: string): Promise<void> {
-    // This would be handled by your backend API
     await fetch(`/api/pi/payments/${paymentId}/complete`, {
       method: 'POST',
     });
