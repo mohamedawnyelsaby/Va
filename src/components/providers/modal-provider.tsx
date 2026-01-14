@@ -1,18 +1,36 @@
-// src/components/providers/modal-provider.tsx
 'use client';
+import { ThemeProvider } from './theme-provider';
+import { QueryProvider } from './query-provider';
+import { I18nProvider } from './i18n-provider';
+import { PiProvider } from './pi-provider';
+import ToastProvider from './toast-provider';
+import { ModalProvider } from './modal-provider';
+import { TooltipProvider } from './tooltip-provider';
 
-import { useEffect, useState } from 'react';
+interface ProvidersProps {
+  children: React.ReactNode;
+  locale?: string;
+}
 
-export function ModalProvider() {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
-
-  return null; // We'll implement specific modals in components
+export function Providers({ children, locale = 'en' }: ProvidersProps) {
+  return (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <QueryProvider>
+        <I18nProvider locale={locale}>
+          <PiProvider>
+            <TooltipProvider>
+              {children}
+              <ModalProvider />
+              <ToastProvider />
+            </TooltipProvider>
+          </PiProvider>
+        </I18nProvider>
+      </QueryProvider>
+    </ThemeProvider>
+  );
 }
