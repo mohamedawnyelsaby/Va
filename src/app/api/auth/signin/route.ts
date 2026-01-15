@@ -1,12 +1,32 @@
-// src/app/api/auth/signin/route.ts
+// src/app/api/auth/signup/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
-const signinSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+// Strong password requirements
+const passwordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .max(128, 'Password must not exceed 128 characters')
+  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+  .regex(/[0-9]/, 'Password must contain at least one number');
+
+const signupSchema = z.object({
+  email: z
+    .string()
+    .email('Invalid email address')
+    .toLowerCase(),
+  password: passwordSchema,
+  confirmPassword: z.string(),
+  name: z
+    .string()
+    .min(2, 'Name must be at least 2 characters')
+    .max(100, 'Name must not exceed 100 characters'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
 });
 
 export async function POST(request: NextRequest) {
@@ -16,78 +36,85 @@ export async function POST(request: NextRequest) {
   try {
     // Parse and validate input
     const body = await request.json();
-    const validatedData = signinSchema.parse(body);
+    const validatedData = signupSchema.parse(body);
 
-    // Find user - only use fields that exist in schema
-    const user = await prisma.user.findUnique({
-      where: { email: validatedData.email.toLowerCase() },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        password: true,
-        image: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+    // Check if email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: validatedData.email },
     });
 
-    if (!user) {
-      // Add delay to prevent timing attacks
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+    if (existingUser) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
-    }
-
-    // Verify password
-    if (!user.password) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
-    }
-
-    const passwordValid = await bcrypt.compare(
-      validatedData.password,
-      user.password
-    );
-
-    if (!passwordValid) {
-      // Add delay to prevent timing attacks
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
-    }
-
-    // Return success response (password excluded)
-    const { password: _, ...userWithoutPassword } = user;
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Login successful',
-        user: userWithoutPassword,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors[0].message },
+        {
+          error: 'An account with this email already exists',
+          suggestion: 'Try logging in or use password recovery',
+        },
         { status: 400 }
       );
     }
 
-    console.error('Login error:', error);
+    // Hash password (Bcrypt with 12 rounds)
+    const hashedPassword = await bcrypt.hash(validatedData.password, 12);
+
+    // Create user in database
+    const user = await prisma.user.create({
+      data: {
+        email: validatedData.email,
+        password: hashedPassword,
+        name: validatedData.name,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+      },
+    });
+
+    console.log('✅ New user created:', {
+      id: user.id,
+      email: user.email,
+      ip,
+    });
+
+    // Return success response
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Account created successfully!',
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    // Error handling
+    if (error instanceof z.ZodError) {
+      const firstError = error.errors[0];
+      return NextResponse.json(
+        {
+          error: firstError.message,
+          field: firstError.path.join('.'),
+        },
+        { status: 400 }
+      );
+    }
+
+    console.error('Signup error:', error);
 
     return NextResponse.json(
-      { error: 'An error occurred during login. Please try again.' },
+      {
+        error: 'An error occurred during registration. Please try again.',
+        details:
+          process.env.NODE_ENV === 'development'
+            ? error instanceof Error
+              ? error.message
+              : 'Unknown error'
+            : undefined,
+      },
       { status: 500 }
     );
   }
