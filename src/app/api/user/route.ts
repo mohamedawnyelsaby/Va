@@ -7,12 +7,7 @@ import { z } from 'zod';
 
 const updateProfileSchema = z.object({
   name: z.string().min(2).optional(),
-  phone: z.string().optional(),
-  bio: z.string().max(500).optional(),
-  avatar: z.string().url().optional(),
-  locale: z.string().optional(),
-  theme: z.enum(['light', 'dark', 'system']).optional(),
-  timezone: z.string().optional(),
+  image: z.string().url().optional(),
 });
 
 // GET /api/user - Get current user profile
@@ -29,15 +24,13 @@ export async function GET(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      include: {
-        preferences: true,
-        _count: {
-          select: {
-            bookings: true,
-            reviews: true,
-            favorites: true,
-          },
-        },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        image: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -48,10 +41,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Remove sensitive data
-    const { password, ...userWithoutPassword } = user;
-
-    return NextResponse.json(userWithoutPassword);
+    return NextResponse.json(user);
   } catch (error) {
     console.error('Get user error:', error);
     return NextResponse.json(
@@ -79,14 +69,17 @@ export async function PATCH(request: NextRequest) {
     const user = await prisma.user.update({
       where: { id: session.user.id },
       data: validatedData,
-      include: {
-        preferences: true,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        image: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
-    const { password, ...userWithoutPassword } = user;
-
-    return NextResponse.json(userWithoutPassword);
+    return NextResponse.json(user);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -94,7 +87,6 @@ export async function PATCH(request: NextRequest) {
         { status: 400 }
       );
     }
-
     console.error('Update user error:', error);
     return NextResponse.json(
       { error: 'Failed to update user' },
@@ -115,10 +107,9 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Soft delete by setting isActive to false
-    await prisma.user.update({
+    // Hard delete since isActive doesn't exist
+    await prisma.user.delete({
       where: { id: session.user.id },
-      data: { isActive: false },
     });
 
     return NextResponse.json({
