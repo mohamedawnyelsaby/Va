@@ -1,5 +1,5 @@
 // prisma/seed.ts
-// ✅ COMPLETE SEED FILE WITH ALL DATA
+// ✅ SIMPLIFIED SEED FILE - Only creates data for existing models
 
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
@@ -18,6 +18,7 @@ async function main() {
     prisma.city.create({
       data: {
         name: 'Paris',
+        slug: 'paris',
         country: 'France',
         countryCode: 'FR',
         description: 'The City of Light, known for its art, fashion, gastronomy, and culture.',
@@ -37,6 +38,7 @@ async function main() {
     prisma.city.create({
       data: {
         name: 'Dubai',
+        slug: 'dubai',
         country: 'United Arab Emirates',
         countryCode: 'AE',
         description: 'A global hub of luxury, innovation, and Arabian hospitality.',
@@ -56,6 +58,7 @@ async function main() {
     prisma.city.create({
       data: {
         name: 'Tokyo',
+        slug: 'tokyo',
         country: 'Japan',
         countryCode: 'JP',
         description: 'Where ancient tradition meets cutting-edge technology.',
@@ -75,6 +78,7 @@ async function main() {
     prisma.city.create({
       data: {
         name: 'New York',
+        slug: 'new-york',
         country: 'United States',
         countryCode: 'US',
         description: 'The city that never sleeps, offering endless entertainment.',
@@ -91,6 +95,7 @@ async function main() {
     prisma.city.create({
       data: {
         name: 'London',
+        slug: 'london',
         country: 'United Kingdom',
         countryCode: 'GB',
         description: 'A historic capital blending tradition with modern culture.',
@@ -121,10 +126,6 @@ async function main() {
         email: 'admin@vatravel.com',
         password: hashedPassword,
         name: 'Admin User',
-        isVerified: true,
-        piBalance: 1000,
-        loyaltyPoints: 5000,
-        loyaltyTier: 'platinum',
       },
     }),
     prisma.user.create({
@@ -132,10 +133,6 @@ async function main() {
         email: 'user@vatravel.com',
         password: hashedPassword,
         name: 'Test User',
-        isVerified: true,
-        piBalance: 100,
-        loyaltyPoints: 500,
-        loyaltyTier: 'silver',
       },
     }),
     prisma.user.create({
@@ -143,26 +140,9 @@ async function main() {
         email: 'demo@vatravel.com',
         password: hashedPassword,
         name: 'Demo User',
-        isVerified: true,
-        piBalance: 50,
-        loyaltyPoints: 100,
-        loyaltyTier: 'bronze',
       },
     }),
   ]);
-
-  // Create preferences for users
-  for (const user of users) {
-    await prisma.preference.create({
-      data: {
-        userId: user.id,
-        currency: 'USD',
-        language: 'en',
-        notificationsEnabled: true,
-        emailNotifications: true,
-      },
-    });
-  }
 
   console.log(`✅ Created ${users.length} users`);
 
@@ -273,6 +253,7 @@ async function main() {
         currency: 'EUR',
         duration: '2-3 hours',
         openingHours: { open: '09:00', close: '23:45' },
+        accessibility: [],
         images: ['https://images.unsplash.com/photo-1511739001486-6bfe10ce785f'],
         thumbnail: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=400',
         isPopular: true,
@@ -297,6 +278,7 @@ async function main() {
         ticketPrice: 149,
         currency: 'AED',
         duration: '1-2 hours',
+        accessibility: [],
         images: ['https://images.unsplash.com/photo-1512453979798-5ea266f8880c'],
         thumbnail: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400',
         isPopular: true,
@@ -321,6 +303,7 @@ async function main() {
         ticketPrice: 0,
         currency: 'JPY',
         duration: '1-2 hours',
+        accessibility: [],
         images: ['https://images.unsplash.com/photo-1513407030348-c983a97b98d8'],
         thumbnail: 'https://images.unsplash.com/photo-1513407030348-c983a97b98d8?w=400',
         isPopular: true,
@@ -385,133 +368,7 @@ async function main() {
   console.log(`✅ Created ${restaurants.length} restaurants`);
 
   // ========================================
-  // 6. CREATE SERVICES
-  // ========================================
-  console.log('🚕 Creating services...');
-
-  const services = await Promise.all([
-    prisma.service.create({
-      data: {
-        name: 'Airport Transfer - Luxury',
-        description: 'Premium airport transfer service with professional drivers.',
-        category: 'Transport',
-        price: 50,
-        currency: 'USD',
-        duration: '1 hour',
-        city: cities[0].name,
-        cityId: cities[0].id,
-        images: ['https://images.unsplash.com/photo-1449965408869-eaa3f722e40d'],
-        thumbnail: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400',
-        rating: 4.7,
-        reviewCount: 234,
-      },
-    }),
-    prisma.service.create({
-      data: {
-        name: 'City Tour - Full Day',
-        description: 'Comprehensive city tour covering all major attractions.',
-        category: 'Tour',
-        price: 80,
-        currency: 'USD',
-        duration: '8 hours',
-        city: cities[1].name,
-        cityId: cities[1].id,
-        images: ['https://images.unsplash.com/photo-1464037866556-6812c9d1c72e'],
-        thumbnail: 'https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=400',
-        rating: 4.9,
-        reviewCount: 567,
-      },
-    }),
-  ]);
-
-  console.log(`✅ Created ${services.length} services`);
-
-  // ========================================
-  // 7. CREATE SAMPLE BOOKINGS
-  // ========================================
-  console.log('📅 Creating bookings...');
-
-  const bookings = await Promise.all([
-    prisma.booking.create({
-      data: {
-        userId: users[1].id,
-        itemType: 'hotel',
-        hotelId: hotels[0].id,
-        itemName: hotels[0].name,
-        startDate: new Date('2024-12-25'),
-        endDate: new Date('2024-12-30'),
-        checkInDate: new Date('2024-12-25T14:00:00'),
-        checkOutDate: new Date('2024-12-30T12:00:00'),
-        guests: 2,
-        rooms: 1,
-        totalPrice: 1100,
-        currency: 'EUR',
-        status: 'confirmed',
-        paymentStatus: 'paid',
-        paymentMethod: 'credit_card',
-      },
-    }),
-  ]);
-
-  console.log(`✅ Created ${bookings.length} bookings`);
-
-  // ========================================
-  // 8. CREATE REVIEWS
-  // ========================================
-  console.log('⭐ Creating reviews...');
-
-  const reviews = await Promise.all([
-    prisma.review.create({
-      data: {
-        userId: users[1].id,
-        itemType: 'hotel',
-        hotelId: hotels[0].id,
-        rating: 5,
-        title: 'Absolutely Amazing Stay!',
-        comment: 'Best hotel experience ever. Staff was incredibly helpful, room was spotless, and the view was breathtaking.',
-        images: [],
-        isVerified: true,
-      },
-    }),
-    prisma.review.create({
-      data: {
-        userId: users[2].id,
-        itemType: 'attraction',
-        attractionId: attractions[0].id,
-        rating: 5,
-        title: 'Must Visit!',
-        comment: 'Iconic landmark that exceeded expectations. Go at sunset for the best experience.',
-        images: [],
-        isVerified: true,
-      },
-    }),
-  ]);
-
-  console.log(`✅ Created ${reviews.length} reviews`);
-
-  // ========================================
-  // 9. CREATE NOTIFICATIONS
-  // ========================================
-  console.log('🔔 Creating notifications...');
-
-  await Promise.all(
-    users.map((user) =>
-      prisma.notification.create({
-        data: {
-          userId: user.id,
-          type: 'system',
-          title: '🎉 Welcome to Va Travel!',
-          message: 'Thank you for joining us. Start exploring amazing destinations worldwide!',
-          data: { piBonus: 100 },
-        },
-      })
-    )
-  );
-
-  console.log('✅ Created notifications');
-
-  // ========================================
-  // 10. FINAL SUMMARY
+  // FINAL SUMMARY
   // ========================================
   console.log('\n🎉 ===== DATABASE SEEDING COMPLETED =====');
   console.log(`
@@ -520,9 +377,6 @@ async function main() {
     ✅ ${hotels.length} Hotels
     ✅ ${attractions.length} Attractions
     ✅ ${restaurants.length} Restaurants
-    ✅ ${services.length} Services
-    ✅ ${bookings.length} Bookings
-    ✅ ${reviews.length} Reviews
     
     🔑 Test Accounts:
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

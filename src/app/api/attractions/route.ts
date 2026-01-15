@@ -6,7 +6,6 @@ import { authOptions } from '@/lib/auth/options';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
     const cityId = searchParams.get('cityId');
@@ -18,7 +17,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const isPopular = searchParams.get('popular') === 'true';
 
-    const where: any = { isActive: true };
+    const where: any = {};
 
     if (cityId) {
       where.cityId = cityId;
@@ -56,10 +55,13 @@ export async function GET(request: NextRequest) {
         skip: (page - 1) * limit,
         take: limit,
         include: {
-          _count: {
+          cityRelation: {
             select: {
-              reviews: true,
-              bookings: true,
+              id: true,
+              name: true,
+              slug: true,
+              country: true,
+              countryCode: true,
             },
           },
         },
@@ -88,7 +90,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-
+    
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -125,6 +127,7 @@ export async function POST(request: NextRequest) {
         currency: body.currency || city.currency,
         openingHours: body.openingHours,
         duration: body.duration,
+        accessibility: body.accessibility || [],
         images: body.images || [],
         thumbnail: body.thumbnail || (body.images?.[0] || ''),
         cityId: body.cityId,
