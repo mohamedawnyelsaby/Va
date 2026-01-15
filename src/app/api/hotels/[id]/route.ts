@@ -1,6 +1,5 @@
 // src/app/api/hotels/[id]/route.ts
 // Single Hotel API - Get, Update, Delete
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
@@ -15,25 +14,13 @@ export async function GET(
     const hotel = await prisma.hotel.findUnique({
       where: { id: params.id },
       include: {
-        // city: true,
-        reviews: {
-          take: 10,
-          orderBy: { createdAt: 'desc' },
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                avatar: true,
-              },
-            },
-          },
-        },
-        _count: {
+        cityRelation: {
           select: {
-            reviews: true,
-            bookings: true,
-            favorites: true,
+            id: true,
+            name: true,
+            slug: true,
+            country: true,
+            countryCode: true,
           },
         },
       },
@@ -63,7 +50,7 @@ export async function PATCH(
 ) {
   try {
     const session = await getServerSession(authOptions);
-
+    
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -73,14 +60,36 @@ export async function PATCH(
 
     const body = await request.json();
 
+    // Only update fields that exist in the schema
+    const updateData: any = {};
+    
+    if (body.name) updateData.name = body.name;
+    if (body.description) updateData.description = body.description;
+    if (body.shortDescription) updateData.shortDescription = body.shortDescription;
+    if (body.address) updateData.address = body.address;
+    if (body.starRating) updateData.starRating = body.starRating;
+    if (body.amenities) updateData.amenities = body.amenities;
+    if (body.roomTypes) updateData.roomTypes = body.roomTypes;
+    if (body.pricePerNight) updateData.pricePerNight = body.pricePerNight;
+    if (body.currency) updateData.currency = body.currency;
+    if (body.images) updateData.images = body.images;
+    if (body.thumbnail) updateData.thumbnail = body.thumbnail;
+    if (body.isFeatured !== undefined) updateData.isFeatured = body.isFeatured;
+    if (body.rating) updateData.rating = body.rating;
+    if (body.reviewCount) updateData.reviewCount = body.reviewCount;
+
     const hotel = await prisma.hotel.update({
       where: { id: params.id },
-      data: {
-        ...body,
-        updatedAt: new Date(),
-      },
+      data: updateData,
       include: {
-        // city: true,
+        cityRelation: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            country: true,
+          },
+        },
       },
     });
 
@@ -94,14 +103,14 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/hotels/[id] - Delete hotel (soft delete)
+// DELETE /api/hotels/[id] - Delete hotel
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
-
+    
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -109,15 +118,13 @@ export async function DELETE(
       );
     }
 
-    // Soft delete by setting isActive to false
-    const hotel = await prisma.hotel.update({
+    // Hard delete since isActive doesn't exist in schema
+    await prisma.hotel.delete({
       where: { id: params.id },
-      data: { isActive: false },
     });
 
     return NextResponse.json({
       message: 'Hotel deleted successfully',
-      hotel,
     });
   } catch (error) {
     console.error('Delete hotel error:', error);
