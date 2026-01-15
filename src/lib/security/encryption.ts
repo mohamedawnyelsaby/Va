@@ -1,10 +1,22 @@
 // src/lib/security/encryption.ts
-// 🔒 Advanced Encryption System
 
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32);
+// ✅ Generate or use existing encryption key
+const getEncryptionKey = (): Buffer => {
+  if (process.env.ENCRYPTION_KEY) {
+    // Convert hex string to buffer
+    return Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
+  }
+  
+  // Generate a random key (for development only)
+  const key = crypto.randomBytes(32);
+  console.warn('⚠️ Using random encryption key. Set ENCRYPTION_KEY in production!');
+  return key;
+};
+
+const ENCRYPTION_KEY = getEncryptionKey();
 const IV_LENGTH = 16;
 const SALT_ROUNDS = 12;
 
@@ -13,57 +25,70 @@ export class SecurityEncryption {
    * Encrypt sensitive data (AES-256-GCM)
    */
   static encrypt(text: string): { encrypted: string; iv: string; tag: string } {
-    const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv(
-      'aes-256-gcm',
-      Buffer.from(ENCRYPTION_KEY),
-      iv
-    );
+    try {
+      const iv = crypto.randomBytes(IV_LENGTH);
+      const cipher = crypto.createCipheriv('aes-256-gcm', ENCRYPTION_KEY, iv);
 
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    const tag = cipher.getAuthTag();
+      let encrypted = cipher.update(text, 'utf8', 'hex');
+      encrypted += cipher.final('hex');
+      const tag = cipher.getAuthTag();
 
-    return {
-      encrypted,
-      iv: iv.toString('hex'),
-      tag: tag.toString('hex'),
-    };
+      return {
+        encrypted,
+        iv: iv.toString('hex'),
+        tag: tag.toString('hex'),
+      };
+    } catch (error) {
+      console.error('Encryption error:', error);
+      throw new Error('Encryption failed');
+    }
   }
 
   /**
    * Decrypt sensitive data
    */
   static decrypt(encrypted: string, iv: string, tag: string): string {
-    const decipher = crypto.createDecipheriv(
-      'aes-256-gcm',
-      Buffer.from(ENCRYPTION_KEY),
-      Buffer.from(iv, 'hex')
-    );
+    try {
+      const decipher = crypto.createDecipheriv(
+        'aes-256-gcm',
+        ENCRYPTION_KEY,
+        Buffer.from(iv, 'hex')
+      );
 
-    decipher.setAuthTag(Buffer.from(tag, 'hex'));
+      decipher.setAuthTag(Buffer.from(tag, 'hex'));
 
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
+      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
 
-    return decrypted;
+      return decrypted;
+    } catch (error) {
+      console.error('Decryption error:', error);
+      throw new Error('Decryption failed');
+    }
   }
 
   /**
    * Hash password with bcrypt
    */
   static async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, SALT_ROUNDS);
+    try {
+      return await bcrypt.hash(password, SALT_ROUNDS);
+    } catch (error) {
+      console.error('Password hashing error:', error);
+      throw new Error('Password hashing failed');
+    }
   }
 
   /**
    * Verify password
    */
-  static async verifyPassword(
-    password: string,
-    hash: string
-  ): Promise<boolean> {
-    return bcrypt.compare(password, hash);
+  static async verifyPassword(password: string, hash: string): Promise<boolean> {
+    try {
+      return await bcrypt.compare(password, hash);
+    } catch (error) {
+      console.error('Password verification error:', error);
+      return false;
+    }
   }
 
   /**
@@ -79,9 +104,12 @@ export class SecurityEncryption {
   static generateOTP(length: number = 6): string {
     const digits = '0123456789';
     let otp = '';
+    const randomBytes = crypto.randomBytes(length);
+    
     for (let i = 0; i < length; i++) {
-      otp += digits[crypto.randomInt(0, digits.length)];
+      otp += digits[randomBytes[i] % digits.length];
     }
+    
     return otp;
   }
 
@@ -103,10 +131,45 @@ export class SecurityEncryption {
    * Verify HMAC signature
    */
   static verifyHMAC(data: string, signature: string, secret: string): boolean {
-    const expectedSignature = this.generateHMAC(data, secret);
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expectedSignature)
-    );
+    try {
+      const expectedSignature = this.generateHMAC(data, secret);
+      return crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(expectedSignature)
+      );
+    } catch (error) {
+      console.error('HMAC verification error:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Generate random UUID
+   */
+  static generateUUID(): string {
+    return crypto.randomUUID();
+  }
+
+  /**
+   * Generate secure session ID
+   */
+  static generateSessionId(): string {
+    return this.generateToken(48);
+  }
+
+  /**
+   * Encrypt object (serializes to JSON first)
+   */
+  static encryptObject(obj: any): { encrypted: string; iv: string; tag: string } {
+    const json = JSON.stringify(obj);
+    return this.encrypt(json);
+  }
+
+  /**
+   * Decrypt object
+   */
+  static decryptObject<T>(encrypted: string, iv: string, tag: string): T {
+    const json = this.decrypt(encrypted, iv, tag);
+    return JSON.parse(json) as T;
   }
 }
