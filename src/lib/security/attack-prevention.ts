@@ -65,42 +65,38 @@ export class AttackPrevention {
   }
 
   /**
-   * Brute Force Protection
+   * Brute Force Protection - Using Redis for tracking
    */
   static async checkBruteForce(
     userId: string,
     ipAddress: string
   ): Promise<{ blocked: boolean; lockoutMinutes?: number }> {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { loginAttempts: true, lockedUntil: true },
-    });
+    try {
+      const lockKey = `bruteforce:${userId}`;
+      const lockData = await redis.get<{ until: number; attempts: number }>(lockKey);
 
-    if (!user) {
+      if (lockData && lockData.until > Date.now()) {
+        const lockoutMinutes = Math.ceil((lockData.until - Date.now()) / 60000);
+
+        await prisma.securityLog.create({
+          data: {
+            userId,
+            action: 'login_attempt_locked',
+            success: false,
+            failureReason: 'Account locked',
+            ipAddress,
+            userAgent: 'system',
+          },
+        });
+
+        return { blocked: true, lockoutMinutes };
+      }
+
+      return { blocked: false };
+    } catch (error) {
+      console.error('Brute force check error:', error);
       return { blocked: false };
     }
-
-    // Check if account is locked
-    if (user.lockedUntil && user.lockedUntil > new Date()) {
-      const lockoutMinutes = Math.ceil(
-        (user.lockedUntil.getTime() - Date.now()) / 60000
-      );
-
-      await prisma.securityLog.create({
-        data: {
-          userId,
-          action: 'login_attempt_locked',
-          success: false,
-          failureReason: 'Account locked',
-          ipAddress,
-          userAgent: 'system',
-        },
-      });
-
-      return { blocked: true, lockoutMinutes };
-    }
-
-    return { blocked: false };
   }
 
   /**
@@ -110,58 +106,64 @@ export class AttackPrevention {
     userId: string,
     ipAddress: string
   ): Promise<void> {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { loginAttempts: true },
-    });
+    try {
+      const attemptsKey = `login_attempts:${userId}`;
+      const lockKey = `bruteforce:${userId}`;
+      
+      // Increment failed attempts
+      const attempts = await redis.incr(attemptsKey);
+      
+      // Set expiry for attempts counter (15 minutes)
+      await redis.expire(attemptsKey, 900);
 
-    if (!user) return;
+      let lockedUntil: number | null = null;
 
-    const newAttempts = user.loginAttempts + 1;
-    let lockedUntil: Date | null = null;
+      // Lock account after 5 failed attempts
+      if (attempts >= 5) {
+        // Exponential lockout: 5 mins, 15 mins, 30 mins, 1 hour, 24 hours
+        const lockoutMinutes = [5, 15, 30, 60, 1440][
+          Math.min(attempts - 5, 4)
+        ];
+        lockedUntil = Date.now() + lockoutMinutes * 60000;
+        
+        // Store lock in Redis
+        await redis.setex(
+          lockKey,
+          lockoutMinutes * 60,
+          JSON.stringify({ until: lockedUntil, attempts })
+        );
+      }
 
-    // Lock account after 5 failed attempts
-    if (newAttempts >= 5) {
-      // Exponential lockout: 5 mins, 15 mins, 30 mins, 1 hour, 24 hours
-      const lockoutMinutes = [5, 15, 30, 60, 1440][
-        Math.min(newAttempts - 5, 4)
-      ];
-      lockedUntil = new Date(Date.now() + lockoutMinutes * 60000);
+      await prisma.securityLog.create({
+        data: {
+          userId,
+          action: 'failed_login',
+          success: false,
+          failureReason: `Failed attempt ${attempts}${
+            lockedUntil ? ` - Account locked until ${new Date(lockedUntil).toISOString()}` : ''
+          }`,
+          ipAddress,
+          userAgent: 'system',
+        },
+      });
+    } catch (error) {
+      console.error('Record failed login error:', error);
     }
-
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        loginAttempts: newAttempts,
-        lockedUntil,
-      },
-    });
-
-    await prisma.securityLog.create({
-      data: {
-        userId,
-        action: 'failed_login',
-        success: false,
-        failureReason: `Failed attempt ${newAttempts}${
-          lockedUntil ? ` - Account locked until ${lockedUntil.toISOString()}` : ''
-        }`,
-        ipAddress,
-        userAgent: 'system',
-      },
-    });
   }
 
   /**
    * Reset login attempts on successful login
    */
   static async resetLoginAttempts(userId: string): Promise<void> {
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        loginAttempts: 0,
-        lockedUntil: null,
-      },
-    });
+    try {
+      const attemptsKey = `login_attempts:${userId}`;
+      const lockKey = `bruteforce:${userId}`;
+      
+      await redis.del(attemptsKey);
+      await redis.del(lockKey);
+    } catch (error) {
+      console.error('Reset login attempts error:', error);
+    }
   }
 
   /**
@@ -278,7 +280,7 @@ export class AttackPrevention {
         success: true,
         ipAddress,
         userAgent: 'system',
-        metadata: { reason, durationMinutes },
+        metadata: JSON.stringify({ reason, durationMinutes }),
       },
     });
   }
@@ -385,10 +387,10 @@ export class AttackPrevention {
           success: false,
           ipAddress: currentIP,
           userAgent: currentUserAgent,
-          metadata: {
+          metadata: JSON.stringify({
             originalIP: session.ip,
             originalUserAgent: session.userAgent,
-          },
+          }),
         },
       });
 
