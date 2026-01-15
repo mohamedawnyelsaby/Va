@@ -1,74 +1,55 @@
+// src/app/api/hotels/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/options';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
-    const query = {
-      page: parseInt(searchParams.get('page') || '1'),
-      limit: parseInt(searchParams.get('limit') || '12'),
-      cityId: searchParams.get('cityId') || undefined,
-      minPrice: searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : undefined,
-      maxPrice: searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : undefined,
-      starRating: searchParams.get('starRating') ? parseInt(searchParams.get('starRating')!) : undefined,
-      sortBy: searchParams.get('sortBy') || 'rating',
-      order: (searchParams.get('order') || 'desc') as 'asc' | 'desc',
-      search: searchParams.get('search') || undefined,
-    };
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '12');
+    const cityId = searchParams.get('cityId');
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+    const starRating = searchParams.get('starRating');
+    const sortBy = searchParams.get('sortBy') || 'rating';
+    const order = searchParams.get('order') || 'desc';
 
-    const where: any = { isActive: true };
+    const where: any = {};
 
-    if (query.cityId) {
-      where.cityId = query.cityId;
+    if (cityId) {
+      where.cityId = cityId;
     }
 
-    if (query.starRating) {
-      where.starRating = { gte: query.starRating };
-    }
-
-    if (query.minPrice || query.maxPrice) {
+    if (minPrice || maxPrice) {
       where.pricePerNight = {};
-      if (query.minPrice) where.pricePerNight.gte = query.minPrice;
-      if (query.maxPrice) where.pricePerNight.lte = query.maxPrice;
+      if (minPrice) where.pricePerNight.gte = parseFloat(minPrice);
+      if (maxPrice) where.pricePerNight.lte = parseFloat(maxPrice);
     }
 
-    if (query.search) {
-      where.OR = [
-        { name: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } },
-        { address: { contains: query.search, mode: 'insensitive' } },
-      ];
+    if (starRating) {
+      where.starRating = parseInt(starRating);
     }
 
     const orderBy: any = {};
-    orderBy[query.sortBy] = query.order;
+    orderBy[sortBy] = order;
 
     const [hotels, total] = await Promise.all([
       prisma.hotel.findMany({
         where,
-        skip: (query.page - 1) * query.limit,
-        take: query.limit,
         orderBy,
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          shortDescription: true,
-          address: true,
-          latitude: true,
-          longitude: true,
-          starRating: true,
-          rating: true,
-          reviewCount: true,
-          pricePerNight: true,
-          currency: true,
-          thumbnail: true,
-          images: true,
-          amenities: true,
-          cityId: true,
-          isActive: true,
-          isFeatured: true,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          cityRelation: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              country: true,
+            },
+          },
         },
       }),
       prisma.hotel.count({ where }),
@@ -77,16 +58,86 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       hotels,
       pagination: {
-        page: query.page,
-        limit: query.limit,
+        page,
+        limit,
         total,
-        totalPages: Math.ceil(total / query.limit),
+        totalPages: Math.ceil(total / limit),
       },
     });
   } catch (error) {
     console.error('Hotels API error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch hotels' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+
+    // Validate required fields
+    const requiredFields = ['name', 'description', 'address', 'city', 'cityId', 'country', 'latitude', 'longitude', 'starRating', 'pricePerNight', 'currency'];
+    const missingFields = requiredFields.filter(field => !body[field]);
+
+    if (missingFields.length > 0) {
+      return NextResponse.json(
+        { error: `Missing required fields: ${missingFields.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    const hotel = await prisma.hotel.create({
+      data: {
+        name: body.name,
+        description: body.description,
+        shortDescription: body.shortDescription,
+        address: body.address,
+        city: body.city,
+        cityId: body.cityId,
+        country: body.country,
+        postalCode: body.postalCode,
+        latitude: parseFloat(body.latitude),
+        longitude: parseFloat(body.longitude),
+        starRating: parseInt(body.starRating),
+        amenities: body.amenities || [],
+        roomTypes: body.roomTypes || [],
+        pricePerNight: parseFloat(body.pricePerNight),
+        currency: body.currency,
+        images: body.images || [],
+        thumbnail: body.thumbnail,
+        isFeatured: body.isFeatured || false,
+        rating: body.rating || 0,
+        reviewCount: body.reviewCount || 0,
+        discountRate: body.discountRate || 0,
+      },
+      include: {
+        cityRelation: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            country: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(hotel, { status: 201 });
+  } catch (error) {
+    console.error('Create hotel error:', error);
+    return NextResponse.json(
+      { error: 'Failed to create hotel' },
       { status: 500 }
     );
   }
