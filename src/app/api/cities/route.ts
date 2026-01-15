@@ -2,6 +2,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
+// Helper function to generate slug from city name
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -12,7 +22,7 @@ export async function GET(request: NextRequest) {
     const country = searchParams.get('country');
     const popular = searchParams.get('popular') === 'true';
     
-    const where: any = { isActive: true };
+    const where: any = {};
     
     if (search) {
       where.OR = [
@@ -70,9 +80,25 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
+    // Generate slug from name
+    const slug = generateSlug(body.name);
+    
+    // Check if slug already exists
+    const existingCity = await prisma.city.findUnique({
+      where: { slug },
+    });
+    
+    if (existingCity) {
+      return NextResponse.json(
+        { error: 'A city with this name already exists' },
+        { status: 400 }
+      );
+    }
+    
     const city = await prisma.city.create({
       data: {
         name: body.name,
+        slug: slug,
         country: body.country,
         countryCode: body.countryCode,
         description: body.description,
