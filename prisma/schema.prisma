@@ -1,4 +1,4 @@
-// This is your Prisma schema file
+// prisma/schema.prisma
 
 generator client {
   provider = "prisma-client-js"
@@ -9,16 +9,53 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================
+// USER MODEL
+// ============================================
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String?
-  image     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String    @id @default(cuid())
+  email             String    @unique
+  name              String?
+  password          String?
+  image             String?
+  role              String    @default("user")
+  tier              String    @default("free")
+  phone             String?
+  bio               String?
+  
+  // Pi Network Integration
+  piWalletId        String?
+  piUsername        String?
+  piBalance         Float     @default(0)
+  piAccessToken     String?
+  
+  // Security
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?
+  backupCodes       String?
+  emailVerified     DateTime?
+  isActive          Boolean   @default(true)
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  bookings          Booking[]
+  reviews           Review[]
+  favorites         Favorite[]
+  payments          Payment[]
+  preferences       Preference?
+  securityLogs      SecurityLog[]
+  auditLogs         AuditLog[]
+  
+  @@index([email])
+  @@index([tier])
 }
 
+// ============================================
+// CITY MODEL
+// ============================================
 model City {
   id          String   @id @default(cuid())
   name        String
@@ -34,18 +71,26 @@ model City {
   isPopular   Boolean  @default(false)
   images      String[]
   thumbnail   String?
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
+  // Relations
   hotels      Hotel[]
   attractions Attraction[]
   restaurants Restaurant[]
+  
+  @@index([slug])
+  @@index([country])
 }
 
+// ============================================
+// HOTEL MODEL
+// ============================================
 model Hotel {
   id               String   @id @default(cuid())
   name             String
-  description      String
+  description      String   @db.Text
   shortDescription String?
   address          String
   city             String
@@ -65,16 +110,28 @@ model Hotel {
   rating           Float    @default(0)
   reviewCount      Int      @default(0)
   discountRate     Int      @default(0)
+  
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   
-  cityRelation     City     @relation(fields: [cityId], references: [id])
+  // Relations
+  cityRelation     City       @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  bookings         Booking[]
+  reviews          Review[]
+  favorites        Favorite[]
+  
+  @@index([cityId])
+  @@index([isFeatured])
+  @@index([rating])
 }
 
+// ============================================
+// ATTRACTION MODEL
+// ============================================
 model Attraction {
   id               String   @id @default(cuid())
   name             String
-  description      String
+  description      String   @db.Text
   shortDescription String?
   category         String
   subcategory      String?
@@ -95,16 +152,28 @@ model Attraction {
   isPopular        Boolean  @default(false)
   rating           Float    @default(0)
   reviewCount      Int      @default(0)
+  
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   
-  cityRelation     City     @relation(fields: [cityId], references: [id])
+  // Relations
+  cityRelation     City       @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  bookings         Booking[]
+  reviews          Review[]
+  favorites        Favorite[]
+  
+  @@index([cityId])
+  @@index([category])
+  @@index([isPopular])
 }
 
+// ============================================
+// RESTAURANT MODEL
+// ============================================
 model Restaurant {
   id                  String   @id @default(cuid())
   name                String
-  description         String
+  description         String   @db.Text
   cuisine             String[]
   priceRange          String
   address             String
@@ -122,8 +191,249 @@ model Restaurant {
   isFeatured          Boolean  @default(false)
   rating              Float    @default(0)
   reviewCount         Int      @default(0)
+  
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   
-  cityRelation        City     @relation(fields: [cityId], references: [id])
+  // Relations
+  cityRelation        City       @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  bookings            Booking[]
+  reviews             Review[]
+  favorites           Favorite[]
+  
+  @@index([cityId])
+  @@index([isFeatured])
+}
+
+// ============================================
+// BOOKING MODEL
+// ============================================
+model Booking {
+  id              String   @id @default(cuid())
+  userId          String
+  itemId          String
+  itemType        String   // hotel, attraction, restaurant
+  itemName        String
+  bookingCode     String   @unique @default(cuid())
+  
+  // Dates
+  startDate       DateTime
+  endDate         DateTime?
+  checkInDate     DateTime?
+  checkOutDate    DateTime?
+  
+  // Details
+  guests          Int      @default(1)
+  rooms           Int?     @default(1)
+  
+  // Pricing
+  totalPrice      Float
+  currency        String   @default("USD")
+  
+  // Status
+  status          String   @default("pending") // pending, confirmed, cancelled, completed
+  paymentStatus   String   @default("unpaid") // unpaid, paid, refunded
+  paymentMethod   String?
+  
+  // Additional Info
+  specialRequests String?  @db.Text
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments        Payment[]
+  
+  @@index([userId])
+  @@index([bookingCode])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// PAYMENT MODEL
+// ============================================
+model Payment {
+  id              String   @id @default(cuid())
+  userId          String
+  bookingId       String?
+  
+  // Amount
+  amount          Float
+  currency        String   @default("USD")
+  method          String   // credit_card, pi_network, paypal, stripe
+  
+  // Status
+  status          String   @default("pending") // pending, completed, failed, refunded
+  
+  // Pi Network Details
+  piPaymentId     String?
+  piAmount        Float?
+  piTxid          String?
+  
+  // Stripe Details
+  stripePaymentId String?
+  stripeCustomerId String?
+  
+  // PayPal Details
+  paypalOrderId   String?
+  
+  // Additional Info
+  metadata        Json?
+  errorMessage    String?  @db.Text
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  booking         Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([bookingId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// REVIEW MODEL
+// ============================================
+model Review {
+  id          String   @id @default(cuid())
+  userId      String
+  itemId      String
+  itemType    String   // hotel, attraction, restaurant
+  
+  // Review Content
+  rating      Int      // 1-5
+  title       String?
+  comment     String   @db.Text
+  images      String[]
+  
+  // Metadata
+  helpful     Int      @default(0)
+  unhelpful   Int      @default(0)
+  verified    Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([itemId])
+  @@index([itemType])
+  @@index([rating])
+  @@index([createdAt])
+}
+
+// ============================================
+// FAVORITE MODEL
+// ============================================
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  itemId    String
+  itemType  String   // hotel, attraction, restaurant
+  
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, itemId, itemType])
+  @@index([userId])
+  @@index([itemId])
+}
+
+// ============================================
+// PREFERENCE MODEL
+// ============================================
+model Preference {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  
+  // Localization
+  language              String   @default("en")
+  currency              String   @default("USD")
+  timezone              String   @default("UTC")
+  
+  // Notifications
+  emailNotifications    Boolean  @default(true)
+  pushNotifications     Boolean  @default(true)
+  smsNotifications      Boolean  @default(false)
+  marketingEmails       Boolean  @default(false)
+  
+  // Display
+  theme                 String   @default("system") // light, dark, system
+  
+  // Travel Preferences
+  preferredAirlines     String[]
+  dietaryRestrictions   String[]
+  accessibility         String[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// SECURITY LOG MODEL
+// ============================================
+model SecurityLog {
+  id            String   @id @default(cuid())
+  userId        String?
+  
+  // Action Details
+  action        String
+  success       Boolean
+  failureReason String?  @db.Text
+  
+  // Request Info
+  ipAddress     String
+  userAgent     String   @db.Text
+  
+  // Additional Data
+  metadata      Json?
+  
+  createdAt     DateTime @default(now())
+  
+  // Relations
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([ipAddress])
+}
+
+// ============================================
+// AUDIT LOG MODEL
+// ============================================
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  
+  // Action Details
+  action     String
+  entityType String?
+  entityId   String?
+  changes    String?  @db.Text
+  
+  // Request Info
+  ipAddress  String?
+  userAgent  String?  @db.Text
+  
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([entityType])
+  @@index([createdAt])
 }
