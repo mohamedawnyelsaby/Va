@@ -1,4 +1,4 @@
-// prisma/schema.prisma
+// prisma/schema.prisma - FIXED VERSION ✅
 
 generator client {
   provider = "prisma-client-js"
@@ -116,9 +116,9 @@ model Hotel {
   
   // Relations
   cityRelation     City       @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  bookings         Booking[]
-  reviews          Review[]
-  favorites        Favorite[]
+  bookings         Booking[]  @relation("HotelBookings")
+  reviews          Review[]   @relation("HotelReviews")
+  favorites        Favorite[] @relation("HotelFavorites")
   
   @@index([cityId])
   @@index([isFeatured])
@@ -158,9 +158,9 @@ model Attraction {
   
   // Relations
   cityRelation     City       @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  bookings         Booking[]
-  reviews          Review[]
-  favorites        Favorite[]
+  bookings         Booking[]  @relation("AttractionBookings")
+  reviews          Review[]   @relation("AttractionReviews")
+  favorites        Favorite[] @relation("AttractionFavorites")
   
   @@index([cityId])
   @@index([category])
@@ -197,9 +197,9 @@ model Restaurant {
   
   // Relations
   cityRelation        City       @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  bookings            Booking[]
-  reviews             Review[]
-  favorites           Favorite[]
+  bookings            Booking[]  @relation("RestaurantBookings")
+  reviews             Review[]   @relation("RestaurantReviews")
+  favorites           Favorite[] @relation("RestaurantFavorites")
   
   @@index([cityId])
   @@index([isFeatured])
@@ -231,8 +231,8 @@ model Booking {
   currency        String   @default("USD")
   
   // Status
-  status          String   @default("pending") // pending, confirmed, cancelled, completed
-  paymentStatus   String   @default("unpaid") // unpaid, paid, refunded
+  status          String   @default("pending")
+  paymentStatus   String   @default("unpaid")
   paymentMethod   String?
   
   // Additional Info
@@ -242,13 +242,24 @@ model Booking {
   updatedAt       DateTime @updatedAt
   
   // Relations
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   payments        Payment[]
+  
+  // Polymorphic relations
+  hotel           Hotel?       @relation("HotelBookings", fields: [hotelId], references: [id])
+  hotelId         String?
+  attraction      Attraction?  @relation("AttractionBookings", fields: [attractionId], references: [id])
+  attractionId    String?
+  restaurant      Restaurant?  @relation("RestaurantBookings", fields: [restaurantId], references: [id])
+  restaurantId    String?
   
   @@index([userId])
   @@index([bookingCode])
   @@index([status])
   @@index([createdAt])
+  @@index([hotelId])
+  @@index([attractionId])
+  @@index([restaurantId])
 }
 
 // ============================================
@@ -262,10 +273,10 @@ model Payment {
   // Amount
   amount          Float
   currency        String   @default("USD")
-  method          String   // credit_card, pi_network, paypal, stripe
+  method          String
   
   // Status
-  status          String   @default("pending") // pending, completed, failed, refunded
+  status          String   @default("pending")
   
   // Pi Network Details
   piPaymentId     String?
@@ -303,10 +314,10 @@ model Review {
   id          String   @id @default(cuid())
   userId      String
   itemId      String
-  itemType    String   // hotel, attraction, restaurant
+  itemType    String
   
   // Review Content
-  rating      Int      // 1-5
+  rating      Int
   title       String?
   comment     String   @db.Text
   images      String[]
@@ -322,11 +333,22 @@ model Review {
   // Relations
   user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
+  // Polymorphic relations
+  hotel           Hotel?       @relation("HotelReviews", fields: [hotelId], references: [id])
+  hotelId         String?
+  attraction      Attraction?  @relation("AttractionReviews", fields: [attractionId], references: [id])
+  attractionId    String?
+  restaurant      Restaurant?  @relation("RestaurantReviews", fields: [restaurantId], references: [id])
+  restaurantId    String?
+  
   @@index([userId])
   @@index([itemId])
   @@index([itemType])
   @@index([rating])
   @@index([createdAt])
+  @@index([hotelId])
+  @@index([attractionId])
+  @@index([restaurantId])
 }
 
 // ============================================
@@ -336,16 +358,27 @@ model Favorite {
   id        String   @id @default(cuid())
   userId    String
   itemId    String
-  itemType  String   // hotel, attraction, restaurant
+  itemType  String
   
   createdAt DateTime @default(now())
   
   // Relations
   user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
+  // Polymorphic relations
+  hotel           Hotel?       @relation("HotelFavorites", fields: [hotelId], references: [id])
+  hotelId         String?
+  attraction      Attraction?  @relation("AttractionFavorites", fields: [attractionId], references: [id])
+  attractionId    String?
+  restaurant      Restaurant?  @relation("RestaurantFavorites", fields: [restaurantId], references: [id])
+  restaurantId    String?
+  
   @@unique([userId, itemId, itemType])
   @@index([userId])
   @@index([itemId])
+  @@index([hotelId])
+  @@index([attractionId])
+  @@index([restaurantId])
 }
 
 // ============================================
@@ -367,7 +400,7 @@ model Preference {
   marketingEmails       Boolean  @default(false)
   
   // Display
-  theme                 String   @default("system") // light, dark, system
+  theme                 String   @default("system")
   
   // Travel Preferences
   preferredAirlines     String[]
