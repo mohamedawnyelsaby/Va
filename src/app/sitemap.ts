@@ -1,5 +1,5 @@
+// src/app/sitemap.ts
 import { MetadataRoute } from 'next';
-import { prisma } from '@/lib/db';
 
 const BASE_URL = 'https://va-pied.vercel.app';
 const LOCALES = ['en', 'ar', 'fr', 'es', 'de', 'it', 'ru', 'zh', 'ja', 'ko'];
@@ -36,33 +36,45 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   });
 
-  // Dynamic city pages
-  const cities = await prisma.city.findMany({
-    select: {
-      id: true,
-      slug: true,
-      updatedAt: true,
-    },
-  });
+  // Try to fetch dynamic cities, but don't fail if database is unavailable
+  try {
+    const { prisma } = await import('@/lib/db');
+    
+    const cities = await prisma.city.findMany({
+      select: {
+        id: true,
+        slug: true,
+        updatedAt: true,
+      },
+      take: 100, // Limit for build performance
+    });
 
-  cities.forEach((city) => {
-    LOCALES.forEach((locale) => {
-      sitemap.push({
-        url: `${BASE_URL}/${locale}/cities/${city.slug}`,
-        lastModified: city.updatedAt,
-        changeFrequency: 'weekly',
-        priority: 0.7,
-        alternates: {
-          languages: Object.fromEntries(
-            LOCALES.map((l) => [
-              l,
-              `${BASE_URL}/${l}/cities/${city.slug}`,
-            ])
-          ),
-        },
+    cities.forEach((city) => {
+      LOCALES.forEach((locale) => {
+        sitemap.push({
+          url: `${BASE_URL}/${locale}/cities/${city.slug}`,
+          lastModified: city.updatedAt,
+          changeFrequency: 'weekly',
+          priority: 0.7,
+          alternates: {
+            languages: Object.fromEntries(
+              LOCALES.map((l) => [
+                l,
+                `${BASE_URL}/${l}/cities/${city.slug}`,
+              ])
+            ),
+          },
+        });
       });
     });
-  });
+  } catch (error) {
+    console.warn('Unable to fetch cities for sitemap during build:', error);
+    // Continue with static pages only
+  }
 
   return sitemap;
 }
+
+// Make it dynamic to prevent build-time database requirement
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // Revalidate every hour
