@@ -2,11 +2,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
+// Mark as dynamic to prevent static generation
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('q') || '';
-    const type = searchParams.get('type'); // 'hotels', 'cities', 'attractions', 'restaurants', 'all'
+    const type = searchParams.get('type');
     const limit = parseInt(searchParams.get('limit') || '10');
 
     if (!query || query.length < 2) {
@@ -136,7 +140,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Calculate total results
     const totalResults = 
       results.hotels.length + 
       results.cities.length + 
