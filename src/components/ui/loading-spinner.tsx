@@ -1,12 +1,9 @@
-// src/components/ui/loading-spinner.tsx
-
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
-  fullScreen?: boolean;
 }
 
 const sizeClasses = {
@@ -18,10 +15,9 @@ const sizeClasses = {
 
 export function LoadingSpinner({ 
   size = 'md', 
-  className,
-  fullScreen = false 
+  className 
 }: LoadingSpinnerProps) {
-  const spinner = (
+  return (
     <Loader2 
       className={cn(
         'animate-spin text-primary',
@@ -29,31 +25,5 @@ export function LoadingSpinner({
         className
       )} 
     />
-  );
-
-  if (fullScreen) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
-        {spinner}
-      </div>
-    );
-  }
-
-  return spinner;
-}
-
-export function PageLoader() {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <LoadingSpinner size="lg" />
-    </div>
-  );
-}
-
-export function SectionLoader() {
-  return (
-    <div className="flex items-center justify-center py-12">
-      <LoadingSpinner size="md" />
-    </div>
   );
 }
