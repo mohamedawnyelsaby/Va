@@ -1,11 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    // Remove optimizeCss - it requires critters which is causing the error
     scrollRestoration: true,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
     ignoreDuringBuilds: true,
@@ -18,15 +17,13 @@ const nextConfig = {
       },
     ],
   },
-  // Enable standalone output for better deployment
-  output: 'standalone',
-  
-  // Disable swc minifier (as warned in logs)
   swcMinify: false,
-  
-  // Skip static generation for pages that need database
-  generateBuildId: async () => {
-    return 'va-travel-build-' + Date.now()
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': require('path').resolve(__dirname, './src'),
+    };
+    return config;
   },
 };
 
