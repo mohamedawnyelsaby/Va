@@ -54,7 +54,7 @@
     "@types/react-dom": "18.2.18",
     "eslint": "8.56.0",
     "eslint-config-next": "14.2.18",
-    "prisma": "5.8.0",
+    "prisma": "^5.8.0",
     "typescript": "5.3.3"
   }
 }
