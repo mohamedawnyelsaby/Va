@@ -27,6 +27,13 @@ const nextConfig = {
 
   outputFileTracingRoot: path.join(__dirname, './'),
 
+  // دعم لكل من Turbopack و Webpack
+  turbopack: {
+    resolveAlias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
