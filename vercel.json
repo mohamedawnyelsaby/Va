@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm install --save-dev typescript @types/react @types/node && prisma generate && next build",
+  "buildCommand": "npm install typescript @types/react @types/node --legacy-peer-deps && prisma generate && next build",
   "devCommand": "next dev",
   "installCommand": "npm install",
   "framework": "nextjs",
