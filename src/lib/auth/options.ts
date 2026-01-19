@@ -5,9 +5,10 @@ import GoogleProvider from 'next-auth/providers/google';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import { Adapter } from 'next-auth/adapters';
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: PrismaAdapter(prisma) as Adapter,
   session: {
     strategy: 'jwt',
   },
@@ -58,8 +59,8 @@ export const authOptions: NextAuthOptions = {
         return {
           id: user.id,
           email: user.email,
-          name: user.name,
-          image: user.image,
+          name: user.name ?? undefined,
+          image: user.image ?? undefined,
         };
       },
     }),

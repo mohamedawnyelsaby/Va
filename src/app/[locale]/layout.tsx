@@ -7,13 +7,14 @@ import { Footer } from '@/components/layout/footer';
 
 export default async function LocaleLayout({
   children,
-  params: { locale },
+  params,
 }: {
   children: ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   const session = await getServerSession(authOptions);
-
+  
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar locale={locale} session={session} />

@@ -6,15 +6,16 @@ const __dirname = path.dirname(__filename);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
+  
   experimental: {
     scrollRestoration: true,
   },
+
   typescript: {
     ignoreBuildErrors: false,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+
   images: {
     remotePatterns: [
       {
@@ -23,7 +24,9 @@ const nextConfig = {
       },
     ],
   },
-  swcMinify: false,
+
+  outputFileTracingRoot: path.join(__dirname, './'),
+
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,

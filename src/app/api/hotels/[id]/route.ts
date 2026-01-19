@@ -8,11 +8,13 @@ import { authOptions } from '@/lib/auth/options';
 // GET /api/hotels/[id] - Get single hotel
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     const hotel = await prisma.hotel.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         cityRelation: {
           select: {
@@ -46,9 +48,10 @@ export async function GET(
 // PATCH /api/hotels/[id] - Update hotel
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     
     if (!session) {
@@ -59,7 +62,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-
+    
     // Only update fields that exist in the schema
     const updateData: any = {};
     
@@ -79,7 +82,7 @@ export async function PATCH(
     if (body.reviewCount) updateData.reviewCount = body.reviewCount;
 
     const hotel = await prisma.hotel.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         cityRelation: {
@@ -106,9 +109,10 @@ export async function PATCH(
 // DELETE /api/hotels/[id] - Delete hotel
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     
     if (!session) {
@@ -120,7 +124,7 @@ export async function DELETE(
 
     // Hard delete since isActive doesn't exist in schema
     await prisma.hotel.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({

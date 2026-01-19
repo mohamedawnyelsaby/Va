@@ -7,10 +7,12 @@ import { PiIntegration } from '@/components/sections/pi-integration';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default async function HomePage({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
+  
   return (
     <div className="flex min-h-screen flex-col">
       <Suspense fallback={<LoadingSpinner />}>
