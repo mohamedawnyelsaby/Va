@@ -1,0 +1,24 @@
+{
+  "version": "2.0",
+  "name": "VA Hotel Booking",
+  "slug": "va-70d9714fc5ede62a",
+  "description": "Hotel booking platform with Pi Network payments",
+  "url": "https://va-pied.vercel.app",
+  "iconUrl": "https://va-pied.vercel.app/logo.png",
+
+  "developer": {
+    "name": "Mohamed Awny",
+    "email": "mohamed.awny.00000@gmail.com"
+  },
+
+  "scopes": ["username", "payments"],
+  "sandbox": true,
+
+  "appId": "va-70d9714fc5ede62a",
+  "walletAddress": "GAGPNHEKZ5XIWBPPHXG7HKLRU525G2KH4F6DLHKAAUDPQ5W6MFM5ROEH",
+
+  "paymentWebhookUrl": "",
+  "redirectUris": [
+    "https://va-pied.vercel.app"
+  ]
+}
