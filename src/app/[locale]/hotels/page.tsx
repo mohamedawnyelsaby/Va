@@ -190,7 +190,7 @@ export default function HotelsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {hotels.map((hotel) => (
                 <Card key={hotel.id} className="group overflow-hidden hover:shadow-xl transition-all">
-                  <Link href={'/hotels/' + hotel.id}>
+                  <Link href={`/en/hotels/${hotel.id}`}>
                     <div className="relative h-48 overflow-hidden">
                       <Image
                         src={hotel.thumbnail || '/placeholder-hotel.jpg'}
