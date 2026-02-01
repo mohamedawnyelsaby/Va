@@ -17,6 +17,7 @@ const protectedPaths = [
 
 const publicPaths = [
   '/api/auth',
+  '/api/seed',
   '/auth/signin',
   '/auth/signup',
   '/auth/error',
