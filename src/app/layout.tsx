@@ -111,6 +111,8 @@ export default function RootLayout({
         <link rel="manifest" href="/site.webmanifest" />
         <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#3b82f6" />
         <meta name="msapplication-TileColor" content="#3b82f6" />
+        
+        {/* Theme Script */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -124,14 +126,20 @@ export default function RootLayout({
             `,
           }}
         />
-      </head>
-      <body className="min-h-screen bg-background font-sans antialiased">
-        {/* Pi Network SDK */}
+        
+        {/* ⭐ PI NETWORK SDK - CRITICAL FOR STEP 10 */}
         <Script 
           src="https://sdk.minepi.com/pi-sdk.js" 
           strategy="beforeInteractive"
+          onLoad={() => {
+            console.log('✅ Pi SDK Script Loaded');
+          }}
+          onError={() => {
+            console.error('❌ Failed to load Pi SDK script');
+          }}
         />
-        
+      </head>
+      <body className="min-h-screen bg-background font-sans antialiased">
         <Providers>
           {children}
         </Providers>
