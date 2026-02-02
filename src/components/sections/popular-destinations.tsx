@@ -6,7 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, Star, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import Image from 'next/image';
 
 const destinations = [
   {
@@ -84,11 +83,11 @@ export function PopularDestinations({ locale }: { locale: string }) {
           {destinations.map((destination) => (
             <Card key={destination.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300">
               <div className="relative h-64 overflow-hidden">
-                <Image
+                <img
                   src={destination.image}
                   alt={destination.name}
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-300"
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  loading={destination.id <= 3 ? 'eager' : 'lazy'}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4 text-white">
