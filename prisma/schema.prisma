@@ -5,8 +5,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ============================================
@@ -22,24 +23,24 @@ model User {
   tier              String    @default("free")
   phone             String?
   bio               String?
-  
+
   // Pi Network Integration
   piWalletId        String?
   piUsername        String?
   piBalance         Float     @default(0)
   piAccessToken     String?
-  
+
   // Security
   twoFactorEnabled  Boolean   @default(false)
   twoFactorSecret   String?
   backupCodes       String?
   emailVerified     DateTime?
   isActive          Boolean   @default(true)
-  
+
   // Timestamps
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
-  
+
   // Relations
   bookings          Booking[]
   reviews           Review[]
@@ -48,7 +49,7 @@ model User {
   preferences       Preference?
   securityLogs      SecurityLog[]
   auditLogs         AuditLog[]
-  
+
   @@index([email])
   @@index([tier])
 }
@@ -71,15 +72,15 @@ model City {
   isPopular   Boolean  @default(false)
   images      String[]
   thumbnail   String?
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   // Relations
   hotels      Hotel[]
   attractions Attraction[]
   restaurants Restaurant[]
-  
+
   @@index([slug])
   @@index([country])
 }
@@ -110,16 +111,16 @@ model Hotel {
   rating           Float    @default(0)
   reviewCount      Int      @default(0)
   discountRate     Int      @default(0)
-  
+
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  
+
   // Relations
   cityRelation     City       @relation(fields: [cityId], references: [id], onDelete: Cascade)
   bookings         Booking[]  @relation("HotelBookings")
   reviews          Review[]   @relation("HotelReviews")
   favorites        Favorite[] @relation("HotelFavorites")
-  
+
   @@index([cityId])
   @@index([isFeatured])
   @@index([rating])
@@ -152,16 +153,16 @@ model Attraction {
   isPopular        Boolean  @default(false)
   rating           Float    @default(0)
   reviewCount      Int      @default(0)
-  
+
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  
+
   // Relations
   cityRelation     City       @relation(fields: [cityId], references: [id], onDelete: Cascade)
   bookings         Booking[]  @relation("AttractionBookings")
   reviews          Review[]   @relation("AttractionReviews")
   favorites        Favorite[] @relation("AttractionFavorites")
-  
+
   @@index([cityId])
   @@index([category])
   @@index([isPopular])
@@ -191,16 +192,16 @@ model Restaurant {
   isFeatured          Boolean  @default(false)
   rating              Float    @default(0)
   reviewCount         Int      @default(0)
-  
+
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
-  
+
   // Relations
   cityRelation        City       @relation(fields: [cityId], references: [id], onDelete: Cascade)
   bookings            Booking[]  @relation("RestaurantBookings")
   reviews             Review[]   @relation("RestaurantReviews")
   favorites           Favorite[] @relation("RestaurantFavorites")
-  
+
   @@index([cityId])
   @@index([isFeatured])
 }
@@ -212,39 +213,39 @@ model Booking {
   id              String   @id @default(cuid())
   userId          String
   itemId          String
-  itemType        String   // hotel, attraction, restaurant
+  itemType        String
   itemName        String
   bookingCode     String   @unique @default(cuid())
-  
+
   // Dates
   startDate       DateTime
   endDate         DateTime?
   checkInDate     DateTime?
   checkOutDate    DateTime?
-  
+
   // Details
   guests          Int      @default(1)
   rooms           Int?     @default(1)
-  
+
   // Pricing
   totalPrice      Float
   currency        String   @default("USD")
-  
+
   // Status
   status          String   @default("pending")
   paymentStatus   String   @default("unpaid")
   paymentMethod   String?
-  
+
   // Additional Info
   specialRequests String?  @db.Text
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   // Relations
   user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   payments        Payment[]
-  
+
   // Polymorphic relations
   hotel           Hotel?       @relation("HotelBookings", fields: [hotelId], references: [id])
   hotelId         String?
@@ -252,7 +253,7 @@ model Booking {
   attractionId    String?
   restaurant      Restaurant?  @relation("RestaurantBookings", fields: [restaurantId], references: [id])
   restaurantId    String?
-  
+
   @@index([userId])
   @@index([bookingCode])
   @@index([status])
@@ -269,38 +270,38 @@ model Payment {
   id              String   @id @default(cuid())
   userId          String
   bookingId       String?
-  
+
   // Amount
   amount          Float
   currency        String   @default("USD")
   method          String
-  
+
   // Status
   status          String   @default("pending")
-  
+
   // Pi Network Details
   piPaymentId     String?
   piAmount        Float?
   piTxid          String?
-  
+
   // Stripe Details
   stripePaymentId String?
   stripeCustomerId String?
-  
+
   // PayPal Details
   paypalOrderId   String?
-  
+
   // Additional Info
   metadata        Json?
   errorMessage    String?  @db.Text
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   // Relations
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   booking         Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-  
+
   @@index([userId])
   @@index([bookingId])
   @@index([status])
@@ -315,24 +316,24 @@ model Review {
   userId      String
   itemId      String
   itemType    String
-  
+
   // Review Content
   rating      Int
   title       String?
   comment     String   @db.Text
   images      String[]
-  
+
   // Metadata
   helpful     Int      @default(0)
   unhelpful   Int      @default(0)
   verified    Boolean  @default(false)
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   // Relations
   user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   // Polymorphic relations
   hotel           Hotel?       @relation("HotelReviews", fields: [hotelId], references: [id])
   hotelId         String?
@@ -340,7 +341,7 @@ model Review {
   attractionId    String?
   restaurant      Restaurant?  @relation("RestaurantReviews", fields: [restaurantId], references: [id])
   restaurantId    String?
-  
+
   @@index([userId])
   @@index([itemId])
   @@index([itemType])
@@ -359,12 +360,12 @@ model Favorite {
   userId    String
   itemId    String
   itemType  String
-  
+
   createdAt DateTime @default(now())
-  
+
   // Relations
   user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   // Polymorphic relations
   hotel           Hotel?       @relation("HotelFavorites", fields: [hotelId], references: [id])
   hotelId         String?
@@ -372,7 +373,7 @@ model Favorite {
   attractionId    String?
   restaurant      Restaurant?  @relation("RestaurantFavorites", fields: [restaurantId], references: [id])
   restaurantId    String?
-  
+
   @@unique([userId, itemId, itemType])
   @@index([userId])
   @@index([itemId])
@@ -387,29 +388,29 @@ model Favorite {
 model Preference {
   id                    String   @id @default(cuid())
   userId                String   @unique
-  
+
   // Localization
   language              String   @default("en")
   currency              String   @default("USD")
   timezone              String   @default("UTC")
-  
+
   // Notifications
   emailNotifications    Boolean  @default(true)
   pushNotifications     Boolean  @default(true)
   smsNotifications      Boolean  @default(false)
   marketingEmails       Boolean  @default(false)
-  
+
   // Display
   theme                 String   @default("system")
-  
+
   // Travel Preferences
   preferredAirlines     String[]
   dietaryRestrictions   String[]
   accessibility         String[]
-  
+
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
-  
+
   // Relations
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -420,24 +421,24 @@ model Preference {
 model SecurityLog {
   id            String   @id @default(cuid())
   userId        String?
-  
+
   // Action Details
   action        String
   success       Boolean
   failureReason String?  @db.Text
-  
+
   // Request Info
   ipAddress     String
   userAgent     String   @db.Text
-  
+
   // Additional Data
   metadata      Json?
-  
+
   createdAt     DateTime @default(now())
-  
+
   // Relations
   user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+
   @@index([userId])
   @@index([action])
   @@index([createdAt])
@@ -450,22 +451,22 @@ model SecurityLog {
 model AuditLog {
   id         String   @id @default(cuid())
   userId     String?
-  
+
   // Action Details
   action     String
   entityType String?
   entityId   String?
   changes    String?  @db.Text
-  
+
   // Request Info
   ipAddress  String?
   userAgent  String?  @db.Text
-  
+
   createdAt  DateTime @default(now())
-  
+
   // Relations
   user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+
   @@index([userId])
   @@index([entityType])
   @@index([createdAt])
