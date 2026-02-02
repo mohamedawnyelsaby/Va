@@ -231,7 +231,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
   const paymentTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   // ============================================
-  // SDK Initialization
+  // SDK Initialization - FIXED VERSION
   // ============================================
 
   useEffect(() => {
@@ -253,8 +253,11 @@ export function PiProvider({ children }: { children: ReactNode }) {
         initializationAttempts.current++;
         
         if (initializationAttempts.current >= maxInitAttempts) {
-          console.warn('⚠️ Pi SDK not available after multiple attempts');
-          console.warn('💡 This app needs to be opened in Pi Browser');
+          console.error('❌ CRITICAL: Pi SDK Failed to load!');
+          console.warn('💡 Fix: Make sure:');
+          console.warn('  1. Pi SDK script is in layout.tsx <head>: <Script src="https://sdk.minepi.com/pi-sdk.js" />');
+          console.warn('  2. NEXT_PUBLIC_PI_SANDBOX=true in .env.local');
+          console.warn('  3. You are using Pi Browser or Pi Network testnet');
           setSdkStatus('unavailable');
           if (sdkCheckInterval.current) {
             clearInterval(sdkCheckInterval.current);
@@ -270,6 +273,8 @@ export function PiProvider({ children }: { children: ReactNode }) {
       try {
         const isSandbox = process.env.NEXT_PUBLIC_PI_SANDBOX === 'true';
         
+        console.log('🔧 Initializing Pi SDK...');
+        
         Pi.init({ 
           version: "2.0",
           sandbox: isSandbox
@@ -277,7 +282,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
 
         setSdkStatus('available');
         console.log('✅ Pi Network SDK initialized successfully');
-        console.log(`🌍 Environment: ${isSandbox ? 'SANDBOX' : 'PRODUCTION'}`);
+        console.log(`🌍 Environment: ${isSandbox ? 'SANDBOX (TEST MODE)' : 'PRODUCTION'}`);
 
         // Clear interval once initialized
         if (sdkCheckInterval.current) {
@@ -296,8 +301,8 @@ export function PiProvider({ children }: { children: ReactNode }) {
     // Initial check
     initializePiSDK();
 
-    // Set up interval to keep checking
-    sdkCheckInterval.current = setInterval(initializePiSDK, 500);
+    // Set up interval to keep checking (faster check for quicker detection)
+    sdkCheckInterval.current = setInterval(initializePiSDK, 300);
 
     // Cleanup
     return () => {
