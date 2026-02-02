@@ -131,12 +131,6 @@ export default function RootLayout({
         <Script 
           src="https://sdk.minepi.com/pi-sdk.js" 
           strategy="beforeInteractive"
-          onLoad={() => {
-            console.log('✅ Pi SDK Script Loaded');
-          }}
-          onError={() => {
-            console.error('❌ Failed to load Pi SDK script');
-          }}
         />
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
