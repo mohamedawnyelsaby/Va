@@ -1,17 +1,25 @@
 // src/app/components/PaymentFlow.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePi } from '@/components/providers/pi-provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pi, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 
 export default function PaymentFlow({ booking }: { booking: any }) {
-  const { isAvailable, createPayment } = usePi();
+  const { isAvailable, createPayment, sdkStatus } = usePi();
   const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Debug logging to see what's happening
+  useEffect(() => {
+    console.log('🔍 PaymentFlow Debug Info:');
+    console.log('  - SDK Status:', sdkStatus);
+    console.log('  - Is Available:', isAvailable);
+    console.log('  - Window.Pi exists:', typeof window !== 'undefined' && !!(window as any).Pi);
+  }, [sdkStatus, isAvailable]);
 
   const handlePiPayment = async () => {
     if (!isAvailable) {
@@ -61,7 +69,7 @@ export default function PaymentFlow({ booking }: { booking: any }) {
 
             setStatus('success');
             setLoading(false);
-            console.log('Payment complete! Cashback:', result.cashback);
+            console.log('✅ Payment complete! Cashback:', result.cashback);
           },
 
           onCancel: () => {
@@ -145,6 +153,13 @@ export default function PaymentFlow({ booking }: { booking: any }) {
                 ⚠️ Pi SDK not available. Please open in Pi Browser.
               </p>
             )}
+
+            {/* Debug Info - Remove in Production */}
+            <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+              <p className="text-gray-700 dark:text-gray-300">
+                SDK Status: <strong>{sdkStatus}</strong> | Available: <strong>{isAvailable ? '✅' : '❌'}</strong>
+              </p>
+            </div>
           </CardContent>
         </Card>
 
