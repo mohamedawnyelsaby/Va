@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://va.up.railway.app'),
+  metadataBase: new URL('https://va-pied.vercel.app'),
   alternates: {
     canonical: '/',
     languages: {
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://va.up.railway.app',
+    url: 'https://va-pied.vercel.app',
     title: 'Va Travel - Global Travel & Booking Platform',
     description: 'AI-powered global travel platform for hotel bookings, tourist attractions, and local services worldwide with Pi Network integration.',
     siteName: 'Va Travel',
@@ -112,28 +112,13 @@ export default function RootLayout({
         <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#3b82f6" />
         <meta name="msapplication-TileColor" content="#3b82f6" />
         
-        {/* Theme Script */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.documentElement.classList.add('dark')
-                } else {
-                  document.documentElement.classList.remove('dark')
-                }
-              } catch (_) {}
-            `,
-          }}
-        />
-        
         {/* ⭐ PI NETWORK SDK - CRITICAL FOR STEP 10 */}
         <Script 
           src="https://sdk.minepi.com/pi-sdk.js" 
           strategy="beforeInteractive"
         />
       </head>
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
         <Providers>
           {children}
         </Providers>
