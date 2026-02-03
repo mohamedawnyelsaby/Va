@@ -1,6 +1,8 @@
+// src/app/[locale]/hotels/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +19,9 @@ import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 
 export default function HotelsPage() {
+  const params = useParams();
+  const locale = params.locale as string || 'en';
+  
   const [hotels, setHotels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,6 +57,7 @@ export default function HotelsPage() {
       const response = await fetch('/api/hotels?' + params);
       const data = await response.json();
 
+      console.log('Hotels data:', data); // للتأكد من البيانات
       setHotels(data.hotels || []);
       setTotalPages(data.pagination?.totalPages || 1);
     } catch (error) {
@@ -182,7 +188,16 @@ export default function HotelsPage() {
         ) : hotels.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground">No hotels found. Try adjusting your filters.</p>
+              <p className="text-muted-foreground mb-4">No hotels found.</p>
+              <p className="text-sm text-muted-foreground">
+                يبدو أن قاعدة البيانات فارغة. تحتاج لإضافة بيانات أولاً.
+              </p>
+              <Button 
+                onClick={() => window.location.href = '/api/seed'} 
+                className="mt-4"
+              >
+                إضافة بيانات تجريبية
+              </Button>
             </CardContent>
           </Card>
         ) : (
@@ -190,7 +205,7 @@ export default function HotelsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {hotels.map((hotel) => (
                 <Card key={hotel.id} className="group overflow-hidden hover:shadow-xl transition-all">
-                  <Link href={`/en/hotels/${hotel.id}`}>
+                  <Link href={`/${locale}/hotels/${hotel.id}`}>
                     <div className="relative h-48 overflow-hidden">
                       <Image
                         src={hotel.thumbnail || '/placeholder-hotel.jpg'}
@@ -202,6 +217,7 @@ export default function HotelsPage() {
                         className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100"
                         onClick={(e) => {
                           e.preventDefault();
+                          // Handle favorite
                         }}
                       >
                         <Heart className="h-4 w-4" />
@@ -215,20 +231,20 @@ export default function HotelsPage() {
 
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-2">
-                        <div>
+                        <div className="flex-1">
                           <h3 className="font-semibold text-lg mb-1 line-clamp-1">
                             {hotel.name}
                           </h3>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <MapPin className="h-3 w-3" />
-                            <span>{hotel.city?.name}, {hotel.city?.country}</span>
+                            <span>{hotel.city?.name || hotel.city}, {hotel.city?.country || hotel.country}</span>
                           </div>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2 mb-3">
                         <div className="flex">
-                          {Array.from({ length: hotel.starRating }).map((_, i) => (
+                          {Array.from({ length: hotel.starRating || 0 }).map((_, i) => (
                             <Star
                               key={i}
                               className="h-4 w-4 fill-yellow-400 text-yellow-400"
@@ -236,9 +252,9 @@ export default function HotelsPage() {
                           ))}
                         </div>
                         <div className="flex items-center gap-1">
-                          <span className="font-semibold">{hotel.rating?.toFixed(1)}</span>
+                          <span className="font-semibold">{hotel.rating?.toFixed(1) || '0.0'}</span>
                           <span className="text-sm text-muted-foreground">
-                            ({hotel.reviewCount} reviews)
+                            ({hotel.reviewCount || 0} reviews)
                           </span>
                         </div>
                       </div>
