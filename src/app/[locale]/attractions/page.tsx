@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,9 @@ import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 
 export default function AttractionsPage() {
+  const params = useParams();
+  const locale = params.locale as string || 'en';
+  
   const [attractions, setAttractions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -201,7 +205,7 @@ export default function AttractionsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {attractions.map((attraction) => (
                 <Card key={attraction.id} className="group overflow-hidden hover:shadow-xl transition-all">
-                  <Link href={`/attractions/${attraction.id}`}>
+                  <Link href={`/${locale}/attractions/${attraction.id}`}>
                     <div className="relative h-48 overflow-hidden">
                       <Image
                         src={attraction.thumbnail || '/placeholder-attraction.jpg'}
@@ -213,7 +217,6 @@ export default function AttractionsPage() {
                         className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100"
                         onClick={(e) => {
                           e.preventDefault();
-                          // Handle favorite
                         }}
                       >
                         <Heart className="h-4 w-4" />
@@ -235,15 +238,15 @@ export default function AttractionsPage() {
 
                       <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
                         <MapPin className="h-3 w-3" />
-                        <span>{attraction.city?.name}, {attraction.city?.country}</span>
+                        <span>{attraction.city?.name || attraction.city}, {attraction.city?.country || attraction.country}</span>
                       </div>
 
                       <div className="flex items-center gap-4 mb-3">
                         <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-semibold">{attraction.rating?.toFixed(1)}</span>
+                          <span className="font-semibold">{attraction.rating?.toFixed(1) || '0.0'}</span>
                           <span className="text-sm text-muted-foreground">
-                            ({attraction.reviewCount})
+                            ({attraction.reviewCount || 0})
                           </span>
                         </div>
                         {attraction.duration && (
