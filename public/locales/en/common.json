@@ -1,3 +1,18 @@
 {
-  "welcome": "Welcome"
+  "welcome": "Welcome",
+  "search": {
+    "title": "Search",
+    "placeholder": "Search for hotels, cities, attractions...",
+    "searching": "Searching...",
+    "results": "Search Results",
+    "noResults": "No results found",
+    "hotels": "Hotels",
+    "cities": "Cities",
+    "attractions": "Attractions",
+    "restaurants": "Restaurants",
+    "totalResults": "Total Results",
+    "perNight": "per night",
+    "viewDetails": "View Details",
+    "tryAgain": "Please try searching for something else"
+  }
 }
