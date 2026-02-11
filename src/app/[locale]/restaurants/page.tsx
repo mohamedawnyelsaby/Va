@@ -329,10 +329,3 @@ export default function RestaurantsPage() {
     </div>
   );
 }
-```
-
----
-
-**حط الكود ده في:**
-```
-src/app/[locale]/restaurants/page.tsx
