@@ -1,3 +1,18 @@
 {
-  "welcome": "مرحبا"
+  "welcome": "مرحبا",
+  "search": {
+    "title": "بحث",
+    "placeholder": "ابحث عن فنادق، مدن، معالم سياحية...",
+    "searching": "جاري البحث...",
+    "results": "نتائج البحث",
+    "noResults": "لا توجد نتائج",
+    "hotels": "الفنادق",
+    "cities": "المدن",
+    "attractions": "المعالم السياحية",
+    "restaurants": "المطاعم",
+    "totalResults": "إجمالي النتائج",
+    "perNight": "لكل ليلة",
+    "viewDetails": "عرض التفاصيل",
+    "tryAgain": "يرجى البحث عن شيء آخر"
+  }
 }
