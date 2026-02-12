@@ -1,4 +1,3 @@
-// src/app/[locale]/auth/signin/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -9,47 +8,86 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Mail, Lock, Eye, EyeOff, Pi } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Pi, User } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
-export default function SignInPage() {
+export default function SignUpPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: 'Error',
+        description: 'Passwords do not match',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      toast({
+        title: 'Error',
+        description: 'Password must be at least 8 characters',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const result = await signIn('credentials', {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Account created successfully',
+      });
+
+      // Auto sign in after registration
+      const signInResult = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
         redirect: false,
       });
 
-      if (result?.error) {
-        toast({
-          title: 'Error',
-          description: 'Invalid email or password',
-          variant: 'destructive',
-        });
+      if (signInResult?.error) {
+        router.push('/auth/signin');
       } else {
-        toast({
-          title: 'Success',
-          description: 'Logged in successfully',
-        });
         router.push('/dashboard');
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Something went wrong',
+        description: error.message || 'Something went wrong',
         variant: 'destructive',
       });
     } finally {
@@ -57,45 +95,60 @@ export default function SignInPage() {
     }
   };
 
-  const handlePiNetworkLogin = async () => {
+  const handlePiNetworkSignup = async () => {
     try {
-      // Implement Pi Network authentication
       toast({
         title: 'Coming Soon',
-        description: 'Pi Network login will be available soon',
+        description: 'Pi Network signup will be available soon',
       });
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Pi Network login failed',
+        description: 'Pi Network signup failed',
         variant: 'destructive',
       });
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleSignup = async () => {
     try {
       await signIn('google', { callbackUrl: '/dashboard' });
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Google login failed',
+        description: 'Google signup failed',
         variant: 'destructive',
       });
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-8">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome Back</CardTitle>
+          <CardTitle className="text-2xl">Create Account</CardTitle>
           <CardDescription>
-            Sign in to your Va Travel account
+            Join Va Travel and start your journey
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="John Doe"
+                  className="pl-10"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -124,6 +177,7 @@ export default function SignInPage() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
+                  minLength={8}
                 />
                 <button
                   type="button"
@@ -137,17 +191,52 @@ export default function SignInPage() {
                   )}
                 </button>
               </div>
+              <p className="text-xs text-gray-500">
+                Must be at least 8 characters
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  className="pl-10 pr-10"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-3"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? 'Creating account...' : 'Create Account'}
             </Button>
 
-            <div className="text-center">
-              <a href="#" className="text-sm text-blue-600 hover:underline">
-                Forgot password?
+            <p className="text-xs text-center text-gray-500">
+              By signing up, you agree to our{' '}
+              <a href="/terms" className="text-blue-600 hover:underline">
+                Terms of Service
+              </a>{' '}
+              and{' '}
+              <a href="/privacy" className="text-blue-600 hover:underline">
+                Privacy Policy
               </a>
-            </div>
+            </p>
           </form>
 
           <Separator className="my-6" />
@@ -157,7 +246,7 @@ export default function SignInPage() {
               type="button"
               variant="outline"
               className="w-full"
-              onClick={handleGoogleLogin}
+              onClick={handleGoogleSignup}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path
@@ -177,24 +266,24 @@ export default function SignInPage() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Continue with Google
+              Sign up with Google
             </Button>
 
             <Button
               type="button"
               variant="outline"
               className="w-full"
-              onClick={handlePiNetworkLogin}
+              onClick={handlePiNetworkSignup}
             >
               <Pi className="mr-2 h-4 w-4" />
-              Continue with Pi Network
+              Sign up with Pi Network
             </Button>
           </div>
 
           <div className="mt-6 text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <a href="/signup" className="text-blue-600 hover:underline">
-              Sign up
+            Already have an account?{' '}
+            <a href="/auth/signin" className="text-blue-600 hover:underline">
+              Sign in
             </a>
           </div>
         </CardContent>
