@@ -21,8 +21,8 @@ import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 
 export default function AttractionsPage() {
-  const params = useParams();
-  const locale = params.locale as string || 'en';
+  const routeParams = useParams();
+  const locale = routeParams.locale as string || 'en';
   
   const [attractions, setAttractions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,17 +59,17 @@ export default function AttractionsPage() {
   const fetchAttractions = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
+      const queryParams = new URLSearchParams({
         page: currentPage.toString(),
         limit: '12',
         ...filters,
       });
 
       if (searchTerm) {
-        params.append('search', searchTerm);
+        queryParams.append('search', searchTerm);
       }
 
-      const response = await fetch(`/api/attractions?${params}`);
+      const response = await fetch(`/api/attractions?${queryParams}`);
       const data = await response.json();
 
       setAttractions(data.attractions || []);
@@ -90,7 +90,6 @@ export default function AttractionsPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Discover Amazing Attractions</h1>
           <p className="text-muted-foreground">
@@ -98,7 +97,6 @@ export default function AttractionsPage() {
           </p>
         </div>
 
-        {/* Search & Filters */}
         <Card className="mb-8">
           <CardContent className="pt-6">
             <form onSubmit={handleSearch} className="space-y-4">
@@ -189,7 +187,6 @@ export default function AttractionsPage() {
           </CardContent>
         </Card>
 
-        {/* Results */}
         {loading ? (
           <div className="flex justify-center py-12">
             <LoadingSpinner size="lg" />
@@ -215,9 +212,7 @@ export default function AttractionsPage() {
                       />
                       <button
                         className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100"
-                        onClick={(e) => {
-                          e.preventDefault();
-                        }}
+                        onClick={(e) => e.preventDefault()}
                       >
                         <Heart className="h-4 w-4" />
                       </button>
@@ -281,7 +276,6 @@ export default function AttractionsPage() {
               ))}
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center gap-2 mt-8">
                 <Button
