@@ -19,9 +19,9 @@ import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 
 export default function HotelsPage() {
-  const params = useParams();
-  const locale = params.locale as string || 'en';
-  
+  const routeParams = useParams();
+  const locale = routeParams.locale as string || 'en';
+
   const [hotels, setHotels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,20 +44,19 @@ export default function HotelsPage() {
   const fetchHotels = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
+      const queryParams = new URLSearchParams({
         page: currentPage.toString(),
         limit: '12',
         ...filters,
       });
 
       if (searchTerm) {
-        params.append('search', searchTerm);
+        queryParams.append('search', searchTerm);
       }
 
-      const response = await fetch('/api/hotels?' + params);
+      const response = await fetch(`/api/hotels?${queryParams}`);
       const data = await response.json();
 
-      console.log('Hotels data:', data); // للتأكد من البيانات
       setHotels(data.hotels || []);
       setTotalPages(data.pagination?.totalPages || 1);
     } catch (error) {
@@ -188,16 +187,7 @@ export default function HotelsPage() {
         ) : hotels.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground mb-4">No hotels found.</p>
-              <p className="text-sm text-muted-foreground">
-                يبدو أن قاعدة البيانات فارغة. تحتاج لإضافة بيانات أولاً.
-              </p>
-              <Button 
-                onClick={() => window.location.href = '/api/seed'} 
-                className="mt-4"
-              >
-                إضافة بيانات تجريبية
-              </Button>
+              <p className="text-muted-foreground">No hotels found. Try adjusting your filters.</p>
             </CardContent>
           </Card>
         ) : (
@@ -215,10 +205,7 @@ export default function HotelsPage() {
                       />
                       <button
                         className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          // Handle favorite
-                        }}
+                        onClick={(e) => e.preventDefault()}
                       >
                         <Heart className="h-4 w-4" />
                       </button>
