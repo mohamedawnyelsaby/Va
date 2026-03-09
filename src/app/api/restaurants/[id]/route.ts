@@ -5,13 +5,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   try {
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: params.id },
-      include: {
-        cityRelation: { select: { id: true, name: true, country: true } },
-      },
     });
     if (!restaurant) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(restaurant);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch restaurant' }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }

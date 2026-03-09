@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Star, DollarSign, Utensils } from 'lucide-react';
@@ -12,21 +11,27 @@ export default function RestaurantDetailPage() {
   const router = useRouter();
   const [restaurant, setRestaurant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetch(`/api/restaurants/${params.id}`)
       .then(r => r.json())
-      .then(d => { setRestaurant(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(d => {
+        if (d.error) { setError(d.error); setLoading(false); return; }
+        setRestaurant(d);
+        setLoading(false);
+      })
+      .catch(e => { setError(e.message); setLoading(false); });
   }, [params.id]);
 
-  if (loading) return <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>;
+  if (loading) return <div className="flex justify-center py-20 text-xl">Loading...</div>;
+  if (error) return <div className="text-center py-20"><p className="text-red-500 mb-4">Error: {error}</p><Button onClick={() => router.back()}>Go Back</Button></div>;
   if (!restaurant) return <div className="text-center py-20"><p>Restaurant not found</p><Button onClick={() => router.back()}>Go Back</Button></div>;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="relative h-96">
-        <Image src={restaurant.thumbnail || '/placeholder-restaurant.jpg'} alt={restaurant.name} fill className="object-cover" />
+        <Image src={restaurant.thumbnail || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800'} alt={restaurant.name} fill className="object-cover" />
         <div className="absolute inset-0 bg-black/40" />
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
           <h1 className="text-4xl font-bold mb-2">{restaurant.name}</h1>
