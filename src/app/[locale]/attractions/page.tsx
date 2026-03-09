@@ -208,7 +208,7 @@ export default function AttractionsPage() {
                         src={attraction.thumbnail || '/placeholder-attraction.jpg'}
                         alt={attraction.name}
                         fill
-                        className="object-cover group-hover:scale-110 transition-transform duration-300"
+                        sizes="(max-width: 768px) 100vw, 33vw" className="object-cover group-hover:scale-110 transition-transform duration-300"
                       />
                       <button
                         className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100"
