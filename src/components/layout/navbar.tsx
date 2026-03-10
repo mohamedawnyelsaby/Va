@@ -201,30 +201,6 @@ export function Navbar({ locale, session }: NavbarProps) {
               </DropdownMenu>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => piLogin(['username', 'payments'])} className="border-yellow-500 text-yellow-600 hover:bg-yellow-50">
-                    <Pi className="mr-1 h-4 w-4" />Pi Login
-                  </Button>
-                )}
-                {isPiAuth && piUser && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="border-yellow-500 text-yellow-600">
-                        <Pi className="mr-1 h-4 w-4" />{piUser.username}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Pi Network</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href={`/${locale}/wallet`}><Pi className="mr-2 h-4 w-4 text-yellow-500" />My Wallet</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={piLogout} className="text-destructive">
-                        <LogOut className="mr-2 h-4 w-4" />Pi Logout
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
                 <Link href={`/${locale}/auth/signin`}>
                   <Button variant="ghost" size="sm">Sign In</Button>
                 </Link>
