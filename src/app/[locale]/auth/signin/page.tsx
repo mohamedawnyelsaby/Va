@@ -70,12 +70,10 @@ export default function SignInPage() {
         uid: piUser.uid,
         redirect: false,
       });
-      if (result?.ok) {
-        toast({ title: 'Welcome ' + piUser.username, description: 'Pi Network login successful!' });
-        router.push('/en/dashboard');
-      } else {
-        throw new Error('Sign in failed');
-      }
+      toast({ title: 'Welcome ' + piUser.username, description: 'Pi Network login successful!' });
+      setTimeout(() => {
+        window.location.href = '/en/dashboard';
+      }, 1000);
     } catch (error) {
       toast({ title: 'Error', description: 'Pi Network login failed', variant: 'destructive' });
     }
