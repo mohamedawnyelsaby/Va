@@ -1,4 +1,5 @@
 'use client';
+import { usePi } from '@/components/providers/pi-provider';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -14,6 +15,7 @@ import { useToast } from '@/components/ui/use-toast';
 export default function SignInPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { isAvailable, authenticate } = usePi();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -58,17 +60,22 @@ export default function SignInPage() {
 
   const handlePiNetworkLogin = async () => {
     try {
-      // Implement Pi Network authentication
-      toast({
-        title: 'Coming Soon',
-        description: 'Pi Network login will be available soon',
+      if (!isAvailable) {
+        toast({ title: 'Pi Browser Required', description: 'Please open this app in Pi Browser', variant: 'destructive' });
+        return;
+      }
+      const piUser = await authenticate(['username', 'payments']);
+      const res = await fetch('/api/auth/pi/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken: piUser.accessToken, uid: piUser.userId }),
       });
+      if (res.ok) {
+        toast({ title: 'Welcome ' + piUser.username, description: 'Pi Network login successful!' });
+        router.push('/en/dashboard');
+      }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Pi Network login failed',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Pi Network login failed', variant: 'destructive' });
     }
   };
 
