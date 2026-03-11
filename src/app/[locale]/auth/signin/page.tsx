@@ -67,11 +67,11 @@ export default function SignInPage() {
       const piUser = await authenticate(['username', 'payments']);
       const result = await signIn('pi-network', {
         accessToken: piUser.accessToken,
-        uid: piUser.user.uid,
+        uid: piUser.uid,
         redirect: false,
       });
       if (result?.ok) {
-        toast({ title: 'Welcome ' + piUser.user.username, description: 'Pi Network login successful!' });
+        toast({ title: 'Welcome ' + piUser.username, description: 'Pi Network login successful!' });
         router.push('/en/dashboard');
       } else {
         throw new Error('Sign in failed');
