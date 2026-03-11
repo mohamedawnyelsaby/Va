@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { usePi } from '@/components/providers/pi-provider';
-import { usePi } from '@/components/providers/pi-provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +29,6 @@ export default function BookingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
-  const { isAvailable: isPiAvailable, isAuthenticated: isPiAuth, authenticate: piLogin, createPayment } = usePi();
   const { isAvailable: isPiAvailable, isAuthenticated: isPiAuth, authenticate: piLogin, createPayment } = usePi();
   const { toast } = useToast();
 
