@@ -65,14 +65,16 @@ export default function SignInPage() {
         return;
       }
       const piUser = await authenticate(['username', 'payments']);
-      const res = await fetch('/api/auth/pi/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken: piUser.accessToken, uid: piUser.userId }),
+      const result = await signIn('pi-network', {
+        accessToken: piUser.accessToken,
+        uid: piUser.user.uid,
+        redirect: false,
       });
-      if (res.ok) {
-        toast({ title: 'Welcome ' + piUser.username, description: 'Pi Network login successful!' });
+      if (result?.ok) {
+        toast({ title: 'Welcome ' + piUser.user.username, description: 'Pi Network login successful!' });
         router.push('/en/dashboard');
+      } else {
+        throw new Error('Sign in failed');
       }
     } catch (error) {
       toast({ title: 'Error', description: 'Pi Network login failed', variant: 'destructive' });
