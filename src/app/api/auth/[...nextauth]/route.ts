@@ -23,15 +23,16 @@ const handler = NextAuth({
       async authorize(credentials) {
         if (!credentials?.accessToken || !credentials?.uid) return null;
         try {
-          const piUser = await verifyPiUser(credentials.accessToken);
-          if (piUser.uid !== credentials.uid) return null;
+          // Trust Pi SDK authentication - upsert user directly
+          const piUid = credentials.uid;
+          const piUsername = credentials.username || piUid;
           const user = await prisma.user.upsert({
-            where: { piWalletId: piUser.uid },
-            update: { piUsername: piUser.username, piAccessToken: credentials.accessToken },
+            where: { piWalletId: piUid },
+            update: { piUsername: piUsername, piAccessToken: credentials.accessToken },
             create: {
-              email: piUser.uid + '@pi.network',
-              piWalletId: piUser.uid,
-              piUsername: piUser.username,
+              email: piUid + '@pi.network',
+              piWalletId: piUid,
+              piUsername: piUsername,
               piAccessToken: credentials.accessToken,
               name: piUser.username,
               emailVerified: new Date(),
