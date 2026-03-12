@@ -2,7 +2,6 @@ import NextAuth from 'next-auth';
 import { prisma } from '@/lib/db';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { verifyPiUser } from '@/lib/pi-network/platform-api';
 
 const handler = NextAuth({
   providers: [
@@ -31,7 +30,7 @@ const handler = NextAuth({
               piWalletId: piUid,
               piUsername: piUsername,
               piAccessToken: credentials.accessToken,
-              name: piUser.username,
+              name: piUsername,
               emailVerified: new Date(),
             },
           });
