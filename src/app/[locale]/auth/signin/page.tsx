@@ -68,6 +68,7 @@ export default function SignInPage() {
       const result = await signIn('pi-network', {
         accessToken: piUser.accessToken,
         uid: piUser.uid,
+        username: piUser.username,
         redirect: false,
       });
       toast({ title: 'Welcome ' + piUser.username, description: 'Pi Network login successful!' });
