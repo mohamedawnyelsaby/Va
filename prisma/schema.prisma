@@ -25,7 +25,7 @@ model User {
   bio               String?
 
   // Pi Network Integration
-  piWalletId        String?
+  piWalletId        String?  @unique
   piUsername        String?
   piBalance         Float     @default(0)
   piAccessToken     String?
