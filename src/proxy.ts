@@ -70,11 +70,12 @@ export default async function proxy(request: NextRequest) {
     pathWithoutLocale.startsWith(path)
   );
 
-  if (isProtectedPath && !token) {
-    const signInUrl = new URL(`/${locale}/auth/signin`, request.url);
-    signInUrl.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(signInUrl);
-  }
+  // Temporarily disabled for Pi Browser compatibility
+  // if (isProtectedPath && !token) {
+  //   const signInUrl = new URL(`/${locale}/auth/signin`, request.url);
+  //   signInUrl.searchParams.set('callbackUrl', pathname);
+  //   return NextResponse.redirect(signInUrl);
+  // }
 
   return response;
 }
