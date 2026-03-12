@@ -49,6 +49,7 @@ const handler = NextAuth({
     signIn: '/auth/signin',
     error: '/auth/error',
   },
+  trustHost: true,
   session: {
     strategy: 'jwt',
   },
