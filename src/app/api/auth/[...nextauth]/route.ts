@@ -10,6 +10,26 @@ const handler = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
     CredentialsProvider({
+      id: 'credentials',
+      name: 'Email',
+      credentials: {
+        email: { type: 'text' },
+        password: { type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+        try {
+          const user = await prisma.user.findUnique({ where: { email: credentials.email } });
+          if (!user) return null;
+          // password = user.id for Pi users
+          if (credentials.password !== user.id) return null;
+          return { id: user.id, name: user.name, email: user.email };
+        } catch (e) {
+          return null;
+        }
+      },
+    }),
+    CredentialsProvider({
       id: 'pi-network',
       name: 'Pi Network',
       credentials: {

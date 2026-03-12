@@ -65,18 +65,23 @@ export default function SignInPage() {
         return;
       }
       const piUser = await authenticate(['username', 'payments']);
-      const result = await signIn('pi-network', {
-        accessToken: piUser.accessToken,
-        uid: piUser.uid,
-        username: piUser.username,
+      // Use custom Pi auth endpoint
+      const res = await fetch('/api/pi/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken: piUser.accessToken, uid: piUser.uid }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Auth failed');
+      // Now sign in with NextAuth using email
+      const result = await signIn('credentials', {
+        email: data.user.email,
+        password: data.user.id,
         redirect: false,
       });
-      toast({ title: 'DEBUG result', description: JSON.stringify(result) });
       if (result?.ok) {
         toast({ title: 'Welcome ' + piUser.username, description: 'Pi Network login successful!' });
-        setTimeout(() => {
-          window.location.href = '/en/dashboard';
-        }, 1000);
+        setTimeout(() => { window.location.href = '/en/dashboard'; }, 1000);
       } else {
         throw new Error(result?.error || 'Sign in failed');
       }
