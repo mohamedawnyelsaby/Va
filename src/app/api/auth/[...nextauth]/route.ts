@@ -20,9 +20,10 @@ const handler = NextAuth({
       async authorize(credentials) {
         if (!credentials?.accessToken || !credentials?.uid) return null;
         try {
-          // Trust Pi SDK authentication - upsert user directly
+          console.log('🔑 authorize called:', { uid: credentials.uid, username: credentials.username });
           const piUid = credentials.uid;
           const piUsername = credentials.username || piUid;
+          console.log('📝 upserting user:', { piUid, piUsername });
           const user = await prisma.user.upsert({
             where: { piWalletId: piUid },
             update: { piUsername: piUsername, piAccessToken: credentials.accessToken },
@@ -35,9 +36,10 @@ const handler = NextAuth({
               emailVerified: new Date(),
             },
           });
+          console.log('✅ user upserted:', user.id);
           return { id: user.id, name: user.name, email: user.email };
         } catch (e) {
-          console.error('Pi auth error:', e);
+          console.error('❌ Pi auth error:', e);
           return null;
         }
       },
