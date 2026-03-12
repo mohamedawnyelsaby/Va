@@ -40,10 +40,10 @@ export async function POST(request: NextRequest) {
     if (!user) {
       user = await prisma.user.create({
         data: {
-          email: `${piUser.username}@pi.network`,
-          name: piUser.username,
+          email: `${piUsername}@pi.network`,
+          name: piUsername,
           piWalletId: uid,
-          piUsername: piUser.username,
+          piUsername: piUsername,
           piAccessToken: accessToken,
           emailVerified: new Date(),
         },
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
         where: { id: user.id },
         data: {
           piAccessToken: accessToken,
-          piUsername: piUser.username,
+          piUsername: piUsername,
         },
       });
     }
