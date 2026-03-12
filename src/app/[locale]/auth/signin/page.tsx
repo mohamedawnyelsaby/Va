@@ -71,6 +71,7 @@ export default function SignInPage() {
         username: piUser.username,
         redirect: false,
       });
+      toast({ title: 'DEBUG result', description: JSON.stringify(result) });
       if (result?.ok) {
         toast({ title: 'Welcome ' + piUser.username, description: 'Pi Network login successful!' });
         setTimeout(() => {
