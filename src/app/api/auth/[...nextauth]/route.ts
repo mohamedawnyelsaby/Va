@@ -50,8 +50,21 @@ const handler = NextAuth({
     error: '/auth/error',
   },
   trustHost: true,
+  secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60,
+  },
+  cookies: {
+    sessionToken: {
+      name: 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false,
+      },
+    },
   },
   callbacks: {
     async session({ session, token }) {
