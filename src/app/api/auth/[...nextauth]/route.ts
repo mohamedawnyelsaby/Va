@@ -15,6 +15,7 @@ const handler = NextAuth({
       credentials: {
         accessToken: { type: 'text' },
         uid: { type: 'text' },
+        username: { type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.accessToken || !credentials?.uid) return null;

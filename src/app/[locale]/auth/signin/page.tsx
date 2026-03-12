@@ -71,10 +71,14 @@ export default function SignInPage() {
         username: piUser.username,
         redirect: false,
       });
-      toast({ title: 'Welcome ' + piUser.username, description: 'Pi Network login successful!' });
-      setTimeout(() => {
-        window.location.href = '/en/dashboard';
-      }, 1000);
+      if (result?.ok) {
+        toast({ title: 'Welcome ' + piUser.username, description: 'Pi Network login successful!' });
+        setTimeout(() => {
+          window.location.href = '/en/dashboard';
+        }, 1000);
+      } else {
+        throw new Error(result?.error || 'Sign in failed');
+      }
     } catch (error) {
       toast({ title: 'Error', description: 'Pi Network login failed', variant: 'destructive' });
     }
