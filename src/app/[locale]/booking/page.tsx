@@ -55,11 +55,7 @@ export default function BookingPage() {
     country: '',
   });
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push(`/auth/signin?callbackUrl=/booking?${searchParams.toString()}`);
-    }
-  }, [status, router, searchParams]);
+  // Auth check disabled for Pi Browser compatibility
 
   useEffect(() => {
     if (bookingData.itemId) {
