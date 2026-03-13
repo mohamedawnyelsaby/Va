@@ -104,14 +104,7 @@ export default function BookingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!session?.user?.id) {
-      toast({
-        title: 'Authentication Required',
-        description: 'Please sign in to complete your booking',
-        variant: 'destructive',
-      });
-      return;
-    }
+    // Auth check bypassed for Pi Browser
 
     setProcessing(true);
 
