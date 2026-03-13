@@ -31,10 +31,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === 'authenticated') {
-      fetchDashboardData();
-    }
-  }, [status]);
+    fetchDashboardData();
+  }, []);
 
   useEffect(() => {
     if (session?.user) {
@@ -70,7 +68,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading || status === 'loading') {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
