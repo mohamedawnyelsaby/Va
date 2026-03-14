@@ -1,4 +1,4 @@
-// src/app/api/user/route.ts
+// src/app/api/user/route.ts — FIXED
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
@@ -10,16 +10,13 @@ const updateProfileSchema = z.object({
   image: z.string().url().optional(),
 });
 
-// GET /api/user - Get current user profile
+// GET /api/user
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -29,38 +26,38 @@ export async function GET(request: NextRequest) {
         email: true,
         name: true,
         image: true,
+        piBalance: true,      // ✅ مطلوب للـ dashboard card
+        piUsername: true,
         createdAt: true,
         updatedAt: true,
+        _count: {             // ✅ مطلوب للـ stats cards
+          select: {
+            bookings: true,
+            reviews: true,
+            favorites: true,
+          },
+        },
       },
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     return NextResponse.json(user);
   } catch (error) {
     console.error('Get user error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch user' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch user' }, { status: 500 });
   }
 }
 
-// PATCH /api/user - Update user profile
+// PATCH /api/user
 export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -74,6 +71,7 @@ export async function PATCH(request: NextRequest) {
         email: true,
         name: true,
         image: true,
+        piBalance: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -82,44 +80,27 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json(user);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
     }
     console.error('Update user error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update user' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
   }
 }
 
-// DELETE /api/user - Delete user account
+// DELETE /api/user
 export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Hard delete since isActive doesn't exist
-    await prisma.user.delete({
-      where: { id: session.user.id },
-    });
+    await prisma.user.delete({ where: { id: session.user.id } });
 
-    return NextResponse.json({
-      message: 'Account deleted successfully',
-    });
+    return NextResponse.json({ message: 'Account deleted successfully' });
   } catch (error) {
     console.error('Delete user error:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete account' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to delete account' }, { status: 500 });
   }
 }
