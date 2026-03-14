@@ -472,15 +472,15 @@ export default function BookingPage() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal:</span>
-                      <span>{formatCurrency(pricing.subtotal, item.currency)}</span>
+                      <span>{formatCurrency(pricing.subtotal, 'USD')}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Tax (10%):</span>
-                      <span>{formatCurrency(pricing.tax, item.currency)}</span>
+                      <span>{formatCurrency(pricing.tax, 'USD')}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Service Fee (5%):</span>
-                      <span>{formatCurrency(pricing.serviceFee, item.currency)}</span>
+                      <span>{formatCurrency(pricing.serviceFee, 'USD')}</span>
                     </div>
                   </div>
 
@@ -488,7 +488,7 @@ export default function BookingPage() {
 
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total:</span>
-                    <span>{formatCurrency(pricing.total, item.currency)}</span>
+                    <span>{formatCurrency(pricing.total, 'USD')}</span>
                   </div>
 
                   <Button 
