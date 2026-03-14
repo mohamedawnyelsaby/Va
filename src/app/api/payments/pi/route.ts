@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     // TODO: Add Payment and Booking models to Prisma schema
     console.log('Pi payment request:', {
-      userId: session.user.id,
+      userId: userId,
       paymentId,
       bookingId,
       amount,
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         paymentId,
         bookingId,
         amount,
-        currency: 'PI',
+        currency: 'USD',
         status: 'pending',
       },
     }, { status: 501 }); // Not Implemented
