@@ -1,5 +1,5 @@
 // src/app/api/bookings/route.ts
-'use client';
+
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
