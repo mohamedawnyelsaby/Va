@@ -1,4 +1,4 @@
-// src/lib/utils.ts — FIXED
+// src/lib/utils.ts
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -6,17 +6,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// ✅ Fix: handle 'PI' currency code — Intl.NumberFormat rejects it
 export function formatCurrency(
   amount: number,
   currency: string = 'USD',
   locale: string = 'en-US'
 ): string {
-  // Pi Network currency — not a valid ISO 4217 code
-  if (!currency || currency.toUpperCase() === 'PI' || currency.toUpperCase() === 'π') {
+  // Pi Network ليست ISO 4217 — نتعامل معها يدوياً
+  if (!currency || ['PI', 'Pi', 'π'].includes(currency)) {
     return `π ${Number(amount).toFixed(2)}`;
   }
-
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
@@ -25,7 +23,6 @@ export function formatCurrency(
       maximumFractionDigits: 2,
     }).format(amount);
   } catch {
-    // Fallback if currency code is still invalid
     return `${currency} ${Number(amount).toFixed(2)}`;
   }
 }
@@ -72,28 +69,9 @@ export function debounce<T extends (...args: any[]) => any>(
   };
 }
 
-export function throttle<T extends (...args: any[]) => any>(
-  func: T,
-  limit: number
-): (...args: Parameters<T>) => void {
-  let inThrottle: boolean;
-  return (...args: Parameters<T>) => {
-    if (!inThrottle) {
-      func(...args);
-      inThrottle = true;
-      setTimeout(() => (inThrottle = false), limit);
-    }
-  };
-}
-
 export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
-}
-
-export function isValidPhone(phone: string): boolean {
-  const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-  return phoneRegex.test(phone.replace(/\D/g, ''));
 }
 
 export function generateId(): string {
@@ -113,82 +91,16 @@ export function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export function isObjectEmpty(obj: Record<string, any>): boolean {
-  return Object.keys(obj).length === 0;
-}
-
-export function deepClone<T>(obj: T): T {
-  return JSON.parse(JSON.stringify(obj));
-}
-
-export function mergeObjects<T extends Record<string, any>>(
-  target: T,
-  source: Partial<T>
-): T {
-  return { ...target, ...source };
-}
-
 export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-export function camelToKebab(str: string): string {
-  return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+export function isClient(): boolean {
+  return typeof window !== 'undefined';
 }
 
-export function kebabToCamel(str: string): string {
-  return str.replace(/-([a-z])/g, g => g[1].toUpperCase());
-}
-
-export function getQueryParam(url: string, param: string): string | null {
-  const urlObj = new URL(url, window.location.origin);
-  return urlObj.searchParams.get(param);
-}
-
-export function setQueryParam(url: string, param: string, value: string): string {
-  const urlObj = new URL(url, window.location.origin);
-  urlObj.searchParams.set(param, value);
-  return urlObj.toString();
-}
-
-export function removeQueryParam(url: string, param: string): string {
-  const urlObj = new URL(url, window.location.origin);
-  urlObj.searchParams.delete(param);
-  return urlObj.toString();
-}
-
-export function formatBytes(bytes: number, decimals: number = 2): string {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
-
-export function formatDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
-  const parts = [];
-  if (hours > 0) parts.push(`${hours}h`);
-  if (minutes > 0) parts.push(`${minutes}m`);
-  if (remainingSeconds > 0 || parts.length === 0) parts.push(`${remainingSeconds}s`);
-  return parts.join(' ');
-}
-
-export function calculateAge(birthDate: Date): number {
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age;
-}
-
-export function randomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+export function isServer(): boolean {
+  return typeof window === 'undefined';
 }
 
 export function shuffleArray<T>(array: T[]): T[] {
@@ -200,71 +112,38 @@ export function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-export function chunkArray<T>(array: T[], size: number): T[][] {
-  const chunks: T[][] = [];
-  for (let i = 0; i < array.length; i += size) {
-    chunks.push(array.slice(i, i + size));
-  }
-  return chunks;
+export function formatBytes(bytes: number, decimals: number = 2): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-export function flattenArray<T>(arrays: T[][]): T[] {
-  return arrays.reduce((flat, array) => flat.concat(array), []);
+export function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 export function uniqueArray<T>(array: T[]): T[] {
   return [...new Set(array)];
 }
 
-export function sortByProperty<T>(array: T[], property: keyof T, order: 'asc' | 'desc' = 'asc'): T[] {
-  return [...array].sort((a, b) => {
-    const aValue = a[property];
-    const bValue = b[property];
-    if (aValue < bValue) return order === 'asc' ? -1 : 1;
-    if (aValue > bValue) return order === 'asc' ? 1 : -1;
-    return 0;
-  });
-}
-
-export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
-  return array.reduce((groups, item) => {
-    const groupKey = String(item[key]);
-    if (!groups[groupKey]) groups[groupKey] = [];
-    groups[groupKey].push(item);
-    return groups;
-  }, {} as Record<string, T[]>);
-}
-
-export function isClient(): boolean {
-  return typeof window !== 'undefined';
-}
-
-export function isServer(): boolean {
-  return typeof window === 'undefined';
-}
-
 export function copyToClipboard(text: string): Promise<void> {
   if (!isClient()) return Promise.reject(new Error('Not in browser'));
   if (navigator.clipboard && window.isSecureContext) {
     return navigator.clipboard.writeText(text);
-  } else {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
-    textArea.style.top = '-999999px';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    return new Promise((resolve, reject) => {
-      try {
-        document.execCommand('copy');
-        resolve();
-      } catch (error) {
-        reject(error);
-      } finally {
-        textArea.remove();
-      }
-    });
   }
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-999999px';
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  return new Promise((resolve, reject) => {
+    try { document.execCommand('copy'); resolve(); }
+    catch (error) { reject(error); }
+    finally { textArea.remove(); }
+  });
 }
