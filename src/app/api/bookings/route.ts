@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     const [bookings, total] = await Promise.all([
       prisma.booking.findMany({
-        where: { userId: session.user.id },
+        where: { userId: userId },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
           },
         },
       }),
-      prisma.booking.count({ where: { userId: session.user.id } }),
+      prisma.booking.count({ where: { userId: userId } }),
     ]);
 
     return NextResponse.json({
@@ -81,8 +81,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let userId = session?.user?.id;
+    if (!userId) {
+      let guest = await prisma.user.findFirst({ where: { email: 'guest@pi.network' } });
+      if (!guest) guest = await prisma.user.create({ data: { email: 'guest@pi.network', name: 'Pi User', emailVerified: new Date() } });
+      userId = guest.id;
     }
 
     const body = await request.json();
@@ -119,7 +122,7 @@ export async function POST(request: NextRequest) {
 
     const booking = await prisma.booking.create({
       data: {
-        userId: session.user.id,
+        userId: userId,
         itemId: data.itemId,
         itemType: data.type,
         itemName: data.itemName,
