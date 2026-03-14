@@ -31,8 +31,10 @@ const createBookingSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let userId = session?.user?.id;
+    if (!userId) {
+      const guest = await prisma.user.findFirst({ where: { email: 'guest@pi.network' } });
+      userId = guest?.id || "";
     }
 
     const { searchParams } = new URL(request.url);
