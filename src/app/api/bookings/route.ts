@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
 
     // Validate item
     let price = 0;
-    let currency = 'PI';
+    let currency = 'USD';
     let relation: Record<string, string> = {};
 
     if (data.type === 'hotel') {
