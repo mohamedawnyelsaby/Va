@@ -127,7 +127,7 @@ export default function BookingPage() {
           guests: bookingData.guests,
           rooms: bookingData.rooms,
           totalPrice: total,
-          currency: item.currency || 'USD',
+          currency: 'USD',
           specialRequests: bookingData.specialRequests,
           paymentMethod,
         }),
