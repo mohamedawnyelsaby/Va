@@ -1,4 +1,4 @@
-// src/lib/auth/options.ts — FIXED
+// src/lib/auth/options.ts
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
@@ -17,7 +17,9 @@ export const authOptions: NextAuthOptions = {
     signIn: '/auth/signin',
     error: '/auth/error',
   },
-  // ✅ Fix: make session cookie work on HTTP (Pi Browser)
+  trustHost: true,
+  secret: process.env.NEXTAUTH_SECRET,
+  // ✅ الإصلاح الرئيسي: secure: false عشان Pi Browser بيشتغل على HTTP
   cookies: {
     sessionToken: {
       name: 'next-auth.session-token',
@@ -25,8 +27,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        // ✅ secure only if HTTPS — Pi Browser may use HTTP
-        secure: process.env.NEXTAUTH_URL?.startsWith('https://') ?? false,
+        secure: false, // كان true وده سبب المشكلة
       },
     },
   },
@@ -35,83 +36,92 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+
+    // المستخدمين العاديين + Pi users عن طريق email/id
     CredentialsProvider({
-      name: 'credentials',
+      id: 'credentials',
+      name: 'Email',
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        email: { type: 'text' },
+        password: { type: 'text' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Invalid credentials');
-        }
+        if (!credentials?.email || !credentials?.password) return null;
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+          });
+          if (!user) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            password: true,
-            image: true,
-            piWalletId: true,
-          },
-        });
-
-        if (!user) {
-          throw new Error('Invalid credentials');
-        }
-
-        // ✅ Fix: Pi users have no password — password field = user.id
-        // This is the convention set in signin/page.tsx handlePiNetworkLogin
-        if (!user.password) {
-          // Pi user: verify that the provided "password" matches the user ID
-          if (credentials.password === user.id) {
-            return {
-              id: user.id,
-              email: user.email,
-              name: user.name ?? undefined,
-              image: user.image ?? undefined,
-            };
+          // Pi users: password = user.id
+          if (!user.password) {
+            if (credentials.password === user.id) {
+              return { id: user.id, name: user.name, email: user.email };
+            }
+            return null;
           }
-          throw new Error('Invalid credentials');
+
+          // مستخدم عادي: bcrypt
+          const isValid = await bcrypt.compare(credentials.password, user.password);
+          if (!isValid) return null;
+
+          return { id: user.id, name: user.name, email: user.email };
+        } catch (e) {
+          return null;
         }
+      },
+    }),
 
-        // Normal user: bcrypt compare
-        const isCorrectPassword = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isCorrectPassword) {
-          throw new Error('Invalid credentials');
+    // Pi Network provider المباشر
+    CredentialsProvider({
+      id: 'pi-network',
+      name: 'Pi Network',
+      credentials: {
+        accessToken: { type: 'text' },
+        uid: { type: 'text' },
+        username: { type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.accessToken || !credentials?.uid) return null;
+        try {
+          const piUid = credentials.uid;
+          const piUsername = credentials.username || piUid;
+          const user = await prisma.user.upsert({
+            where: { piWalletId: piUid },
+            update: {
+              piUsername: piUsername,
+              piAccessToken: credentials.accessToken,
+            },
+            create: {
+              email: piUid + '@pi.network',
+              piWalletId: piUid,
+              piUsername: piUsername,
+              piAccessToken: credentials.accessToken,
+              name: piUsername,
+              emailVerified: new Date(),
+            },
+          });
+          return { id: user.id, name: user.name, email: user.email };
+        } catch (e) {
+          console.error('Pi auth error:', e);
+          return null;
         }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name ?? undefined,
-          image: user.image ?? undefined,
-        };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.sub = user.id;
-      }
-      return token;
-    },
     async session({ session, token }) {
-      if (session.user) {
+      if (token && session.user) {
         session.user.id = (token.sub || token.id) as string;
       }
       return session;
     },
+    async jwt({ token, user }) {
+      if (user) {
+        token.sub = user.id;
+        token.id = user.id;
+      }
+      return token;
+    },
   },
-  secret: process.env.NEXTAUTH_SECRET,
-  trustHost: true,
-  debug: process.env.NODE_ENV === 'development',
 };
