@@ -10,9 +10,8 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Auth bypass for Pi Browser
+    const userId = session?.user?.id || 'guest';
 
     const { paymentId, bookingId, amount } = await request.json();
 
