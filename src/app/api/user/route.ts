@@ -1,4 +1,4 @@
-// src/app/api/user/route.ts — FIXED
+// src/app/api/user/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
@@ -10,7 +10,6 @@ const updateProfileSchema = z.object({
   image: z.string().url().optional(),
 });
 
-// GET /api/user
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -26,11 +25,11 @@ export async function GET(request: NextRequest) {
         email: true,
         name: true,
         image: true,
-        piBalance: true,      // ✅ مطلوب للـ dashboard card
+        piBalance: true,
         piUsername: true,
         createdAt: true,
         updatedAt: true,
-        _count: {             // ✅ مطلوب للـ stats cards
+        _count: {
           select: {
             bookings: true,
             reviews: true,
@@ -51,7 +50,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PATCH /api/user
 export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -87,7 +85,6 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// DELETE /api/user
 export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
