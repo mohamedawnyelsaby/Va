@@ -1,3 +1,4 @@
+// src/lib/utils.ts — FIXED
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -5,17 +6,28 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// ✅ Fix: handle 'PI' currency code — Intl.NumberFormat rejects it
 export function formatCurrency(
   amount: number,
   currency: string = 'USD',
   locale: string = 'en-US'
 ): string {
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  // Pi Network currency — not a valid ISO 4217 code
+  if (!currency || currency.toUpperCase() === 'PI' || currency.toUpperCase() === 'π') {
+    return `π ${Number(amount).toFixed(2)}`;
+  }
+
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency.toUpperCase(),
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    // Fallback if currency code is still invalid
+    return `${currency} ${Number(amount).toFixed(2)}`;
+  }
 }
 
 export function formatDate(
@@ -133,11 +145,7 @@ export function getQueryParam(url: string, param: string): string | null {
   return urlObj.searchParams.get(param);
 }
 
-export function setQueryParam(
-  url: string,
-  param: string,
-  value: string
-): string {
+export function setQueryParam(url: string, param: string, value: string): string {
   const urlObj = new URL(url, window.location.origin);
   urlObj.searchParams.set(param, value);
   return urlObj.toString();
@@ -151,13 +159,10 @@ export function removeQueryParam(url: string, param: string): string {
 
 export function formatBytes(bytes: number, decimals: number = 2): string {
   if (bytes === 0) return '0 Bytes';
-
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
@@ -165,14 +170,10 @@ export function formatDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const remainingSeconds = seconds % 60;
-
   const parts = [];
   if (hours > 0) parts.push(`${hours}h`);
   if (minutes > 0) parts.push(`${minutes}m`);
-  if (remainingSeconds > 0 || parts.length === 0) {
-    parts.push(`${remainingSeconds}s`);
-  }
-
+  if (remainingSeconds > 0 || parts.length === 0) parts.push(`${remainingSeconds}s`);
   return parts.join(' ');
 }
 
@@ -180,11 +181,9 @@ export function calculateAge(birthDate: Date): number {
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
-
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
-
   return age;
 }
 
@@ -217,30 +216,20 @@ export function uniqueArray<T>(array: T[]): T[] {
   return [...new Set(array)];
 }
 
-export function sortByProperty<T>(
-  array: T[],
-  property: keyof T,
-  order: 'asc' | 'desc' = 'asc'
-): T[] {
+export function sortByProperty<T>(array: T[], property: keyof T, order: 'asc' | 'desc' = 'asc'): T[] {
   return [...array].sort((a, b) => {
     const aValue = a[property];
     const bValue = b[property];
-
     if (aValue < bValue) return order === 'asc' ? -1 : 1;
     if (aValue > bValue) return order === 'asc' ? 1 : -1;
     return 0;
   });
 }
 
-export function groupBy<T>(
-  array: T[],
-  key: keyof T
-): Record<string, T[]> {
+export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
   return array.reduce((groups, item) => {
     const groupKey = String(item[key]);
-    if (!groups[groupKey]) {
-      groups[groupKey] = [];
-    }
+    if (!groups[groupKey]) groups[groupKey] = [];
     groups[groupKey].push(item);
     return groups;
   }, {} as Record<string, T[]>);
@@ -254,58 +243,8 @@ export function isServer(): boolean {
   return typeof window === 'undefined';
 }
 
-export function getOS(): string {
-  if (!isClient()) return '';
-
-  const userAgent = window.navigator.userAgent;
-  const platform = window.navigator.platform;
-  const macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
-  const windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'];
-  const iosPlatforms = ['iPhone', 'iPad', 'iPod'];
-
-  if (macosPlatforms.indexOf(platform) !== -1) {
-    return 'macOS';
-  } else if (iosPlatforms.indexOf(platform) !== -1) {
-    return 'iOS';
-  } else if (windowsPlatforms.indexOf(platform) !== -1) {
-    return 'Windows';
-  } else if (/Android/.test(userAgent)) {
-    return 'Android';
-  } else if (/Linux/.test(platform)) {
-    return 'Linux';
-  }
-
-  return 'Unknown';
-}
-
-export function getBrowser(): string {
-  if (!isClient()) return '';
-
-  const userAgent = window.navigator.userAgent;
-  let browserName = 'Unknown';
-
-  if (userAgent.includes('Firefox')) {
-    browserName = 'Firefox';
-  } else if (userAgent.includes('SamsungBrowser')) {
-    browserName = 'Samsung Browser';
-  } else if (userAgent.includes('Opera') || userAgent.includes('OPR')) {
-    browserName = 'Opera';
-  } else if (userAgent.includes('Trident')) {
-    browserName = 'Internet Explorer';
-  } else if (userAgent.includes('Edge')) {
-    browserName = 'Edge';
-  } else if (userAgent.includes('Chrome')) {
-    browserName = 'Chrome';
-  } else if (userAgent.includes('Safari')) {
-    browserName = 'Safari';
-  }
-
-  return browserName;
-}
-
 export function copyToClipboard(text: string): Promise<void> {
   if (!isClient()) return Promise.reject(new Error('Not in browser'));
-
   if (navigator.clipboard && window.isSecureContext) {
     return navigator.clipboard.writeText(text);
   } else {
@@ -317,7 +256,6 @@ export function copyToClipboard(text: string): Promise<void> {
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
-
     return new Promise((resolve, reject) => {
       try {
         document.execCommand('copy');
@@ -328,15 +266,5 @@ export function copyToClipboard(text: string): Promise<void> {
         textArea.remove();
       }
     });
-  }
-}
-
-export function readFromClipboard(): Promise<string> {
-  if (!isClient()) return Promise.reject(new Error('Not in browser'));
-
-  if (navigator.clipboard && window.isSecureContext) {
-    return navigator.clipboard.readText();
-  } else {
-    return Promise.reject(new Error('Clipboard API not available'));
   }
 }
