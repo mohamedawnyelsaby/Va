@@ -1,21 +1,23 @@
-// src/app/components/PaymentFlow.tsx — FIXED
+// src/app/components/PaymentFlow.tsx
+// ✅ FIXED: Proper paymentId passing, better error handling
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { usePi } from '@/components/providers/pi-provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pi, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 
 export default function PaymentFlow({ booking }: { booking: any }) {
-  const { isAvailable, isAuthenticated, authenticate, createPayment, sdkStatus } = usePi();
+  const { isAvailable, authenticate, createPayment, sdkStatus } = usePi();
   const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [cashback, setCashback] = useState<number | null>(null);
 
   const handlePiPayment = async () => {
     if (!isAvailable) {
-      setError('⚠️ Pi SDK not available. Please open in Pi Browser.');
+      setError('⚠️ Pi SDK غير متاح. افتح التطبيق في Pi Browser.');
       setStatus('error');
       return;
     }
@@ -25,173 +27,209 @@ export default function PaymentFlow({ booking }: { booking: any }) {
     setError('');
 
     try {
-      // ✅ Fix: دايماً authenticate بـ payments scope قبل الدفع
-      // حتى لو المستخدم authenticated بدون payments scope
+      // ✅ Always authenticate with payments scope before paying
       await authenticate(['username', 'payments']);
 
-      // Step 1: Create payment record on backend
+      // Step 1: Create payment record in backend
       const createRes = await fetch('/api/payments/pi/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           bookingId: booking.id,
           amount: booking.amount,
-          memo: `Va Travel - ${booking.itemName || 'Booking'}`,
+          memo: `Va Travel - ${booking.hotelName || booking.itemName || 'Booking'}`,
         }),
       });
 
       if (!createRes.ok) {
         const err = await createRes.json();
-        throw new Error(err.error || 'Failed to create payment');
+        throw new Error(err.error || 'فشل إنشاء الدفع');
       }
 
       const { paymentId, amount, memo } = await createRes.json();
+      console.log('✅ Payment record created:', paymentId);
 
-      // Step 2: Pi SDK payment
+      // Step 2: Pi SDK payment flow
       await createPayment(
-        { amount, memo, metadata: { bookingId: booking.id, paymentId } },
         {
-          onReadyForServerApproval: async (piPaymentId) => {
+          amount,
+          memo,
+          metadata: {
+            bookingId: booking.id,
+            paymentId,
+          },
+        },
+        {
+          onReadyForServerApproval: async (piPaymentId: string) => {
+            console.log('📝 Approving payment:', piPaymentId);
+
+            // ✅ Send BOTH paymentId (ours) and piPaymentId (Pi SDK's)
             const approveRes = await fetch('/api/payments/pi/approve', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ paymentId, piPaymentId }),
             });
-            if (!approveRes.ok) throw new Error('Server approval failed');
+
+            if (!approveRes.ok) {
+              const err = await approveRes.json().catch(() => ({}));
+              throw new Error(err.error || 'فشل الموافقة على الدفع');
+            }
+
+            console.log('✅ Payment approved');
           },
 
-          onReadyForServerCompletion: async (piPaymentId, txid) => {
+          onReadyForServerCompletion: async (piPaymentId: string, txid: string) => {
+            console.log('⛓️ Completing payment:', txid);
+
             const completeRes = await fetch('/api/payments/pi/complete', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ paymentId, piPaymentId, txid }),
             });
-            if (!completeRes.ok) throw new Error('Payment completion failed');
+
+            if (!completeRes.ok) {
+              const err = await completeRes.json().catch(() => ({}));
+              throw new Error(err.error || 'فشل إتمام الدفع');
+            }
+
             const result = await completeRes.json();
+            console.log('🎉 Payment complete! Cashback:', result.cashback);
+
+            setCashback(result.cashback);
             setStatus('success');
             setLoading(false);
-            console.log('✅ Payment complete! Cashback:', result.cashback);
           },
 
           onCancel: () => {
-            setError('Payment cancelled by user');
+            setError('تم إلغاء الدفع من المستخدم');
             setStatus('error');
             setLoading(false);
           },
 
-          onError: (err) => {
-            setError(err?.message || 'Payment failed');
+          onError: (err: Error) => {
+            setError(err?.message || 'حدث خطأ في الدفع');
             setStatus('error');
             setLoading(false);
           },
         }
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      const message = err instanceof Error ? err.message : 'خطأ غير معروف';
+      console.error('Payment flow error:', message);
+      setError(message);
       setStatus('error');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 p-6">
-      <div className="max-w-2xl mx-auto space-y-6">
-
-        {/* Booking Summary */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Booking Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Property:</span>
-              <span className="font-semibold">{booking.itemName}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Check-in:</span>
+    <div className="space-y-4">
+      {/* Booking Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle>ملخص الحجز</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">الفندق:</span>
+            <span className="font-semibold">{booking.hotelName || booking.itemName}</span>
+          </div>
+          {booking.checkIn && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">تسجيل الوصول:</span>
               <span>{booking.checkIn}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Check-out:</span>
+          )}
+          {booking.checkOut && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">المغادرة:</span>
               <span>{booking.checkOut}</span>
             </div>
-            <div className="border-t pt-2 mt-2 flex justify-between text-lg font-bold">
-              <span>Total:</span>
-              <span className="text-primary">{booking.amount} π</span>
-            </div>
-          </CardContent>
-        </Card>
+          )}
+          <div className="border-t pt-2 flex justify-between text-lg font-bold">
+            <span>الإجمالي:</span>
+            <span className="text-primary">π {booking.amount}</span>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Pi Payment */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Pay with Pi Network</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      {/* Payment Button */}
+      <Card>
+        <CardHeader>
+          <CardTitle>الدفع بـ Pi Network</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {status !== 'success' && (
             <Button
-              className="w-full h-16 bg-gradient-to-r from-[#00b3a5] to-[#26c6da] hover:opacity-90 text-white"
+              className="w-full h-14 bg-gradient-to-r from-[#00b3a5] to-[#26c6da] hover:opacity-90 text-white text-lg"
               onClick={handlePiPayment}
-              disabled={loading || !isAvailable || status === 'success'}
+              disabled={loading || !isAvailable}
             >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Processing Payment...
+                  جاري معالجة الدفع...
                 </>
               ) : (
                 <>
                   <Pi className="mr-2 h-5 w-5" />
-                  Pay with Pi Network
-                  <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded">
-                    +2% Cashback
+                  ادفع بـ Pi Network
+                  <span className="mr-2 text-xs bg-white/20 px-2 py-1 rounded">
+                    +2% كاشباك
                   </span>
                 </>
               )}
             </Button>
+          )}
 
-            {!isAvailable && (
-              <p className="text-sm text-center text-amber-600">
-                ⚠️ Please open in Pi Browser.
+          {!isAvailable && (
+            <p className="text-sm text-center text-amber-600 bg-amber-50 p-3 rounded">
+              ⚠️ يرجى فتح التطبيق في Pi Browser لإتمام الدفع
+            </p>
+          )}
+
+          <div className="p-3 bg-muted rounded text-xs text-muted-foreground">
+            حالة SDK: <strong>{sdkStatus}</strong> | متاح: <strong>{isAvailable ? '✅' : '❌'}</strong>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Success */}
+      {status === 'success' && (
+        <Card className="border-green-500 bg-green-50 dark:bg-green-900/20">
+          <CardContent className="pt-6 text-center space-y-2">
+            <CheckCircle className="h-12 w-12 text-green-600 mx-auto" />
+            <h3 className="text-lg font-bold text-green-900 dark:text-green-100">
+              تم الدفع بنجاح! 🎉
+            </h3>
+            <p className="text-sm text-green-700 dark:text-green-300">
+              تم تأكيد حجزك
+            </p>
+            {cashback !== null && (
+              <p className="text-sm font-semibold text-green-600">
+                💰 حصلت على {cashback.toFixed(4)} Pi كاشباك!
               </p>
             )}
+          </CardContent>
+        </Card>
+      )}
 
-            <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded text-xs">
-              <p className="text-gray-700 dark:text-gray-300">
-                SDK Status: <strong>{sdkStatus}</strong> | Available: <strong>{isAvailable ? '✅' : '❌'}</strong>
-              </p>
+      {/* Error */}
+      {status === 'error' && error && (
+        <Card className="border-red-500 bg-red-50 dark:bg-red-900/20">
+          <CardContent className="pt-6 flex items-center gap-3">
+            <AlertCircle className="h-6 w-6 text-red-600 shrink-0" />
+            <div>
+              <h3 className="font-semibold text-red-900 dark:text-red-100">فشل الدفع</h3>
+              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
             </div>
           </CardContent>
         </Card>
+      )}
 
-        {/* Status */}
-        {status === 'success' && (
-          <Card className="border-green-500 bg-green-50 dark:bg-green-900/20">
-            <CardContent className="pt-6 flex items-center gap-3">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-              <div>
-                <h3 className="font-semibold text-green-900 dark:text-green-100">Payment Successful!</h3>
-                <p className="text-sm text-green-700 dark:text-green-300">Your booking is confirmed.</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {status === 'error' && error && (
-          <Card className="border-red-500 bg-red-50 dark:bg-red-900/20">
-            <CardContent className="pt-6 flex items-center gap-3">
-              <AlertCircle className="h-6 w-6 text-red-600" />
-              <div>
-                <h3 className="font-semibold text-red-900 dark:text-red-100">Payment Failed</h3>
-                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <p className="text-xs text-center text-muted-foreground">
-          🔒 Payments are secured with blockchain technology.
-        </p>
-      </div>
+      <p className="text-xs text-center text-muted-foreground">
+        🔒 جميع المدفوعات مؤمّنة بتقنية البلوكتشين
+      </p>
     </div>
   );
 }
