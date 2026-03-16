@@ -1,4 +1,4 @@
-// src/app/components/PaymentFlow.tsx
+// src/app/components/PaymentFlow.tsx — FIXED
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,18 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pi, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 
 export default function PaymentFlow({ booking }: { booking: any }) {
-  const { isAvailable, createPayment, sdkStatus } = usePi();
+  const { isAvailable, isAuthenticated, authenticate, createPayment, sdkStatus } = usePi();
   const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // Debug logging to see what's happening
-  useEffect(() => {
-    console.log('🔍 PaymentFlow Debug Info:');
-    console.log('  - SDK Status:', sdkStatus);
-    console.log('  - Is Available:', isAvailable);
-    console.log('  - Window.Pi exists:', typeof window !== 'undefined' && !!(window as any).Pi);
-  }, [sdkStatus, isAvailable]);
 
   const handlePiPayment = async () => {
     if (!isAvailable) {
@@ -33,22 +25,33 @@ export default function PaymentFlow({ booking }: { booking: any }) {
     setError('');
 
     try {
+      // ✅ Fix: دايماً authenticate بـ payments scope قبل الدفع
+      // حتى لو المستخدم authenticated بدون payments scope
+      await authenticate(['username', 'payments']);
+
       // Step 1: Create payment record on backend
       const createRes = await fetch('/api/payments/pi/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingId: booking.id }),
+        body: JSON.stringify({
+          bookingId: booking.id,
+          amount: booking.amount,
+          memo: `Va Travel - ${booking.itemName || 'Booking'}`,
+        }),
       });
 
-      if (!createRes.ok) throw new Error('Failed to create payment');
+      if (!createRes.ok) {
+        const err = await createRes.json();
+        throw new Error(err.error || 'Failed to create payment');
+      }
+
       const { paymentId, amount, memo } = await createRes.json();
 
-      // Step 2: Initiate Pi SDK payment
+      // Step 2: Pi SDK payment
       await createPayment(
         { amount, memo, metadata: { bookingId: booking.id, paymentId } },
         {
           onReadyForServerApproval: async (piPaymentId) => {
-            // Step 3: Approve payment on backend
             const approveRes = await fetch('/api/payments/pi/approve', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -58,7 +61,6 @@ export default function PaymentFlow({ booking }: { booking: any }) {
           },
 
           onReadyForServerCompletion: async (piPaymentId, txid) => {
-            // Step 4: Complete payment on backend
             const completeRes = await fetch('/api/payments/pi/complete', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -66,7 +68,6 @@ export default function PaymentFlow({ booking }: { booking: any }) {
             });
             if (!completeRes.ok) throw new Error('Payment completion failed');
             const result = await completeRes.json();
-
             setStatus('success');
             setLoading(false);
             console.log('✅ Payment complete! Cashback:', result.cashback);
@@ -121,7 +122,7 @@ export default function PaymentFlow({ booking }: { booking: any }) {
           </CardContent>
         </Card>
 
-        {/* Pi Network Payment */}
+        {/* Pi Payment */}
         <Card>
           <CardHeader>
             <CardTitle>Pay with Pi Network</CardTitle>
@@ -132,7 +133,7 @@ export default function PaymentFlow({ booking }: { booking: any }) {
               onClick={handlePiPayment}
               disabled={loading || !isAvailable || status === 'success'}
             >
-              {loading && status === 'processing' ? (
+              {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Processing Payment...
@@ -150,12 +151,11 @@ export default function PaymentFlow({ booking }: { booking: any }) {
 
             {!isAvailable && (
               <p className="text-sm text-center text-amber-600">
-                ⚠️ Pi SDK not available. Please open in Pi Browser.
+                ⚠️ Please open in Pi Browser.
               </p>
             )}
 
-            {/* Debug Info - Remove in Production */}
-            <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+            <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded text-xs">
               <p className="text-gray-700 dark:text-gray-300">
                 SDK Status: <strong>{sdkStatus}</strong> | Available: <strong>{isAvailable ? '✅' : '❌'}</strong>
               </p>
@@ -163,18 +163,14 @@ export default function PaymentFlow({ booking }: { booking: any }) {
           </CardContent>
         </Card>
 
-        {/* Status Messages */}
+        {/* Status */}
         {status === 'success' && (
           <Card className="border-green-500 bg-green-50 dark:bg-green-900/20">
             <CardContent className="pt-6 flex items-center gap-3">
               <CheckCircle className="h-6 w-6 text-green-600" />
               <div>
-                <h3 className="font-semibold text-green-900 dark:text-green-100">
-                  Payment Successful!
-                </h3>
-                <p className="text-sm text-green-700 dark:text-green-300">
-                  Your booking is confirmed. Check your email for details.
-                </p>
+                <h3 className="font-semibold text-green-900 dark:text-green-100">Payment Successful!</h3>
+                <p className="text-sm text-green-700 dark:text-green-300">Your booking is confirmed.</p>
               </div>
             </CardContent>
           </Card>
@@ -185,18 +181,15 @@ export default function PaymentFlow({ booking }: { booking: any }) {
             <CardContent className="pt-6 flex items-center gap-3">
               <AlertCircle className="h-6 w-6 text-red-600" />
               <div>
-                <h3 className="font-semibold text-red-900 dark:text-red-100">
-                  Payment Failed
-                </h3>
+                <h3 className="font-semibold text-red-900 dark:text-red-100">Payment Failed</h3>
                 <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Security Notice */}
         <p className="text-xs text-center text-muted-foreground">
-          🔒 Payments are secured with blockchain technology. Your data is encrypted and never stored.
+          🔒 Payments are secured with blockchain technology.
         </p>
       </div>
     </div>
