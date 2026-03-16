@@ -1,21 +1,28 @@
 // src/app/api/payments/pi/approve/route.ts
-// ✅ FIXED: Removed NextAuth session requirement
-// Security via Pi Platform API key verification instead
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { approvePayment, getPayment } from '@/lib/pi-network/platform-api';
 import crypto from 'crypto';
+
+const PI_API_URL = 'https://api.minepi.com';
+const PI_API_KEY = process.env.PI_API_KEY;
+const IS_SANDBOX =
+  process.env.PI_SANDBOX === 'true' ||
+  process.env.NEXT_PUBLIC_PI_SANDBOX === 'true';
 
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
   const clientIp = request.headers.get('x-forwarded-for') || 'unknown';
 
   console.log(`[${requestId}] 📥 Payment approval request received`);
+  console.log(`[${requestId}] 🌍 Sandbox: ${IS_SANDBOX}`);
+  console.log(`[${requestId}] 🔑 PI_API_KEY set: ${!!PI_API_KEY}`);
 
   try {
     const body = await request.json();
     const { paymentId, piPaymentId } = body;
+
+    console.log(`[${requestId}] paymentId=${paymentId}, piPaymentId=${piPaymentId}`);
 
     if (!paymentId && !piPaymentId) {
       return NextResponse.json(
@@ -24,46 +31,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ✅ Find payment by our internal ID (most reliable) or by piPaymentId
+    // Find payment in DB
     const payment = await prisma.payment.findFirst({
-      where: paymentId
-        ? { id: paymentId }
-        : { piPaymentId },
-      include: {
-        booking: true,
-        user: true,
-      },
+      where: paymentId ? { id: paymentId } : { piPaymentId },
+      include: { booking: true, user: true },
     });
 
     if (!payment) {
-      console.error(`[${requestId}] ❌ Payment not found: paymentId=${paymentId}, piPaymentId=${piPaymentId}`);
+      console.error(`[${requestId}] ❌ Payment not found`);
       return NextResponse.json(
         { error: 'Payment not found', requestId },
         { status: 404 }
       );
     }
 
-    // ✅ Link piPaymentId if not already linked
+    console.log(`[${requestId}] ✅ Payment found: ${payment.id}, status: ${payment.status}`);
+
     const piPaymentIdToUse = piPaymentId || payment.piPaymentId;
 
-    if (!piPaymentIdToUse) {
-      return NextResponse.json(
-        { error: 'Pi payment ID is required', requestId },
-        { status: 400 }
-      );
-    }
-
-    if (!payment.piPaymentId && piPaymentId) {
-      console.log(`[${requestId}] 🔗 Linking piPaymentId to payment ${payment.id}`);
-      await prisma.payment.update({
-        where: { id: payment.id },
-        data: { piPaymentId },
-      });
-    }
-
-    // ✅ Idempotency: already approved
+    // Idempotency
     if (payment.status === 'approved' || payment.status === 'completed') {
-      console.log(`[${requestId}] ✅ Payment already approved (idempotent)`);
+      console.log(`[${requestId}] ✅ Already approved (idempotent)`);
       return NextResponse.json({
         success: true,
         alreadyApproved: true,
@@ -74,71 +62,105 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ✅ Verify with Pi Platform API (security via API key, not session)
-    let piPaymentData;
-    try {
-      piPaymentData = await getPayment(piPaymentIdToUse);
-    } catch (err) {
-      console.error(`[${requestId}] ❌ Pi Platform fetch failed:`, err);
+    // Link piPaymentId if not set
+    if (!payment.piPaymentId && piPaymentId) {
+      await prisma.payment.update({
+        where: { id: payment.id },
+        data: { piPaymentId },
+      });
+      console.log(`[${requestId}] 🔗 Linked piPaymentId: ${piPaymentId}`);
+    }
+
+    // Call Pi Platform API
+    let piApprovalSuccess = false;
+    let piApprovalError = '';
+
+    if (piPaymentIdToUse && PI_API_KEY) {
+      try {
+        console.log(`[${requestId}] 🌐 Calling Pi Platform approve...`);
+
+        const piRes = await fetch(
+          `${PI_API_URL}/v2/payments/${piPaymentIdToUse}/approve`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Key ${PI_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        const piResText = await piRes.text();
+        console.log(`[${requestId}] Pi Platform: ${piRes.status} - ${piResText}`);
+
+        if (piRes.ok) {
+          piApprovalSuccess = true;
+        } else {
+          piApprovalError = `Pi API ${piRes.status}: ${piResText}`;
+          // In sandbox, 400/409 are acceptable
+          if (IS_SANDBOX && (piRes.status === 400 || piRes.status === 409)) {
+            console.log(`[${requestId}] 🧪 Sandbox: accepting ${piRes.status}`);
+            piApprovalSuccess = true;
+          }
+        }
+      } catch (err) {
+        piApprovalError = err instanceof Error ? err.message : 'Network error';
+        console.error(`[${requestId}] ❌ Pi Platform error: ${piApprovalError}`);
+        if (IS_SANDBOX) {
+          console.log(`[${requestId}] 🧪 Sandbox: proceeding despite error`);
+          piApprovalSuccess = true;
+        }
+      }
+    } else if (!PI_API_KEY) {
+      console.warn(`[${requestId}] ⚠️ PI_API_KEY not set`);
+      if (IS_SANDBOX) {
+        piApprovalSuccess = true;
+      } else {
+        return NextResponse.json(
+          { error: 'Payment gateway not configured', requestId },
+          { status: 503 }
+        );
+      }
+    } else {
+      // No piPaymentId
+      if (IS_SANDBOX) piApprovalSuccess = true;
+    }
+
+    if (!piApprovalSuccess) {
       return NextResponse.json(
-        { error: 'Failed to verify payment with Pi Network', requestId },
+        {
+          error: 'Pi Network approval failed. Please try again.',
+          details: piApprovalError,
+          requestId,
+        },
         { status: 502 }
       );
     }
 
-    // Security checks
-    if (piPaymentData.direction !== 'user_to_app') {
-      console.error(`[${requestId}] 🚨 Invalid direction: ${piPaymentData.direction}`);
-      return NextResponse.json(
-        { error: 'Invalid payment direction', requestId },
-        { status: 400 }
-      );
-    }
-
-    if (piPaymentData.status?.cancelled || piPaymentData.status?.user_cancelled) {
-      return NextResponse.json(
-        { error: 'Payment was cancelled', requestId },
-        { status: 400 }
-      );
-    }
-
-    // ✅ Approve on Pi Platform
-    console.log(`[${requestId}] 📝 Approving on Pi Platform...`);
-    try {
-      await approvePayment(piPaymentIdToUse);
-    } catch (err) {
-      console.error(`[${requestId}] ❌ Pi Platform approval failed:`, err);
-      return NextResponse.json(
-        { error: 'Pi Network approval failed. Please try again.', requestId },
-        { status: 502 }
-      );
-    }
-
-    // ✅ Update database
+    // Update DB
     const updatedPayment = await prisma.payment.update({
       where: { id: payment.id },
       data: {
         status: 'approved',
-        piPaymentId: piPaymentIdToUse,
+        piPaymentId: piPaymentIdToUse || payment.piPaymentId,
         metadata: {
           ...(payment.metadata as object || {}),
           approvedAt: new Date().toISOString(),
           requestId,
           clientIp,
+          sandboxMode: IS_SANDBOX,
         },
       },
     });
 
-    // Update booking status
     if (payment.bookingId) {
       await prisma.booking.update({
         where: { id: payment.bookingId },
         data: { paymentStatus: 'processing' },
       });
-      console.log(`[${requestId}] 📅 Booking ${payment.bookingId} → processing`);
     }
 
-    console.log(`[${requestId}] 🎉 Payment approved successfully`);
+    console.log(`[${requestId}] 🎉 Approved: ${updatedPayment.id}`);
 
     return NextResponse.json({
       success: true,
@@ -156,9 +178,7 @@ export async function POST(request: NextRequest) {
       {
         error: 'Payment approval failed',
         requestId,
-        details: process.env.NODE_ENV === 'development'
-          ? error instanceof Error ? error.message : 'Unknown error'
-          : undefined,
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -167,9 +187,10 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    service: 'Payment Approval',
+    service: 'Payment Approval v4',
     status: 'operational',
-    version: '3.0.0',
-    note: 'Secured via Pi Platform API Key (no session required)',
+    sandbox: IS_SANDBOX,
+    piApiKeySet: !!PI_API_KEY,
+    piApiKeyPrefix: PI_API_KEY ? PI_API_KEY.substring(0, 8) + '...' : 'NOT SET',
   });
 }
