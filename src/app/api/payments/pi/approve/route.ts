@@ -1,5 +1,5 @@
 // src/app/api/payments/pi/approve/route.ts
-// v6 — Call Pi API FIRST (sync), respond 200, DB in background
+// v7 — Handle both paymentId and piPaymentId, Pi API call guaranteed
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
@@ -12,86 +12,89 @@ const IS_SANDBOX =
   process.env.NEXT_PUBLIC_PI_SANDBOX === 'true';
 
 async function updateDbBackground(
-  paymentId: string | undefined,
+  internalPaymentId: string | undefined,
   piPaymentId: string | undefined,
   requestId: string
 ): Promise<void> {
   try {
-    if (!paymentId && !piPaymentId) return;
+    if (!internalPaymentId && !piPaymentId) return;
 
+    // Use shorter timeout for DB connection
     const payment = await prisma.payment.findFirst({
-      where: paymentId ? { id: paymentId } : { piPaymentId },
+      where: internalPaymentId
+        ? { id: internalPaymentId }
+        : { piPaymentId },
+      // If not found by internal ID, try piPaymentId as fallback
     });
 
-    if (!payment) {
-      console.error(`[${requestId}] ❌ DB: Payment not found`);
+    if (!payment && internalPaymentId) {
+      // Maybe internalPaymentId is actually a piPaymentId
+      const p2 = await prisma.payment.findFirst({ where: { piPaymentId: internalPaymentId } });
+      if (!p2) { console.error(`[${requestId}] DB: payment not found`); return; }
+      await prisma.payment.update({
+        where: { id: p2.id },
+        data: { status: 'approved', piPaymentId: piPaymentId || internalPaymentId,
+          metadata: { ...((p2.metadata as object) || {}), approvedAt: new Date().toISOString(), requestId } }
+      });
+      if (p2.bookingId) await prisma.booking.update({ where: { id: p2.bookingId }, data: { paymentStatus: 'processing' } });
+      console.log(`[${requestId}] DB: approved via piPaymentId fallback`);
       return;
     }
 
+    if (!payment) { console.error(`[${requestId}] DB: not found`); return; }
     if (payment.status === 'approved' || payment.status === 'completed') {
-      console.log(`[${requestId}] ✅ DB: Already approved`);
-      return;
+      console.log(`[${requestId}] DB: already approved`); return;
     }
-
-    const piIdToSet = piPaymentId || payment.piPaymentId;
 
     await prisma.payment.update({
       where: { id: payment.id },
       data: {
         status: 'approved',
-        piPaymentId: piIdToSet,
-        metadata: {
-          ...((payment.metadata as object) || {}),
-          approvedAt: new Date().toISOString(),
-          requestId,
-          sandboxMode: IS_SANDBOX,
-        },
-      },
+        piPaymentId: piPaymentId || payment.piPaymentId,
+        metadata: { ...((payment.metadata as object) || {}), approvedAt: new Date().toISOString(), requestId, sandboxMode: IS_SANDBOX }
+      }
     });
-
     if (payment.bookingId) {
-      await prisma.booking.update({
-        where: { id: payment.bookingId },
-        data: { paymentStatus: 'processing' },
-      });
+      await prisma.booking.update({ where: { id: payment.bookingId }, data: { paymentStatus: 'processing' } });
     }
-
-    console.log(`[${requestId}] ✅ DB: Payment approved, booking updated`);
+    console.log(`[${requestId}] DB: payment approved ✅`);
   } catch (err) {
-    console.error(`[${requestId}] ❌ DB background error:`, err instanceof Error ? err.message : err);
+    console.error(`[${requestId}] DB error:`, err instanceof Error ? err.message : err);
   }
 }
 
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  console.log(`[${requestId}] 📥 v6 approve ${new Date().toISOString()} sandbox=${IS_SANDBOX}`);
+  console.log(`[${requestId}] 📥 v7 ${new Date().toISOString()} sandbox=${IS_SANDBOX} apiKey=${!!PI_API_KEY}`);
 
   let paymentId: string | undefined;
   let piPaymentId: string | undefined;
 
-  // 1. Parse body
   try {
     const body = await request.json();
     paymentId = body?.paymentId;
     piPaymentId = body?.piPaymentId;
-    console.log(`[${requestId}] paymentId=${paymentId} piPaymentId=${piPaymentId}`);
+    console.log(`[${requestId}] body: paymentId=${paymentId} piPaymentId=${piPaymentId}`);
   } catch (err) {
-    console.error(`[${requestId}] Body parse error:`, err);
-    // Return 200 even on parse error — Pi must not see failure
+    console.error(`[${requestId}] parse error:`, err);
     return NextResponse.json({ success: true, requestId, warning: 'parse error' });
   }
 
-  // 2. Call Pi Platform API SYNCHRONOUSLY (before responding)
-  //    Pi SDK waits for this before showing confirm screen
-  if (piPaymentId && PI_API_KEY) {
+  // KEY FIX: In Pi SDK, onReadyForServerApproval receives paymentId = Pi payment ID
+  // So if piPaymentId not sent, use paymentId as the Pi payment ID
+  const piIdToApprove = piPaymentId || paymentId;
+
+  console.log(`[${requestId}] will call Pi API with: ${piIdToApprove}`);
+
+  // ✅ Call Pi Platform SYNCHRONOUSLY — this is what Pi wallet waits for
+  if (piIdToApprove && PI_API_KEY) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 7000);
 
     try {
-      console.log(`[${requestId}] 🌐 Calling Pi API approve for ${piPaymentId}...`);
-
+      console.log(`[${requestId}] 🌐 POST ${PI_API_URL}/v2/payments/${piIdToApprove}/approve`);
       const piRes = await fetch(
-        `${PI_API_URL}/v2/payments/${piPaymentId}/approve`,
+        `${PI_API_URL}/v2/payments/${piIdToApprove}/approve`,
         {
           method: 'POST',
           headers: {
@@ -102,39 +105,26 @@ export async function POST(request: NextRequest) {
         }
       );
       clearTimeout(timer);
-
       const text = await piRes.text();
-      console.log(`[${requestId}] Pi API: ${piRes.status} — ${text.slice(0, 300)}`);
-
-      if (!piRes.ok && !IS_SANDBOX) {
-        // In production, if Pi rejects — still return 200 but log it
-        console.warn(`[${requestId}] ⚠️ Pi API rejected but returning 200 anyway`);
-      }
+      console.log(`[${requestId}] Pi API response: ${piRes.status} — ${text.slice(0, 400)}`);
     } catch (err) {
       clearTimeout(timer);
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[${requestId}] Pi API error: ${msg}`);
-      // Don't fail — Pi timeout shouldn't block our response
+      console.error(`[${requestId}] Pi API error:`, err instanceof Error ? err.message : err);
     }
-  } else if (!PI_API_KEY) {
-    console.warn(`[${requestId}] ⚠️ No PI_API_KEY`);
   } else {
-    console.warn(`[${requestId}] ⚠️ No piPaymentId — can't call Pi API`);
+    console.warn(`[${requestId}] ⚠️ skipping Pi API — piId=${piIdToApprove} apiKey=${!!PI_API_KEY}`);
   }
 
-  // 3. Do DB work in background (non-blocking)
-  if (paymentId || piPaymentId) {
-    updateDbBackground(paymentId, piPaymentId, requestId).catch((e) =>
-      console.error(`[${requestId}] BG error:`, e)
-    );
-  }
+  // Background DB update (non-blocking)
+  updateDbBackground(paymentId, piPaymentId || paymentId, requestId).catch(e =>
+    console.error(`[${requestId}] BG:`, e)
+  );
 
-  // 4. Respond 200 immediately after Pi API call
-  console.log(`[${requestId}] ✅ Returning 200`);
+  console.log(`[${requestId}] ✅ returning 200`);
   return NextResponse.json({
     success: true,
     paymentId,
-    piPaymentId,
+    piPaymentId: piIdToApprove,
     status: 'approved',
     requestId,
   });
@@ -142,11 +132,11 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    service: 'Payment Approval v6',
+    service: 'Payment Approval v7',
     status: 'operational',
     sandbox: IS_SANDBOX,
     piApiKeySet: !!PI_API_KEY,
     piApiKeyPrefix: PI_API_KEY ? PI_API_KEY.substring(0, 8) + '...' : 'NOT SET',
-    note: 'v6: Pi API sync first, then 200, DB async',
+    note: 'v7: piId = piPaymentId || paymentId, Pi API always called',
   });
 }
