@@ -1,5 +1,5 @@
 // src/app/api/ai/travel/route.ts
-// 🧠 Va Travel AI — Global Multilingual Assistant
+// 🧠 Logy AI — Global Multilingual Travel Assistant
 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
-        system: `You are Va Travel AI — the world's most advanced AI travel assistant, powered by Pi Network.
+        system: `You are Logy AI — the world's most advanced AI travel assistant, powered by Pi Network.
 
 🌍 CRITICAL RULE: ALWAYS respond in the EXACT same language the user writes in.
 - User writes in Arabic → respond in Arabic
