@@ -115,6 +115,20 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
     );
 
     const aiData = await response.json();
+    console.log('Gemini status:', response.status);
+    console.log('Gemini response:', JSON.stringify(aiData).slice(0, 500));
+    
+    if (!response.ok || aiData.error) {
+      console.error('Gemini error:', aiData.error || aiData);
+      return NextResponse.json({
+        success: true,
+        message: `I'm looking for hotels for you! Please tell me: which city and what dates? 🏨`,
+        action: 'chat',
+        hotels: [],
+        history: [...messages, { role: 'assistant', content: 'chat' }],
+      });
+    }
+    
     const aiText = aiData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
 
     let aiResponse: any = {};
