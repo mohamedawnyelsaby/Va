@@ -66,71 +66,56 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { message, history = [] } = body;
 
-    if (!ANTHROPIC_API_KEY) {
-      return NextResponse.json({ error: 'AI not configured' }, { status: 500 });
-    }
-
     const today = new Date().toISOString().split('T')[0];
     const messages = [...history, { role: 'user', content: message }];
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        system: `You are Logy AI — the world's most advanced AI travel assistant, powered by Pi Network.
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    
+    if (!GEMINI_API_KEY) {
+      return NextResponse.json({ error: 'AI not configured', message: 'AI service not available' }, { status: 500 });
+    }
+
+    const systemPrompt = `You are Logy AI — the world's most advanced AI travel assistant, powered by Pi Network.
 
 🌍 CRITICAL RULE: ALWAYS respond in the EXACT same language the user writes in.
 - User writes in Arabic → respond in Arabic
 - User writes in English → respond in English  
 - User writes in French → respond in French
 - User writes in Spanish → respond in Spanish
-- User writes in Chinese → respond in Chinese
 - User writes in any language → respond in THAT language
-Never switch languages unless the user does.
 
-Your role: Help users find and book hotels worldwide. You handle EVERYTHING autonomously:
-- Find best hotels from Booking.com worldwide
-- Compare prices and ratings
-- Complete bookings with Pi Network or USD payment
-- Solve any travel problem instantly
-- 24/7 customer support
-
+Your role: Help users find and book hotels worldwide autonomously.
 Today's date: ${today}
 
-When user mentions travel/hotels, extract:
-- destination (city name in English for API)
-- checkIn (YYYY-MM-DD)
-- checkOut (YYYY-MM-DD)  
-- budget (USD per night, optional)
-- guests (number, optional)
+When user mentions travel/hotels, extract destination, dates, budget.
 
-ALWAYS respond in this exact JSON format:
-{
-  "message": "your response in USER'S language — friendly, helpful, expert",
-  "action": "search_hotels" | "chat" | "show_booking",
-  "searchParams": {
-    "destination": "English city name",
-    "checkIn": "YYYY-MM-DD",
-    "checkOut": "YYYY-MM-DD",
-    "budget": 300,
-    "guests": 2
-  }
-}
+ALWAYS respond in this EXACT JSON format (no markdown, no backticks):
+{"message":"your response in USER's language","action":"search_hotels","searchParams":{"destination":"English city name","checkIn":"YYYY-MM-DD","checkOut":"YYYY-MM-DD","budget":300,"guests":2}}
 
-If missing dates, ask for them in user's language before searching.
-Be warm, professional, and efficient. You are the best travel agent in the world.`,
-        messages,
-      }),
-    });
+If just chatting: {"message":"response","action":"chat"}
+If missing dates, ask in user's language: {"message":"ask for dates","action":"chat"}`;
+
+    // Build Gemini messages
+    const geminiMessages = messages.map((m: any) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) }]
+    }));
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: geminiMessages,
+          generationConfig: { maxOutputTokens: 1000, temperature: 0.7 },
+        }),
+      }
+    );
 
     const aiData = await response.json();
-    const aiText = aiData.content?.[0]?.text || '{}';
+    const aiText = aiData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
 
     let aiResponse: any = {};
     try {
