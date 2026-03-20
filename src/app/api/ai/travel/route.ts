@@ -101,42 +101,81 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
       parts: [{ text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) }]
     }));
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: geminiMessages,
-          generationConfig: { maxOutputTokens: 1000, temperature: 0.7 },
-        }),
-      }
-    );
-
-    const aiData = await response.json();
-    console.log('Gemini status:', response.status);
-    console.log('Gemini response:', JSON.stringify(aiData).slice(0, 500));
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    let aiText = '{}';
     
-    if (!response.ok || aiData.error) {
-      console.error('Gemini error:', aiData.error || aiData);
+    // Try Gemini first, fallback to OpenAI
+    let geminiSuccess = false;
+    
+    const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+    for (const model of models) {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: geminiMessages,
+            generationConfig: { maxOutputTokens: 1000, temperature: 0.7 },
+          }),
+        }
+      );
+      
+      if (res.status === 429) continue;
+      
+      const data = await res.json();
+      if (data.error) continue;
+      
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) { aiText = text; geminiSuccess = true; break; }
+    }
+    
+    // Fallback to OpenAI if Gemini failed
+    if (!geminiSuccess && OPENAI_API_KEY) {
+      console.log('Falling back to OpenAI...');
+      const oaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          max_tokens: 1000,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...messages.map((m: any) => ({
+              role: m.role === 'assistant' ? 'assistant' : 'user',
+              content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+            })),
+          ],
+        }),
+      });
+      const oaiData = await oaiRes.json();
+      const oaiText = oaiData.choices?.[0]?.message?.content;
+      if (oaiText) aiText = oaiText;
+      else console.error('OpenAI error:', oaiData.error);
+    }
+    
+    if (aiText === '{}' || !aiText) {
       return NextResponse.json({
         success: true,
-        message: `I'm looking for hotels for you! Please tell me: which city and what dates? 🏨`,
+        message: 'I am a bit busy. Please try again in a moment! 🙏',
         action: 'chat',
         hotels: [],
-        history: [...messages, { role: 'assistant', content: 'chat' }],
+        history: [...messages, { role: 'assistant', content: 'busy' }],
       });
     }
     
-    const aiText = aiData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    const aiText2 = aiText;
 
     let aiResponse: any = {};
     try {
-      const jsonMatch = aiText.match(/\{[\s\S]*\}/);
-      aiResponse = jsonMatch ? JSON.parse(jsonMatch[0]) : { message: aiText, action: 'chat' };
+      const jsonMatch = aiText2.match(/\{[\s\S]*\}/);
+      aiResponse = jsonMatch ? JSON.parse(jsonMatch[0]) : { message: aiText2, action: 'chat' };
     } catch {
-      aiResponse = { message: aiText, action: 'chat' };
+      aiResponse = { message: aiText2, action: 'chat' };
     }
 
     // Search hotels if needed
