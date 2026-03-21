@@ -66,10 +66,13 @@ export function Navbar({ locale, session }: NavbarProps) {
 
   const currentLanguage = languages.find(lang => lang.code === locale) || languages[0];
 
+  const closeMenu = () => setMobileMenuOpen(false);
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
+
           {/* Logo */}
           <Link href={`/${locale}`} className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-r from-primary to-secondary">
@@ -96,6 +99,7 @@ export function Navbar({ locale, session }: NavbarProps) {
 
           {/* Right Section */}
           <div className="flex items-center gap-2">
+
             {/* Search */}
             <Link href={`/${locale}/search`}>
               <Button variant="ghost" size="icon">
@@ -235,20 +239,20 @@ export function Navbar({ locale, session }: NavbarProps) {
                   key={item.name}
                   href={item.href}
                   className="flex items-center gap-3 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={closeMenu}
                 >
                   <item.icon className="h-5 w-5" />
                   {item.name}
                 </Link>
               ))}
-              
+
               {!session?.user && (
                 <>
                   <DropdownMenuSeparator />
-                  <Link href={`/${locale}/auth/signin`}>
+                  <Link href={`/${locale}/auth/signin`} onClick={closeMenu}>
                     <Button variant="outline" className="w-full">Sign In</Button>
                   </Link>
-                  <Link href={`/${locale}/auth/signup`}>
+                  <Link href={`/${locale}/auth/signup`} onClick={closeMenu}>
                     <Button className="w-full">Sign Up</Button>
                   </Link>
                 </>
