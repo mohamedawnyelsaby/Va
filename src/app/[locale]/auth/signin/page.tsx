@@ -1,8 +1,7 @@
 'use client';
 import { usePi } from '@/components/providers/pi-provider';
-
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,9 +10,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Mail, Lock, Eye, EyeOff, Pi } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import Link from 'next/link';
 
 export default function SignInPage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
   const { toast } = useToast();
   const { isAvailable, authenticate } = usePi();
   const [showPassword, setShowPassword] = useState(false);
@@ -45,7 +47,7 @@ export default function SignInPage() {
           title: 'Success',
           description: 'Logged in successfully',
         });
-        router.push('/dashboard');
+        router.push(`/${locale}/dashboard`);
       }
     } catch (error) {
       toast({
@@ -61,11 +63,14 @@ export default function SignInPage() {
   const handlePiNetworkLogin = async () => {
     try {
       if (!isAvailable) {
-        toast({ title: 'Pi Browser Required', description: 'Please open this app in Pi Browser', variant: 'destructive' });
+        toast({
+          title: 'Pi Browser Required',
+          description: 'Please open this app in Pi Browser',
+          variant: 'destructive',
+        });
         return;
       }
       const piUser = await authenticate(['username', 'payments']);
-      // Use custom Pi auth endpoint
       const res = await fetch('/api/pi/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -73,26 +78,32 @@ export default function SignInPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Auth failed');
-      // Now sign in with NextAuth using email
       const result = await signIn('credentials', {
         email: data.user.email,
         password: data.user.id,
         redirect: false,
       });
       if (result?.ok) {
-        toast({ title: 'Welcome ' + piUser.username, description: 'Pi Network login successful!' });
-        setTimeout(() => { window.location.href = '/en/dashboard'; }, 1000);
+        toast({
+          title: `Welcome ${piUser.username}`,
+          description: 'Pi Network login successful!',
+        });
+        router.push(`/${locale}/dashboard`);
       } else {
         throw new Error(result?.error || 'Sign in failed');
       }
     } catch (error) {
-      toast({ title: 'Error', description: 'Pi Network login failed', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Pi Network login failed',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleGoogleLogin = async () => {
     try {
-      await signIn('google', { callbackUrl: '/dashboard' });
+      await signIn('google', { callbackUrl: `/${locale}/dashboard` });
     } catch (error) {
       toast({
         title: 'Error',
@@ -161,9 +172,9 @@ export default function SignInPage() {
             </Button>
 
             <div className="text-center">
-              <a href="#" className="text-sm text-blue-600 hover:underline">
+              <Link href={`/${locale}/auth/forgot-password`} className="text-sm text-blue-600 hover:underline">
                 Forgot password?
-              </a>
+              </Link>
             </div>
           </form>
 
@@ -210,9 +221,9 @@ export default function SignInPage() {
 
           <div className="mt-6 text-center text-sm">
             Don&apos;t have an account?{' '}
-            <a href="/signup" className="text-blue-600 hover:underline">
+            <Link href={`/${locale}/auth/signup`} className="text-blue-600 hover:underline">
               Sign up
-            </a>
+            </Link>
           </div>
         </CardContent>
       </Card>
