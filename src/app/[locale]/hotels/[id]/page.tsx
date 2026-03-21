@@ -1,4 +1,3 @@
-// src/app/[locale]/hotels/[id]/page.tsx
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -8,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useToast } from '@/components/ui/use-toast';
-import { 
-  MapPin, 
-  Star, 
+import {
+  MapPin,
+  Star,
   Heart,
   Share2,
   Wifi,
@@ -20,12 +19,11 @@ import {
   Calendar,
   Users,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react';
 import Image from 'next/image';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
-// TypeScript Interfaces
 interface City {
   name: string;
   country: string;
@@ -79,6 +77,10 @@ export default function HotelDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+
+  // ✅ FIXED: get locale from params
+  const locale = (params.locale as string) || 'en';
+
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -93,14 +95,9 @@ export default function HotelDetailPage() {
   const fetchHotelDetails = useCallback(async () => {
     try {
       const response = await fetch(`/api/hotels/${params.id}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch hotel');
-      }
-      
+      if (!response.ok) throw new Error('Failed to fetch hotel');
       const data = await response.json();
       setHotel(data);
-      
       if (data.roomTypes?.length > 0) {
         setSelectedRoom(data.roomTypes[0]);
       }
@@ -139,28 +136,31 @@ export default function HotelDetailPage() {
       return;
     }
 
-    // Navigate to booking page with data
     const query = new URLSearchParams({
-      itemId: hotel.id,
-      itemType: 'Hotel',
-      roomType: selectedRoom.type,
-      checkIn: bookingData.checkIn,
-      checkOut: bookingData.checkOut,
-      guests: bookingData.guests.toString(),
-      rooms: bookingData.rooms.toString(),
+      itemId:    hotel.id,
+      itemType:  'Hotel',
+      roomType:  selectedRoom.type,
+      checkIn:   bookingData.checkIn,
+      checkOut:  bookingData.checkOut,
+      guests:    bookingData.guests.toString(),
+      rooms:     bookingData.rooms.toString(),
     });
-    router.push(`/booking?${query}`);
+
+    // ✅ FIXED: include locale in redirect
+    router.push(`/${locale}/booking?${query}`);
   };
 
   const handlePreviousImage = () => {
     if (!hotel?.images) return;
-    setCurrentImageIndex(i => (i === 0 ? hotel.images.length - 1 : i - 1));
+    setCurrentImageIndex((i) => (i === 0 ? hotel.images.length - 1 : i - 1));
   };
 
   const handleNextImage = () => {
     if (!hotel?.images) return;
-    setCurrentImageIndex(i => (i === hotel.images.length - 1 ? 0 : i + 1));
+    setCurrentImageIndex((i) => (i === hotel.images.length - 1 ? 0 : i + 1));
   };
+
+  const getTodayDate = () => new Date().toISOString().split('T')[0];
 
   if (loading) {
     return (
@@ -175,9 +175,7 @@ export default function HotelDetailPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Hotel Not Found</h2>
-          <Button onClick={() => router.push('/hotels')}>
-            Back to Hotels
-          </Button>
+          <Button onClick={() => router.push(`/${locale}/hotels`)}>Back to Hotels</Button>
         </div>
       </div>
     );
@@ -190,13 +188,10 @@ export default function HotelDetailPage() {
     Restaurant: Utensils,
   };
 
-  const getTodayDate = () => {
-    return new Date().toISOString().split('T')[0];
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
+
         {/* Image Gallery */}
         <div className="mb-8">
           <div className="relative h-[500px] rounded-2xl overflow-hidden">
@@ -207,8 +202,7 @@ export default function HotelDetailPage() {
               className="object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            
-            {/* Gallery Controls */}
+
             {(hotel.images?.length ?? 0) > 1 && (
               <>
                 <button
@@ -228,7 +222,6 @@ export default function HotelDetailPage() {
               </>
             )}
 
-            {/* Hotel Info Overlay */}
             <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
               <div className="flex items-start justify-between">
                 <div>
@@ -244,11 +237,9 @@ export default function HotelDetailPage() {
                       ))}
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-2xl">{hotel.rating?.toFixed(1)}</span>
-                      <span>({hotel.reviewCount} reviews)</span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-2xl">{hotel.rating?.toFixed(1)}</span>
+                    <span>({hotel.reviewCount} reviews)</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -265,26 +256,22 @@ export default function HotelDetailPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+
             {/* Description */}
             <Card>
-              <CardHeader>
-                <CardTitle>About This Hotel</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>About This Hotel</CardTitle></CardHeader>
               <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
-                  {hotel.description}
-                </p>
+                <p className="text-muted-foreground leading-relaxed">{hotel.description}</p>
               </CardContent>
             </Card>
 
             {/* Amenities */}
             {hotel.amenities?.length > 0 && (
               <Card>
-                <CardHeader>
-                  <CardTitle>Amenities</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Amenities</CardTitle></CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {hotel.amenities.map((amenity: string) => {
@@ -304,9 +291,7 @@ export default function HotelDetailPage() {
             {/* Room Types */}
             {hotel.roomTypes?.length > 0 && (
               <Card>
-                <CardHeader>
-                  <CardTitle>Select Your Room</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Select Your Room</CardTitle></CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {hotel.roomTypes.map((room: RoomType) => (
@@ -341,9 +326,7 @@ export default function HotelDetailPage() {
             {/* Reviews */}
             {hotel.reviews && hotel.reviews.length > 0 && (
               <Card>
-                <CardHeader>
-                  <CardTitle>Guest Reviews</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Guest Reviews</CardTitle></CardHeader>
                 <CardContent>
                   <div className="space-y-6">
                     {hotel.reviews.slice(0, 5).map((review: Review) => (
@@ -368,7 +351,7 @@ export default function HotelDetailPage() {
                               <p className="text-sm text-muted-foreground">
                                 {formatDate(new Date(review.createdAt), 'en-US', {
                                   month: 'short',
-                                  year: 'numeric'
+                                  year: 'numeric',
                                 })}
                               </p>
                             </div>
@@ -389,10 +372,9 @@ export default function HotelDetailPage() {
           {/* Booking Card */}
           <div>
             <Card className="sticky top-8">
-              <CardHeader>
-                <CardTitle>Book Your Stay</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Book Your Stay</CardTitle></CardHeader>
               <CardContent className="space-y-4">
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Check-in</label>
                   <div className="relative">
@@ -430,19 +412,22 @@ export default function HotelDetailPage() {
                         type="number"
                         min="1"
                         value={bookingData.guests}
-                        onChange={(e) => setBookingData({ ...bookingData, guests: parseInt(e.target.value) || 1 })}
+                        onChange={(e) =>
+                          setBookingData({ ...bookingData, guests: parseInt(e.target.value) || 1 })
+                        }
                         className="w-full pl-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                       />
                     </div>
                   </div>
-
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Rooms</label>
                     <input
                       type="number"
                       min="1"
                       value={bookingData.rooms}
-                      onChange={(e) => setBookingData({ ...bookingData, rooms: parseInt(e.target.value) || 1 })}
+                      onChange={(e) =>
+                        setBookingData({ ...bookingData, rooms: parseInt(e.target.value) || 1 })
+                      }
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     />
                   </div>
@@ -458,13 +443,19 @@ export default function HotelDetailPage() {
                   <div className="flex justify-between mb-2">
                     <span>Service fee (10%)</span>
                     <span className="font-semibold">
-                      {formatCurrency((selectedRoom?.price || hotel.pricePerNight) * 0.1, hotel.currency)}
+                      {formatCurrency(
+                        (selectedRoom?.price || hotel.pricePerNight) * 0.1,
+                        hotel.currency
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between text-lg font-bold pt-2 border-t">
                     <span>Total</span>
                     <span>
-                      {formatCurrency((selectedRoom?.price || hotel.pricePerNight) * 1.1, hotel.currency)}
+                      {formatCurrency(
+                        (selectedRoom?.price || hotel.pricePerNight) * 1.1,
+                        hotel.currency
+                      )}
                     </span>
                   </div>
                 </div>
@@ -479,6 +470,7 @@ export default function HotelDetailPage() {
               </CardContent>
             </Card>
           </div>
+
         </div>
       </div>
     </div>
