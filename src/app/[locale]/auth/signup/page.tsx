@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,9 +10,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Mail, Lock, Eye, EyeOff, Pi, User } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import Link from 'next/link';
 
 export default function SignUpPage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -66,9 +69,9 @@ export default function SignUpPage() {
       });
 
       if (signInResult?.error) {
-        router.push('/auth/signin');
+        router.push(`/${locale}/auth/signin`);
       } else {
-        router.push('/dashboard');
+        router.push(`/${locale}/dashboard`);
       }
     } catch (error: any) {
       toast({ title: 'Error', description: error.message || 'Something went wrong', variant: 'destructive' });
@@ -79,7 +82,7 @@ export default function SignUpPage() {
 
   const handleGoogleSignup = async () => {
     try {
-      await signIn('google', { callbackUrl: '/dashboard' });
+      await signIn('google', { callbackUrl: `/${locale}/dashboard` });
     } catch {
       toast({ title: 'Error', description: 'Google signup failed', variant: 'destructive' });
     }
@@ -185,9 +188,9 @@ export default function SignUpPage() {
 
             <p className="text-xs text-center text-gray-500">
               By signing up, you agree to our{' '}
-              <a href="/terms" className="text-blue-600 hover:underline">Terms of Service</a>{' '}
+              <Link href={`/${locale}/terms`} className="text-blue-600 hover:underline">Terms of Service</Link>{' '}
               and{' '}
-              <a href="/privacy" className="text-blue-600 hover:underline">Privacy Policy</a>
+              <Link href={`/${locale}/privacy`} className="text-blue-600 hover:underline">Privacy Policy</Link>
             </p>
           </form>
 
@@ -212,7 +215,9 @@ export default function SignUpPage() {
 
           <div className="mt-6 text-center text-sm">
             Already have an account?{' '}
-            <a href="/auth/signin" className="text-blue-600 hover:underline">Sign in</a>
+            <Link href={`/${locale}/auth/signin`} className="text-blue-600 hover:underline">
+              Sign in
+            </Link>
           </div>
         </CardContent>
       </Card>
