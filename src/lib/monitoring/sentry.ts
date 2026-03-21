@@ -1,49 +1,43 @@
-// src/lib/monitoring/sentry.ts
-// Install: npm install @sentry/nextjs
+// ✅ Optional Sentry — no crash if not installed
+let Sentry: any = null;
 
-import * as Sentry from '@sentry/nextjs';
+async function loadSentry() {
+  try {
+    Sentry = await import('@sentry/nextjs');
+  } catch {
+    // Sentry not installed — silent fail
+  }
+}
 
-export function initSentry() {
-  if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_SENTRY_DSN) {
+if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  loadSentry().then(() => {
+    if (!Sentry) return;
     Sentry.init({
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-      
-      // Performance Monitoring
-      tracesSampleRate: 0.1, // 10% of transactions
-      
-      // Session Replay
-      replaysSessionSampleRate: 0.1,
+      tracesSampleRate: 0.1,
       replaysOnErrorSampleRate: 1.0,
-      
-      // Filter sensitive data
-      beforeSend(event) {
-        // Remove passwords, tokens, etc.
+      ignoreErrors: ['ResizeObserver loop limit exceeded'],
+      beforeSend(event: any) {
         if (event.request) {
           delete event.request.cookies;
           delete event.request.headers;
         }
         return event;
       },
-      
-      // Ignore common errors
-      ignoreErrors: [
-        'ResizeObserver loop limit exceeded',
-        'Non-Error promise rejection captured',
-      ],
     });
-  }
+  });
 }
 
 export function captureException(error: Error, context?: Record<string, any>) {
-  if (process.env.NODE_ENV === 'production') {
+  if (Sentry) {
     Sentry.captureException(error, { extra: context });
   } else {
-    console.error('Error:', error, context);
+    console.error('[Error]', error.message, context);
   }
 }
 
 export function captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info') {
-  if (process.env.NODE_ENV === 'production') {
+  if (Sentry) {
     Sentry.captureMessage(message, level);
   } else {
     console.log(`[${level.toUpperCase()}]`, message);
