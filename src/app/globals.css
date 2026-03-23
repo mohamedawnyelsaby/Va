@@ -1,14 +1,141 @@
-/* Va Travel — Ultimate Theme */
-:root {
-  --color-va-purple: #7C5CFC;
-  --color-va-purple-hover: #6D4EE8;
-  --color-va-gold: #EAB308;
-  --color-va-bg: #07090F;
-  --color-va-surface: #0F1120;
-  --color-va-border: rgba(255, 255, 255, 0.07);
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   Va Travel — Ultimate Theme Variables
+   ============================================ */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 262 83% 58%;
+    --radius: 0.5rem;
+
+    /* Va Travel Brand */
+    --color-va-purple: #7C5CFC;
+    --color-va-purple-hover: #6D4EE8;
+    --color-va-gold: #EAB308;
+    --color-va-bg: #07090F;
+    --color-va-surface: #0F1120;
+    --color-va-border: rgba(255, 255, 255, 0.07);
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 262 83% 58%;
+  }
 }
 
-/* Force dark theme on nav and hero */
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+}
+
+/* ============================================
+   Va Travel — Navbar Dark Override
+   ============================================ */
 nav.sticky {
   background: rgba(7, 9, 15, 0.97) !important;
+  backdrop-filter: blur(20px);
+}
+
+/* ============================================
+   Va Travel — Utility Classes
+   ============================================ */
+@layer utilities {
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, #7C5CFC, #6D4EE8);
+  }
+
+  .bg-gradient-gold {
+    background: linear-gradient(135deg, #EAB308, #CA8A04);
+  }
+
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .text-pi {
+    color: #EAB308;
+  }
+
+  .bg-pi {
+    background-color: #EAB308;
+  }
+
+  .border-pi {
+    border-color: #EAB308;
+  }
+}
+
+/* ============================================
+   Va Travel — Scrollbar
+   ============================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 92, 252, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 92, 252, 0.6);
 }
