@@ -25,6 +25,7 @@
     --ring: 258 94% 61%;
     --radius: 0.5rem;
 
+    /* Va Travel Light Tokens */
     --vt-bg:          #F2F2F7;
     --vt-bg-card:     #FFFFFF;
     --vt-bg-surface:  #E8E8EE;
@@ -46,8 +47,6 @@
     --vt-border-2:    rgba(0,0,0,0.12);
     --vt-nav-bg:      #FFFFFF;
     --vt-nav-border:  rgba(0,0,0,0.06);
-    --vt-tag-bg:      #E8E8F0;
-    --vt-tag-text:    #55555E;
     --color-pi:       #EAB308;
   }
 
@@ -72,6 +71,7 @@
     --input: 240 20% 22%;
     --ring: 258 100% 75%;
 
+    /* Va Travel Dark Tokens */
     --vt-bg:          #09091A;
     --vt-bg-card:     #151530;
     --vt-bg-surface:  #1A1A35;
@@ -93,14 +93,12 @@
     --vt-border-2:    rgba(255,255,255,0.14);
     --vt-nav-bg:      #0D0D22;
     --vt-nav-border:  rgba(255,255,255,0.06);
-    --vt-tag-bg:      rgba(255,255,255,0.06);
-    --vt-tag-text:    rgba(240,240,255,0.55);
   }
 }
 
 @layer base {
   * { @apply border-border; box-sizing: border-box; }
-  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  html { scroll-behavior: smooth; }
   body {
     background-color: var(--vt-bg);
     color: var(--vt-text);
@@ -108,47 +106,48 @@
   }
 }
 
-/* ============================================================
-   OVERRIDE HARDCODED TAILWIND GRAY CLASSES
-   This fixes existing pages WITHOUT changing each file
-   ============================================================ */
+/* ═══════════════════════════════════════════════════════
+   FIX: تحويل كلاسات Tailwind الثابتة للـ Dark Mode
+   الصفحات الموجودة بتستخدم bg-gray-50 dark:bg-gray-900
+   هنخليها تاخد الألوان الجديدة تلقائي من غير ما نغير كل صفحة
+   ═══════════════════════════════════════════════════════ */
 
-/* Page backgrounds */
-.bg-gray-50  { background-color: var(--vt-bg) !important; }
-.dark .bg-gray-50  { background-color: var(--vt-bg) !important; }
-.dark .bg-gray-100 { background-color: var(--vt-bg-surface) !important; }
-.dark .bg-gray-800 { background-color: var(--vt-bg) !important; }
-.dark .bg-gray-900 { background-color: var(--vt-bg) !important; }
+/* خلفيات الصفحات */
+.bg-gray-50                { background-color: var(--vt-bg) !important; }
+.dark .bg-gray-50          { background-color: var(--vt-bg) !important; }
+.dark .bg-gray-100         { background-color: var(--vt-bg-surface) !important; }
+.dark .bg-gray-700         { background-color: var(--vt-bg-surface) !important; }
+.dark .bg-gray-800         { background-color: var(--vt-bg-card) !important; }
+.dark .bg-gray-900         { background-color: var(--vt-bg) !important; }
+.dark .bg-white            { background-color: var(--vt-bg-card) !important; }
 
-/* White backgrounds */
-.dark .bg-white { background-color: var(--vt-bg-card) !important; }
+/* shadcn tokens في الداك مود */
+.dark .bg-background       { background-color: var(--vt-bg) !important; }
+.dark .bg-card             { background-color: var(--vt-bg-card) !important; }
+.dark .bg-muted            { background-color: var(--vt-bg-surface) !important; }
+.dark .bg-accent           { background-color: var(--vt-bg-surface) !important; }
+.dark .bg-popover          { background-color: var(--vt-bg-card) !important; }
+.dark .bg-secondary        { background-color: var(--vt-bg-surface) !important; }
 
-/* shadcn semantic tokens */
-.dark .bg-background { background-color: var(--vt-bg) !important; }
-.dark .bg-card       { background-color: var(--vt-bg-card) !important; }
-.dark .bg-muted      { background-color: var(--vt-bg-surface) !important; }
-.dark .bg-accent     { background-color: var(--vt-bg-surface) !important; }
-.dark .bg-popover    { background-color: var(--vt-bg-card) !important; }
-.dark .bg-secondary  { background-color: var(--vt-bg-surface) !important; }
-
-/* Text colors in dark mode */
+/* نصوص */
 .dark .text-gray-900,
 .dark .text-gray-800,
-.dark .text-gray-700 { color: var(--vt-text) !important; }
+.dark .text-gray-700       { color: var(--vt-text) !important; }
 .dark .text-gray-600,
 .dark .text-gray-500,
-.dark .text-gray-400 { color: var(--vt-text-2) !important; }
+.dark .text-gray-400       { color: var(--vt-text-2) !important; }
 .dark .text-gray-300,
-.dark .text-gray-200 { color: var(--vt-text-3) !important; }
-.dark .text-foreground    { color: var(--vt-text) !important; }
+.dark .text-gray-200       { color: var(--vt-text-3) !important; }
+.dark .text-foreground     { color: var(--vt-text) !important; }
 .dark .text-muted-foreground { color: var(--vt-text-2) !important; }
 
-/* Borders in dark mode */
+/* حدود */
 .dark .border-gray-200,
-.dark .border-gray-300 { border-color: var(--vt-border-2) !important; }
-.dark .border { border-color: var(--vt-border) !important; }
+.dark .border-gray-300,
+.dark .border-gray-700     { border-color: var(--vt-border-2) !important; }
+.dark .border              { border-color: var(--vt-border) !important; }
 
-/* Input / select / textarea dark mode */
+/* inputs في الداك مود */
 .dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 .dark select,
 .dark textarea {
@@ -157,19 +156,17 @@
   border-color: var(--vt-border-2) !important;
 }
 .dark input::placeholder,
-.dark textarea::placeholder {
-  color: var(--vt-text-3) !important;
-}
+.dark textarea::placeholder { color: var(--vt-text-3) !important; }
 
-/* Auth page gradients */
+/* صفحات Auth — gradient في الداك */
 .dark .from-gray-900 { --tw-gradient-from: var(--vt-bg) !important; }
 .dark .to-gray-800   { --tw-gradient-to: var(--vt-bg-surface) !important; }
 .dark .from-blue-50  { --tw-gradient-from: var(--vt-bg) !important; }
 .dark .to-purple-50  { --tw-gradient-to: var(--vt-bg) !important; }
 
-/* ============================================================
+/* ═══════════════════════════════
    Navbar
-   ============================================================ */
+   ═══════════════════════════════ */
 nav.vt-nav {
   background-color: var(--vt-nav-bg) !important;
   border-bottom: 0.5px solid var(--vt-nav-border) !important;
@@ -177,12 +174,9 @@ nav.vt-nav {
   -webkit-backdrop-filter: blur(20px);
 }
 
-/* ============================================================
-   Component utilities
-   ============================================================ */
-.vt-card    { background-color: var(--vt-bg-card); border: 0.5px solid var(--vt-border); border-radius: var(--radius); }
-.vt-surface { background-color: var(--vt-bg-surface); }
-
+/* ═══════════════════════════════
+   Utility Classes
+   ═══════════════════════════════ */
 .vt-pi-badge {
   background-color: var(--vt-pi-bg);
   color: var(--vt-pi);
@@ -198,10 +192,9 @@ nav.vt-nav {
   color: #fff !important;
   border: none;
 }
-.vt-btn-brand:hover { background-color: var(--vt-brand-hover) !important; }
+.vt-btn-brand:hover  { background-color: var(--vt-brand-hover) !important; }
 .vt-btn-brand:active { transform: scale(0.97); }
 
-/* Text utilities */
 .text-vt-primary   { color: var(--vt-text); }
 .text-vt-secondary { color: var(--vt-text-2); }
 .text-vt-tertiary  { color: var(--vt-text-3); }
@@ -209,7 +202,6 @@ nav.vt-nav {
 .text-vt-pi        { color: var(--vt-pi); }
 .text-vt-ok        { color: var(--vt-ok); }
 
-/* Background utilities */
 .bg-vt         { background-color: var(--vt-bg); }
 .bg-vt-card    { background-color: var(--vt-bg-card); }
 .bg-vt-surface { background-color: var(--vt-bg-surface); }
@@ -217,7 +209,6 @@ nav.vt-nav {
 .bg-vt-pi      { background-color: var(--vt-pi-bg); }
 .bg-vt-ok      { background-color: var(--vt-ok-bg); }
 
-/* Pi helpers */
 .text-pi    { color: var(--vt-pi); }
 .bg-pi      { background-color: var(--vt-pi); }
 .border-pi  { border-color: var(--vt-pi); }
@@ -226,9 +217,9 @@ nav.vt-nav {
 .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .hover-lift:hover { transform: translateY(-2px); }
 
-/* ============================================================
+/* ═══════════════════════════════
    Smooth theme transition
-   ============================================================ */
+   ═══════════════════════════════ */
 *, *::before, *::after {
   transition-property: background-color, border-color, color;
   transition-duration: 0.18s;
@@ -236,9 +227,7 @@ nav.vt-nav {
 }
 [class*="animate-"], [class*="transition-"] { transition: inherit; }
 
-/* ============================================================
-   Scrollbar
-   ============================================================ */
+/* Scrollbar */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
