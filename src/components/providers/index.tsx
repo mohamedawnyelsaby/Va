@@ -1,3 +1,6 @@
+// ═══════════════════════════════════════════
+// المسار: src/components/providers/index.tsx
+// ═══════════════════════════════════════════
 'use client';
 import { ThemeProvider } from './theme-provider';
 import { QueryProvider } from './query-provider';
@@ -17,7 +20,6 @@ interface ProvidersProps {
 export function Providers({ children, locale = 'en', session }: ProvidersProps) {
   return (
     <SessionProvider session={session}>
-      {/* ThemeProvider WITHOUT extra props — uses defaults from theme-provider.tsx */}
       <ThemeProvider>
         <QueryProvider>
           <I18nProvider locale={locale}>
