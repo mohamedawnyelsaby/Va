@@ -2,11 +2,11 @@
 import { ThemeProvider } from './theme-provider';
 import { QueryProvider } from './query-provider';
 import { I18nProvider } from './i18n-provider';
-import { PiProvider } from './pi-provider'; // ✅ Critical
+import { PiProvider } from './pi-provider';
 import ToastProvider from './toast-provider';
 import ModalProvider from './modal-provider';
 import { TooltipProvider } from './tooltip-provider';
-import { SessionProvider } from 'next-auth/react'; // ✅ Critical
+import { SessionProvider } from 'next-auth/react';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -17,15 +17,11 @@ interface ProvidersProps {
 export function Providers({ children, locale = 'en', session }: ProvidersProps) {
   return (
     <SessionProvider session={session}>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
+      {/* ThemeProvider WITHOUT extra props — uses defaults from theme-provider.tsx */}
+      <ThemeProvider>
         <QueryProvider>
           <I18nProvider locale={locale}>
-            <PiProvider> {/* ✅ This is critical */}
+            <PiProvider>
               <TooltipProvider>
                 {children}
                 <ModalProvider />
