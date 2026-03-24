@@ -2,61 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================
-   Va Travel — Ultimate Theme Variables
-   ============================================ */
+/* ============================================================
+   Va Travel — Design Tokens (Light + Dark)
+   ============================================================ */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* ── shadcn/ui base tokens ── */
+    --background: 0 0% 95%;
+    --foreground: 240 14% 7%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 240 14% 7%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 262 83% 58%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262 83% 58%;
+    --popover-foreground: 240 14% 7%;
+    --primary: 258 94% 77%;
+    --primary-foreground: 258 100% 20%;
+    --secondary: 240 6% 90%;
+    --secondary-foreground: 240 14% 7%;
+    --muted: 240 6% 90%;
+    --muted-foreground: 240 5% 35%;
+    --accent: 240 6% 90%;
+    --accent-foreground: 240 14% 7%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 6% 86%;
+    --input: 240 6% 86%;
+    --ring: 258 94% 77%;
     --radius: 0.5rem;
 
-    /* Va Travel Brand */
-    --color-va-purple: #7C5CFC;
-    --color-va-purple-hover: #6D4EE8;
-    --color-va-gold: #EAB308;
-    --color-va-bg: #07090F;
-    --color-va-surface: #0F1120;
-    --color-va-border: rgba(255, 255, 255, 0.07);
+    /* ── Va Travel custom tokens — Light ── */
+    --vt-bg:          #F2F2F7;
+    --vt-bg-card:     #FFFFFF;
+    --vt-bg-surface:  #E8E8EE;
+    --vt-bg-deep:     #DDDDE8;
+
+    --vt-text:        #111118;
+    --vt-text-2:      #55555E;
+    --vt-text-3:      #99999F;
+
+    --vt-brand:       #7C5CFC;
+    --vt-brand-hover: #6D4EE8;
+    --vt-brand-bg:    rgba(124, 92, 252, 0.09);
+    --vt-brand-text:  #5B3ED4;
+
+    --vt-pi:          #CA8A04;
+    --vt-pi-bg:       rgba(234, 179, 8, 0.10);
+    --vt-pi-text:     #A16207;
+
+    --vt-ok:          #0B5E49;
+    --vt-ok-bg:       rgba(29, 158, 117, 0.10);
+
+    --vt-star:        #D97706;
+
+    --vt-border:      rgba(0, 0, 0, 0.07);
+    --vt-border-2:    rgba(0, 0, 0, 0.12);
+
+    --vt-nav-bg:      #FFFFFF;
+    --vt-nav-border:  rgba(0, 0, 0, 0.06);
+
+    --vt-tag-bg:      #E8E8F0;
+    --vt-tag-text:    #55555E;
+
+    /* Pi brand color utilities */
+    --color-pi: #EAB308;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 262 83% 58%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 262 83% 58%;
+    /* ── shadcn/ui base tokens — Dark ── */
+    --background: 240 47% 8%;
+    --foreground: 240 100% 97%;
+    --card: 240 44% 14%;
+    --card-foreground: 240 100% 97%;
+    --popover: 240 44% 14%;
+    --popover-foreground: 240 100% 97%;
+    --primary: 258 100% 81%;
+    --primary-foreground: 258 50% 10%;
+    --secondary: 240 33% 16%;
+    --secondary-foreground: 240 100% 97%;
+    --muted: 240 33% 16%;
+    --muted-foreground: 240 15% 60%;
+    --accent: 240 33% 16%;
+    --accent-foreground: 240 100% 97%;
+    --destructive: 0 62% 38%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 20% 22%;
+    --input: 240 20% 22%;
+    --ring: 258 100% 81%;
+
+    /* ── Va Travel custom tokens — Dark ── */
+    --vt-bg:          #09091A;
+    --vt-bg-card:     #151530;
+    --vt-bg-surface:  #1A1A35;
+    --vt-bg-deep:     #21213E;
+
+    --vt-text:        #F0F0FF;
+    --vt-text-2:      rgba(240, 240, 255, 0.55);
+    --vt-text-3:      rgba(240, 240, 255, 0.30);
+
+    --vt-brand:       #9B7FFF;
+    --vt-brand-hover: #B09AFF;
+    --vt-brand-bg:    rgba(155, 127, 255, 0.12);
+    --vt-brand-text:  #C4AAFF;
+
+    --vt-pi:          #F4C775;
+    --vt-pi-bg:       rgba(244, 199, 117, 0.10);
+    --vt-pi-text:     #F4C775;
+
+    --vt-ok:          #5DCAA5;
+    --vt-ok-bg:       rgba(93, 202, 165, 0.10);
+
+    --vt-star:        #F4C775;
+
+    --vt-border:      rgba(255, 255, 255, 0.07);
+    --vt-border-2:    rgba(255, 255, 255, 0.14);
+
+    --vt-nav-bg:      #0D0D22;
+    --vt-nav-border:  rgba(255, 255, 255, 0.06);
+
+    --vt-tag-bg:      rgba(255, 255, 255, 0.06);
+    --vt-tag-text:    rgba(240, 240, 255, 0.55);
   }
 }
 
@@ -67,8 +130,10 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--vt-bg);
+    color: var(--vt-text);
     font-feature-settings: "rlig" 1, "calt" 1;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   html {
@@ -77,65 +142,130 @@
   }
 }
 
-/* ============================================
-   Va Travel — Navbar Dark Override
-   ============================================ */
+/* ============================================================
+   Navbar
+   ============================================================ */
+nav.vt-nav {
+  background-color: var(--vt-nav-bg) !important;
+  border-bottom: 0.5px solid var(--vt-nav-border) !important;
+  backdrop-filter: blur(20px);
+  transition: background-color 0.2s ease;
+}
+
+/* Fallback for existing sticky nav */
 nav.sticky {
-  background: rgba(7, 9, 15, 0.97) !important;
+  background: var(--vt-nav-bg) !important;
   backdrop-filter: blur(20px);
 }
 
-/* ============================================
-   Va Travel — Utility Classes
-   ============================================ */
-@layer utilities {
-  .bg-gradient-primary {
-    background: linear-gradient(135deg, #7C5CFC, #6D4EE8);
-  }
-
-  .bg-gradient-gold {
-    background: linear-gradient(135deg, #EAB308, #CA8A04);
-  }
-
-  .hover-lift {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .hover-lift:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  }
-
-  .text-pi {
-    color: #EAB308;
-  }
-
-  .bg-pi {
-    background-color: #EAB308;
-  }
-
-  .border-pi {
-    border-color: #EAB308;
-  }
+/* ============================================================
+   Card overrides — use design tokens
+   ============================================================ */
+.vt-card {
+  background-color: var(--vt-bg-card);
+  border: 0.5px solid var(--vt-border);
+  border-radius: var(--radius);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-/* ============================================
-   Va Travel — Scrollbar
-   ============================================ */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+.vt-surface {
+  background-color: var(--vt-bg-surface);
+  transition: background-color 0.2s ease;
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+/* ============================================================
+   Pi Network badge
+   ============================================================ */
+.vt-pi-badge {
+  background-color: var(--vt-pi-bg);
+  color: var(--vt-pi);
+  border: 0.5px solid color-mix(in srgb, var(--vt-pi) 30%, transparent);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 10px;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* ============================================================
+   Brand button
+   ============================================================ */
+.vt-btn-brand {
+  background-color: var(--vt-brand);
+  color: #fff;
+  border: none;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.vt-btn-brand:hover {
+  background-color: var(--vt-brand-hover);
+}
+.vt-btn-brand:active {
+  transform: scale(0.97);
+}
+
+/* ============================================================
+   Text utilities
+   ============================================================ */
+.text-vt-primary   { color: var(--vt-text); }
+.text-vt-secondary { color: var(--vt-text-2); }
+.text-vt-tertiary  { color: var(--vt-text-3); }
+.text-vt-brand     { color: var(--vt-brand); }
+.text-vt-pi        { color: var(--vt-pi); }
+.text-vt-ok        { color: var(--vt-ok); }
+
+/* ============================================================
+   Background utilities
+   ============================================================ */
+.bg-vt            { background-color: var(--vt-bg); }
+.bg-vt-card       { background-color: var(--vt-bg-card); }
+.bg-vt-surface    { background-color: var(--vt-bg-surface); }
+.bg-vt-brand      { background-color: var(--vt-brand-bg); }
+.bg-vt-pi         { background-color: var(--vt-pi-bg); }
+.bg-vt-ok         { background-color: var(--vt-ok-bg); }
+
+/* ============================================================
+   Pi / shadcn helpers (used in dashboard)
+   ============================================================ */
+.text-pi           { color: var(--vt-pi); }
+.bg-pi             { background-color: var(--vt-pi); }
+.border-pi         { border-color: var(--vt-pi); }
+.bg-pi-dark        { background-color: var(--vt-pi-text); }
+
+/* ============================================================
+   Hover-lift utility
+   ============================================================ */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   Scrollbar
+   ============================================================ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(124, 92, 252, 0.3);
+  background: color-mix(in srgb, var(--vt-brand) 35%, transparent);
   border-radius: 3px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(124, 92, 252, 0.6);
+  background: color-mix(in srgb, var(--vt-brand) 60%, transparent);
+}
+
+/* ============================================================
+   Theme transition — smooth switch
+   ============================================================ */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 0.18s;
+  transition-timing-function: ease;
+}
+
+/* But NOT on transforms/opacity — let those be instant */
+[class*="animate-"],
+[class*="transition-"],
+[style*="transition"] {
+  transition: inherit;
 }
