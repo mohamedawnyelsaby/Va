@@ -77,7 +77,7 @@ export default function AITravelPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(160deg, #050d1a 0%, #0a1628 40%, #050d1a 100%)',
+      background: 'linear-gradient(135deg, #0A0E27 0%, #1A1B4D 40%, #0A0E27 100%)',
       display: 'flex',
       flexDirection: 'column',
       fontFamily: "'Segoe UI', system-ui, sans-serif",
@@ -99,8 +99,8 @@ export default function AITravelPage() {
       {/* Header */}
       <div style={{
         padding: '16px 20px',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
-        background: 'rgba(5,13,26,0.8)',
+        borderBottom: '1px solid rgba(59,130,246,0.2)',
+        background: 'rgba(10,14,39,0.9)',
         backdropFilter: 'blur(20px)',
         display: 'flex',
         alignItems: 'center',
@@ -114,30 +114,37 @@ export default function AITravelPage() {
             width: 42,
             height: 42,
             borderRadius: 12,
-            background: 'linear-gradient(135deg, #00b3a5 0%, #0097a7 100%)',
+            background: 'linear-gradient(135deg, #3B82F6 0%, #7C5CFC 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 20,
-            boxShadow: '0 0 20px rgba(0,179,165,0.3)',
-          }}>🤖</div>
+            boxShadow: '0 0 20px rgba(123,92,252,0.4)',
+          }}>✨</div>
           <div>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: 16, letterSpacing: '-0.3px' }}>
-              Logy AI
+            <div style={{ color: '#F0F4FF', fontWeight: 700, fontSize: 16, letterSpacing: '-0.3px' }}>
+              VA AI Assistant
             </div>
-            <div style={{ color: '#00b3a5', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00b3a5', display: 'inline-block' }} />
+            <div style={{ color: '#06B6D4', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#06B6D4', display: 'inline-block' }} />
               Online • 🌍 All Languages • π Pi Network
             </div>
           </div>
         </div>
-        <a href="/ar" style={{
+        <a href="/" style={{
           color: 'rgba(255,255,255,0.4)',
           textDecoration: 'none',
           fontSize: 13,
           padding: '6px 12px',
           borderRadius: 8,
           border: '1px solid rgba(255,255,255,0.1)',
+          transition: 'all 0.3s',
+        }} onMouseEnter={(e) => {
+          e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+        }} onMouseLeave={(e) => {
+          e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
         }}>← Back</a>
       </div>
 
@@ -161,16 +168,16 @@ export default function AITravelPage() {
               padding: '13px 17px',
               borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '4px 18px 18px 18px',
               background: msg.role === 'user'
-                ? 'linear-gradient(135deg, #00b3a5, #0097a7)'
-                : 'rgba(255,255,255,0.06)',
-              border: msg.role === 'assistant' ? '1px solid rgba(255,255,255,0.08)' : 'none',
-              color: '#fff',
+                ? 'linear-gradient(135deg, #3B82F6, #7C5CFC)'
+                : 'rgba(59,130,246,0.08)',
+              border: msg.role === 'assistant' ? '1px solid rgba(59,130,246,0.25)' : 'none',
+              color: '#F0F4FF',
               fontSize: 14.5,
               lineHeight: 1.65,
               whiteSpace: 'pre-wrap',
               boxShadow: msg.role === 'user'
-                ? '0 4px 15px rgba(0,179,165,0.3)'
-                : '0 2px 8px rgba(0,0,0,0.2)',
+                ? '0 4px 15px rgba(59,130,246,0.4)'
+                : '0 2px 8px rgba(59,130,246,0.15)',
             }}>
               {msg.content}
             </div>
@@ -178,17 +185,23 @@ export default function AITravelPage() {
             {/* Hotel Results */}
             {msg.hotels && msg.hotels.length > 0 && (
               <div style={{ width: '100%', marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, paddingLeft: 4 }}>
-                  🏨 {msg.hotels.length} hotels found from Booking.com
+                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, paddingLeft: 4 }}>
+                  🏨 {msg.hotels.length} hotels found
                 </div>
                 {msg.hotels.map((hotel: any) => (
                   <div key={hotel.id} style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.09)',
+                    background: 'rgba(59,130,246,0.08)',
+                    border: '1px solid rgba(59,130,246,0.25)',
                     borderRadius: 14,
                     overflow: 'hidden',
                     display: 'flex',
-                    transition: 'border-color 0.2s',
+                    transition: 'all 0.3s',
+                  }} onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(123,92,252,0.5)';
+                    e.currentTarget.style.background = 'rgba(59,130,246,0.15)';
+                  }} onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(59,130,246,0.25)';
+                    e.currentTarget.style.background = 'rgba(59,130,246,0.08)';
                   }}>
                     {hotel.thumbnail && (
                       <img
@@ -303,7 +316,7 @@ export default function AITravelPage() {
       {/* Quick Actions - show at start */}
       {messages.length <= 1 && (
         <div style={{ padding: '0 16px 10px' }}>
-          <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, marginBottom: 8, textAlign: 'center' }}>
+          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginBottom: 8, textAlign: 'center' }}>
             Try in any language:
           </div>
           <div style={{ display: 'flex', gap: 7, overflowX: 'auto', paddingBottom: 4 }}>
@@ -312,9 +325,9 @@ export default function AITravelPage() {
                 key={i}
                 onClick={() => sendMessage(action.text)}
                 style={{
-                  background: 'rgba(0,179,165,0.08)',
-                  border: '1px solid rgba(0,179,165,0.2)',
-                  color: 'rgba(255,255,255,0.7)',
+                  background: 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(123,92,252,0.15))',
+                  border: '1px solid rgba(59,130,246,0.4)',
+                  color: 'rgba(240,244,255,0.8)',
                   padding: '8px 13px',
                   borderRadius: 20,
                   cursor: 'pointer',
@@ -324,6 +337,15 @@ export default function AITravelPage() {
                   alignItems: 'center',
                   gap: 5,
                   flexShrink: 0,
+                  transition: 'all 0.3s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(123,92,252,0.6)';
+                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(59,130,246,0.25), rgba(123,92,252,0.25))';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(59,130,246,0.4)';
+                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(123,92,252,0.15))';
                 }}
               >
                 {action.emoji} {action.text}
@@ -336,8 +358,8 @@ export default function AITravelPage() {
       {/* Input Area */}
       <div style={{
         padding: '12px 16px',
-        borderTop: '1px solid rgba(255,255,255,0.07)',
-        background: 'rgba(5,13,26,0.9)',
+        borderTop: '1px solid rgba(59,130,246,0.2)',
+        background: 'rgba(10,14,39,0.9)',
         backdropFilter: 'blur(20px)',
         display: 'flex',
         gap: 10,
@@ -356,17 +378,23 @@ export default function AITravelPage() {
           placeholder="Type in any language... 🌍"
           style={{
             flex: 1,
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.12)',
+            background: 'rgba(59,130,246,0.08)',
+            border: '1px solid rgba(59,130,246,0.25)',
             borderRadius: 14,
             padding: '12px 16px',
-            color: '#fff',
+            color: '#F0F4FF',
             fontSize: 14.5,
             outline: 'none',
-            transition: 'border-color 0.2s',
+            transition: 'all 0.3s',
           }}
-          onFocus={e => e.target.style.borderColor = 'rgba(0,179,165,0.5)'}
-          onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
+          onFocus={e => {
+            e.target.style.borderColor = 'rgba(123,92,252,0.5)';
+            e.target.style.background = 'rgba(59,130,246,0.15)';
+          }}
+          onBlur={e => {
+            e.target.style.borderColor = 'rgba(59,130,246,0.25)';
+            e.target.style.background = 'rgba(59,130,246,0.08)';
+          }}
         />
         <button
           onClick={() => sendMessage()}
@@ -376,17 +404,18 @@ export default function AITravelPage() {
             height: 46,
             borderRadius: 13,
             background: loading || !input.trim()
-              ? 'rgba(255,255,255,0.06)'
-              : 'linear-gradient(135deg, #00b3a5, #26c6da)',
+              ? 'rgba(59,130,246,0.1)'
+              : 'linear-gradient(135deg, #3B82F6, #7C5CFC)',
             border: 'none',
             cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 18,
-            transition: 'all 0.2s',
+            transition: 'all 0.3s',
             flexShrink: 0,
-            boxShadow: loading || !input.trim() ? 'none' : '0 4px 15px rgba(0,179,165,0.4)',
+            boxShadow: loading || !input.trim() ? 'none' : '0 4px 15px rgba(123,92,252,0.4)',
+            color: loading || !input.trim() ? 'rgba(240,244,255,0.3)' : '#fff',
           }}
         >
           {loading ? '⌛' : '➤'}

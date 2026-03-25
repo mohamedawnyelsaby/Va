@@ -220,6 +220,8 @@ module.exports = {
         'gradient-secondary': 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)',
         'gradient-dark': 'linear-gradient(135deg, #1e3a8a 0%, #581c87 100%)',
         'gradient-pi': 'linear-gradient(135deg, #00b3a5 0%, #26c6da 100%)',
+        'gradient-tech': 'linear-gradient(135deg, #3B82F6 0%, #7C5CFC 50%, #A855F7 100%)',
+        'gradient-tech-cyan': 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
       },
       boxShadow: {
         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',

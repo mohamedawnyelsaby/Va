@@ -8,95 +8,109 @@
 
 @layer base {
   :root {
-    --background: 0 0% 95%;
-    --foreground: 240 14% 7%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 14% 7%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 14% 7%;
-    --primary: 258 94% 61%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 6% 90%;
-    --secondary-foreground: 240 14% 7%;
-    --muted: 240 6% 90%;
-    --muted-foreground: 240 5% 35%;
-    --accent: 240 6% 90%;
-    --accent-foreground: 240 14% 7%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 240 6% 86%;
-    --input: 240 6% 86%;
-    --ring: 258 94% 61%;
-    --radius: 0.5rem;
-
-    /* Va Travel Light Tokens */
-    --vt-bg:          #F2F2F7;
-    --vt-bg-card:     #FFFFFF;
-    --vt-bg-surface:  #E8E8EE;
-    --vt-bg-deep:     #DDDDE8;
-    --vt-text:        #111118;
-    --vt-text-2:      #55555E;
-    --vt-text-3:      #99999F;
-    --vt-brand:       #7C5CFC;
-    --vt-brand-hover: #6D4EE8;
-    --vt-brand-bg:    rgba(124,92,252,0.09);
-    --vt-brand-text:  #5B3ED4;
-    --vt-pi:          #CA8A04;
-    --vt-pi-bg:       rgba(234,179,8,0.10);
-    --vt-pi-text:     #A16207;
-    --vt-ok:          #0B5E49;
-    --vt-ok-bg:       rgba(29,158,117,0.10);
-    --vt-star:        #D97706;
-    --vt-border:      rgba(0,0,0,0.07);
-    --vt-border-2:    rgba(0,0,0,0.12);
-    --vt-nav-bg:      #FFFFFF;
-    --vt-nav-border:  rgba(0,0,0,0.06);
-    --color-pi:       #EAB308;
-  }
-
-  .dark {
-    --background: 240 47% 8%;
+    --background: 240 13% 7%;
     --foreground: 240 100% 97%;
-    --card: 240 44% 14%;
+    --card: 240 47% 10%;
     --card-foreground: 240 100% 97%;
-    --popover: 240 44% 14%;
+    --popover: 240 47% 10%;
     --popover-foreground: 240 100% 97%;
     --primary: 258 100% 75%;
     --primary-foreground: 258 50% 10%;
-    --secondary: 240 33% 16%;
-    --secondary-foreground: 240 100% 97%;
-    --muted: 240 33% 16%;
+    --secondary: 240 100% 70%;
+    --secondary-foreground: 240 50% 10%;
+    --muted: 240 33% 20%;
     --muted-foreground: 240 15% 60%;
-    --accent: 240 33% 16%;
-    --accent-foreground: 240 100% 97%;
-    --destructive: 0 62% 38%;
+    --accent: 168 100% 50%;
+    --accent-foreground: 168 50% 10%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 240 20% 22%;
-    --input: 240 20% 22%;
+    --border: 240 20% 18%;
+    --input: 240 20% 18%;
     --ring: 258 100% 75%;
+    --radius: 0.5rem;
 
-    /* Va Travel Dark Tokens */
-    --vt-bg:          #09091A;
-    --vt-bg-card:     #151530;
-    --vt-bg-surface:  #1A1A35;
-    --vt-bg-deep:     #21213E;
-    --vt-text:        #F0F0FF;
-    --vt-text-2:      rgba(240,240,255,0.55);
-    --vt-text-3:      rgba(240,240,255,0.30);
-    --vt-brand:       #9B7FFF;
-    --vt-brand-hover: #B09AFF;
-    --vt-brand-bg:    rgba(155,127,255,0.12);
-    --vt-brand-text:  #C4AAFF;
+    /* High-Tech Gradient Dark Theme */
+    --vt-bg:          #0A0E27;
+    --vt-bg-card:     #151B3D;
+    --vt-bg-surface:  #1A2249;
+    --vt-bg-deep:     #232F5F;
+    --vt-text:        #F0F4FF;
+    --vt-text-2:      rgba(240,244,255,0.60);
+    --vt-text-3:      rgba(240,244,255,0.35);
+    --vt-brand-purple: #7C5CFC;
+    --vt-brand-blue:  #3B82F6;
+    --vt-brand-cyan:  #06B6D4;
+    --vt-brand-pink:  #EC4899;
+    --vt-brand-hover: #A78BFA;
+    --vt-brand-bg:    rgba(123,92,252,0.12);
+    --vt-brand-text:  #A78BFA;
     --vt-pi:          #F4C775;
     --vt-pi-bg:       rgba(244,199,117,0.10);
     --vt-pi-text:     #F4C775;
     --vt-ok:          #5DCAA5;
     --vt-ok-bg:       rgba(93,202,165,0.10);
     --vt-star:        #F4C775;
-    --vt-border:      rgba(255,255,255,0.07);
-    --vt-border-2:    rgba(255,255,255,0.14);
-    --vt-nav-bg:      #0D0D22;
-    --vt-nav-border:  rgba(255,255,255,0.06);
+    --vt-border:      rgba(255,255,255,0.08);
+    --vt-border-2:    rgba(255,255,255,0.15);
+    --vt-nav-bg:      #0D1129;
+    --vt-nav-border:  rgba(255,255,255,0.07);
+    --color-pi:       #EAB308;
+
+    /* Gradient stops for High-Tech theme */
+    --gradient-start: #3B82F6;
+    --gradient-mid: #7C5CFC;
+    --gradient-end: #A855F7;
+  }
+
+  .dark {
+    --background: 240 13% 7%;
+    --foreground: 240 100% 97%;
+    --card: 240 47% 10%;
+    --card-foreground: 240 100% 97%;
+    --popover: 240 47% 10%;
+    --popover-foreground: 240 100% 97%;
+    --primary: 258 100% 75%;
+    --primary-foreground: 258 50% 10%;
+    --secondary: 240 100% 70%;
+    --secondary-foreground: 240 50% 10%;
+    --muted: 240 33% 20%;
+    --muted-foreground: 240 15% 60%;
+    --accent: 168 100% 50%;
+    --accent-foreground: 168 50% 10%;
+    --destructive: 0 62% 38%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 20% 18%;
+    --input: 240 20% 18%;
+    --ring: 258 100% 75%;
+
+    /* High-Tech Gradient Dark Theme (inherits from root in dark mode) */
+    --vt-bg:          #0A0E27;
+    --vt-bg-card:     #151B3D;
+    --vt-bg-surface:  #1A2249;
+    --vt-bg-deep:     #232F5F;
+    --vt-text:        #F0F4FF;
+    --vt-text-2:      rgba(240,244,255,0.60);
+    --vt-text-3:      rgba(240,244,255,0.35);
+    --vt-brand-purple: #7C5CFC;
+    --vt-brand-blue:  #3B82F6;
+    --vt-brand-cyan:  #06B6D4;
+    --vt-brand-pink:  #EC4899;
+    --vt-brand-hover: #A78BFA;
+    --vt-brand-bg:    rgba(123,92,252,0.12);
+    --vt-brand-text:  #A78BFA;
+    --vt-pi:          #F4C775;
+    --vt-pi-bg:       rgba(244,199,117,0.10);
+    --vt-pi-text:     #F4C775;
+    --vt-ok:          #5DCAA5;
+    --vt-ok-bg:       rgba(93,202,165,0.10);
+    --vt-star:        #F4C775;
+    --vt-border:      rgba(255,255,255,0.08);
+    --vt-border-2:    rgba(255,255,255,0.15);
+    --vt-nav-bg:      #0D1129;
+    --vt-nav-border:  rgba(255,255,255,0.07);
+    --gradient-start: #3B82F6;
+    --gradient-mid: #7C5CFC;
+    --gradient-end: #A855F7;
   }
 }
 
@@ -235,6 +249,103 @@ nav.vt-nav {
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--vt-brand) 40%, transparent);
+  background: linear-gradient(180deg, var(--vt-brand-purple), var(--vt-brand-cyan));
   border-radius: 3px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   High-Tech Gradient Animations
+   ═══════════════════════════════════════════════════════ */
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(123, 92, 252, 0.3), 0 0 40px rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(123, 92, 252, 0.6), 0 0 80px rgba(59, 130, 246, 0.3);
+  }
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gradient-border {
+  0% {
+    border-color: var(--vt-brand-purple);
+  }
+  50% {
+    border-color: var(--vt-brand-cyan);
+  }
+  100% {
+    border-color: var(--vt-brand-purple);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Utility classes for High-Tech design */
+.gradient-text {
+  background: linear-gradient(135deg, var(--vt-brand-blue), var(--vt-brand-purple), var(--vt-brand-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow-effect {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+.float-in {
+  animation: float-up 0.6s ease-out;
+}
+
+.gradient-border {
+  border: 1px solid;
+  animation: gradient-border 3s ease-in-out infinite;
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(123, 92, 252, 0.15), rgba(168, 85, 247, 0.15));
+}
+
+.glass-effect {
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.group-hover-translate {
+  transition: transform 0.3s ease;
+}
+
+.group:hover .group-hover-translate {
+  transform: translateY(-4px);
 }
