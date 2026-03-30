@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════
-   المسار: src/app/globals.css
-   ═══════════════════════════════════════ */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -29,7 +25,7 @@
     --ring: 258 94% 61%;
     --radius: 0.5rem;
 
-    /* Va Travel Light Tokens */
+    /* Va Travel v3 — Light tokens */
     --vt-bg:          #F2F2F7;
     --vt-bg-card:     #FFFFFF;
     --vt-bg-surface:  #E8E8EE;
@@ -52,6 +48,20 @@
     --vt-nav-bg:      #FFFFFF;
     --vt-nav-border:  rgba(0,0,0,0.06);
     --color-pi:       #EAB308;
+
+    /* Va Travel v3 — Luxury dark palette (used in hero/sections) */
+    --void:  #03020A;
+    --s1:    #0A0814;
+    --s2:    #100E1E;
+    --gold:  #C9A227;
+    --gold2: #E8C255;
+    --gold3: #F0D070;
+    --gdim:  rgba(201,162,39,0.15);
+    --gdim2: rgba(201,162,39,0.06);
+    --t1:    #F2EEE6;
+    --t2:    rgba(242,238,230,0.55);
+    --t3:    rgba(242,238,230,0.22);
+    --green: #2ECC8A;
   }
 
   .dark {
@@ -75,7 +85,7 @@
     --input: 240 20% 22%;
     --ring: 258 100% 75%;
 
-    /* Va Travel Dark Tokens */
+    /* Va Travel v3 — Dark tokens */
     --vt-bg:          #09091A;
     --vt-bg-card:     #151530;
     --vt-bg-surface:  #1A1A35;
@@ -110,67 +120,7 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════
-   FIX: تحويل كلاسات Tailwind الثابتة للـ Dark Mode
-   الصفحات الموجودة بتستخدم bg-gray-50 dark:bg-gray-900
-   هنخليها تاخد الألوان الجديدة تلقائي من غير ما نغير كل صفحة
-   ═══════════════════════════════════════════════════════ */
-
-/* خلفيات الصفحات */
-.bg-gray-50                { background-color: var(--vt-bg) !important; }
-.dark .bg-gray-50          { background-color: var(--vt-bg) !important; }
-.dark .bg-gray-100         { background-color: var(--vt-bg-surface) !important; }
-.dark .bg-gray-700         { background-color: var(--vt-bg-surface) !important; }
-.dark .bg-gray-800         { background-color: var(--vt-bg-card) !important; }
-.dark .bg-gray-900         { background-color: var(--vt-bg) !important; }
-.dark .bg-white            { background-color: var(--vt-bg-card) !important; }
-
-/* shadcn tokens في الداك مود */
-.dark .bg-background       { background-color: var(--vt-bg) !important; }
-.dark .bg-card             { background-color: var(--vt-bg-card) !important; }
-.dark .bg-muted            { background-color: var(--vt-bg-surface) !important; }
-.dark .bg-accent           { background-color: var(--vt-bg-surface) !important; }
-.dark .bg-popover          { background-color: var(--vt-bg-card) !important; }
-.dark .bg-secondary        { background-color: var(--vt-bg-surface) !important; }
-
-/* نصوص */
-.dark .text-gray-900,
-.dark .text-gray-800,
-.dark .text-gray-700       { color: var(--vt-text) !important; }
-.dark .text-gray-600,
-.dark .text-gray-500,
-.dark .text-gray-400       { color: var(--vt-text-2) !important; }
-.dark .text-gray-300,
-.dark .text-gray-200       { color: var(--vt-text-3) !important; }
-.dark .text-foreground     { color: var(--vt-text) !important; }
-.dark .text-muted-foreground { color: var(--vt-text-2) !important; }
-
-/* حدود */
-.dark .border-gray-200,
-.dark .border-gray-300,
-.dark .border-gray-700     { border-color: var(--vt-border-2) !important; }
-.dark .border              { border-color: var(--vt-border) !important; }
-
-/* inputs في الداك مود */
-.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-.dark select,
-.dark textarea {
-  background-color: var(--vt-bg-surface) !important;
-  color: var(--vt-text) !important;
-  border-color: var(--vt-border-2) !important;
-}
-.dark input::placeholder,
-.dark textarea::placeholder { color: var(--vt-text-3) !important; }
-
-/* صفحات Auth — gradient في الداك */
-.dark .from-gray-900 { --tw-gradient-from: var(--vt-bg) !important; }
-.dark .to-gray-800   { --tw-gradient-to: var(--vt-bg-surface) !important; }
-.dark .from-blue-50  { --tw-gradient-from: var(--vt-bg) !important; }
-.dark .to-purple-50  { --tw-gradient-to: var(--vt-bg) !important; }
-
-/* ═══════════════════════════════
-   Navbar
-   ═══════════════════════════════ */
+/* ── Navbar ── */
 nav.vt-nav {
   background-color: var(--vt-nav-bg) !important;
   border-bottom: 0.5px solid var(--vt-nav-border) !important;
@@ -178,9 +128,28 @@ nav.vt-nav {
   -webkit-backdrop-filter: blur(20px);
 }
 
-/* ═══════════════════════════════
-   Utility Classes
-   ═══════════════════════════════ */
+/* ── Dark mode overrides ── */
+.dark .bg-gray-50,
+.dark .bg-gray-900  { background-color: var(--vt-bg) !important; }
+.dark .bg-gray-800  { background-color: var(--vt-bg-card) !important; }
+.dark .bg-white     { background-color: var(--vt-bg-card) !important; }
+.dark .bg-background{ background-color: var(--vt-bg) !important; }
+.dark .bg-card      { background-color: var(--vt-bg-card) !important; }
+.dark .bg-muted     { background-color: var(--vt-bg-surface) !important; }
+.dark .text-gray-900,.dark .text-gray-800,.dark .text-gray-700 { color: var(--vt-text) !important; }
+.dark .text-gray-600,.dark .text-gray-500 { color: var(--vt-text-2) !important; }
+.dark .text-foreground { color: var(--vt-text) !important; }
+.dark .text-muted-foreground { color: var(--vt-text-2) !important; }
+.dark .border,.dark .border-gray-200,.dark .border-gray-700 { border-color: var(--vt-border) !important; }
+.dark input,.dark select,.dark textarea {
+  background-color: var(--vt-bg-surface) !important;
+  color: var(--vt-text) !important;
+  border-color: var(--vt-border-2) !important;
+}
+.dark .from-gray-900 { --tw-gradient-from: var(--vt-bg) !important; }
+.dark .to-gray-800   { --tw-gradient-to: var(--vt-bg-surface) !important; }
+
+/* ── Utility classes ── */
 .vt-pi-badge {
   background-color: var(--vt-pi-bg);
   color: var(--vt-pi);
@@ -190,7 +159,6 @@ nav.vt-nav {
   padding: 2px 8px;
   border-radius: 10px;
 }
-
 .vt-btn-brand {
   background-color: var(--vt-brand) !important;
   color: #fff !important;
@@ -198,43 +166,59 @@ nav.vt-nav {
 }
 .vt-btn-brand:hover  { background-color: var(--vt-brand-hover) !important; }
 .vt-btn-brand:active { transform: scale(0.97); }
-
-.text-vt-primary   { color: var(--vt-text); }
-.text-vt-secondary { color: var(--vt-text-2); }
-.text-vt-tertiary  { color: var(--vt-text-3); }
-.text-vt-brand     { color: var(--vt-brand); }
-.text-vt-pi        { color: var(--vt-pi); }
-.text-vt-ok        { color: var(--vt-ok); }
-
-.bg-vt         { background-color: var(--vt-bg); }
-.bg-vt-card    { background-color: var(--vt-bg-card); }
-.bg-vt-surface { background-color: var(--vt-bg-surface); }
-.bg-vt-brand   { background-color: var(--vt-brand-bg); }
-.bg-vt-pi      { background-color: var(--vt-pi-bg); }
-.bg-vt-ok      { background-color: var(--vt-ok-bg); }
-
-.text-pi    { color: var(--vt-pi); }
-.bg-pi      { background-color: var(--vt-pi); }
-.border-pi  { border-color: var(--vt-pi); }
+.text-vt-brand   { color: var(--vt-brand); }
+.text-vt-pi      { color: var(--vt-pi); }
+.bg-vt-card      { background-color: var(--vt-bg-card); }
+.bg-vt-surface   { background-color: var(--vt-bg-surface); }
+.text-pi  { color: var(--vt-pi); }
+.bg-pi    { background-color: var(--vt-pi); }
 .bg-pi-dark { background-color: var(--vt-pi-text); }
-
+.border-pi{ border-color: var(--vt-pi); }
 .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .hover-lift:hover { transform: translateY(-2px); }
 
-/* ═══════════════════════════════
-   Smooth theme transition
-   ═══════════════════════════════ */
+/* ── Grain overlay ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: .02;
+}
+
+/* ── Smooth theme transitions ── */
 *, *::before, *::after {
   transition-property: background-color, border-color, color;
   transition-duration: 0.18s;
   transition-timing-function: ease;
 }
-[class*="animate-"], [class*="transition-"] { transition: inherit; }
 
-/* Scrollbar */
+/* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--vt-brand) 40%, transparent);
   border-radius: 3px;
 }
+
+/* ── Live pulse animation ── */
+@keyframes livePulse {
+  0%,100%{ opacity:1; box-shadow:0 0 0 0 rgba(46,204,138,.5) }
+  60%{ box-shadow:0 0 0 6px rgba(46,204,138,0) }
+}
+.live-dot { animation: livePulse 2s infinite; }
+
+/* ── Ticker ── */
+@keyframes tick { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.ticker-animate { animation: tick 42s linear infinite; }
+
+/* ── Fade up ── */
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+.fade-up { animation: fadeUp .7s forwards; }
+
+/* ── Reveal on scroll ── */
+.reveal { opacity:0; transform:translateY(28px); transition:opacity .85s ease,transform .85s ease; }
+.reveal.on { opacity:1; transform:none; }
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}
