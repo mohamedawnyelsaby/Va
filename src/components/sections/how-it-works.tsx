@@ -1,109 +1,166 @@
-// src/components/sections/how-it-works.tsx
-
+// PATH: src/components/sections/how-it-works.tsx
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { Search, CheckCircle, Plane, Star } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { useTranslation } from 'react-i18next';
 
-const steps = [
+const STEPS = [
   {
-    icon: Search,
+    num: '01',
+    Icon: Search,
     title: 'Search & Discover',
-    description: 'Browse thousands of hotels, attractions, and restaurants worldwide with our AI-powered search',
-    color: 'text-blue-500',
-    bg: 'bg-blue-50 dark:bg-blue-900/20',
-    number: '01',
+    desc: 'Browse thousands of hotels, attractions, and restaurants worldwide with our AI-powered search engine.',
   },
   {
-    icon: CheckCircle,
-    title: 'Compare & Book',
-    description: 'Compare prices, read reviews, and book instantly with our secure payment system',
-    color: 'text-green-500',
-    bg: 'bg-green-50 dark:bg-green-900/20',
-    number: '02',
+    num: '02',
+    Icon: CheckCircle,
+    title: 'Compare & Choose',
+    desc: 'Read verified reviews, compare prices, and get AI recommendations tailored to your preferences.',
   },
   {
-    icon: Plane,
-    title: 'Travel & Enjoy',
-    description: 'Pack your bags and enjoy your trip with our 24/7 customer support and travel assistance',
-    color: 'text-purple-500',
-    bg: 'bg-purple-50 dark:bg-purple-900/20',
-    number: '03',
+    num: '03',
+    Icon: Plane,
+    title: 'Book Instantly',
+    desc: 'Confirm your booking in seconds using Pi Network, credit card, or any supported payment method.',
   },
   {
-    icon: Star,
-    title: 'Share & Earn',
-    description: 'Share your experience, write reviews, and earn Pi rewards for every contribution',
-    color: 'text-yellow-500',
-    bg: 'bg-yellow-50 dark:bg-yellow-900/20',
-    number: '04',
+    num: '04',
+    Icon: Star,
+    title: 'Earn & Return',
+    desc: 'Share your experience, write reviews, and earn Pi cashback rewards for every contribution.',
   },
 ];
 
 export function HowItWorks({ locale }: { locale: string }) {
-  const { t } = useTranslation('home');
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const els = sectionRef.current?.querySelectorAll('.vg-reveal');
+    if (!els) return;
+    const observer = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+      { threshold: 0.1 }
+    );
+    els.forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <section className="py-20 bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            {t('howItWorks.title') || 'How It Works'}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            {t('howItWorks.subtitle') || 'Start your journey in 4 simple steps'}
-          </p>
+    <section ref={sectionRef} className="vg-section">
+      {/* Header */}
+      <div className="vg-reveal" style={{ textAlign: 'center', marginBottom: '4rem' }}>
+        <div className="vg-overline" style={{ justifyContent: 'center', marginBottom: '1.2rem' }}>
+          The Process
         </div>
+        <h2 style={{
+          fontFamily: 'var(--font-cormorant), serif',
+          fontWeight: 300,
+          fontSize: 'clamp(2rem, 5vw, 4rem)',
+          color: 'var(--vg-text)',
+          lineHeight: 0.95,
+        }}>
+          Four Steps to Your<br />
+          <em style={{ color: 'var(--vg-gold)', fontStyle: 'italic' }}>Perfect Journey</em>
+        </h2>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative">
-          {/* Connection Line (hidden on mobile) */}
-          <div className="hidden lg:block absolute top-24 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 via-green-500 via-purple-500 to-yellow-500 opacity-20" />
-
-          {steps.map((step, index) => (
-            <div key={index} className="relative">
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-                <CardContent className="p-6 text-center">
-                  {/* Number Badge */}
-                  <div className="absolute -top-4 -right-4 w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
-                    {step.number}
-                  </div>
-
-                  {/* Icon */}
-                  <div className={`inline-flex p-4 rounded-full ${step.bg} mb-4`}>
-                    <step.icon className={`h-8 w-8 ${step.color}`} />
-                  </div>
-
-                  {/* Content */}
-                  <h3 className="text-xl font-bold mb-3">{step.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {step.description}
-                  </p>
-                </CardContent>
-              </Card>
+      {/* Steps */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: '0',
+        border: '0.5px solid var(--vg-border)',
+      }}>
+        {STEPS.map(({ num, Icon, title, desc }, i) => (
+          <div
+            key={num}
+            className={`vg-reveal d${i + 1}`}
+            style={{
+              padding: '2.5rem 2rem',
+              borderRight: i < STEPS.length - 1 ? '0.5px solid var(--vg-border)' : 'none',
+              position: 'relative',
+              transition: 'background 0.4s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--vg-gold-dim2)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          >
+            {/* Step number */}
+            <div style={{
+              fontFamily: 'var(--font-cormorant), serif',
+              fontSize: '4rem',
+              fontWeight: 300,
+              color: 'var(--vg-gold-border)',
+              lineHeight: 1,
+              marginBottom: '1.2rem',
+              userSelect: 'none',
+            }}>
+              {num}
             </div>
-          ))}
-        </div>
 
-        {/* Stats */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-primary mb-2">10K+</div>
-            <div className="text-gray-600 dark:text-gray-400">Hotels</div>
+            {/* Icon */}
+            <div style={{
+              width: 38,
+              height: 38,
+              border: '0.5px solid var(--vg-gold-border)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--vg-gold)',
+              marginBottom: '1.2rem',
+            }}>
+              <Icon style={{ width: 16, height: 16 }} />
+            </div>
+
+            {/* Text */}
+            <h3 style={{
+              fontFamily: 'var(--font-cormorant), serif',
+              fontWeight: 400,
+              fontSize: '1.2rem',
+              color: 'var(--vg-text)',
+              marginBottom: '0.6rem',
+            }}>
+              {title}
+            </h3>
+            <p style={{
+              fontFamily: 'var(--font-dm-sans), sans-serif',
+              fontSize: '0.78rem',
+              lineHeight: 1.65,
+              color: 'var(--vg-text-2)',
+            }}>
+              {desc}
+            </p>
           </div>
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-primary mb-2">50K+</div>
-            <div className="text-gray-600 dark:text-gray-400">Attractions</div>
+        ))}
+      </div>
+
+      {/* Stats row */}
+      <div
+        className="vg-reveal"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          marginTop: '4rem',
+          border: '0.5px solid var(--vg-border)',
+        }}
+      >
+        {[
+          { num: '10K+',  label: 'Hotels Worldwide' },
+          { num: '50K+',  label: 'Attractions Listed' },
+          { num: '120+',  label: 'Countries Covered' },
+          { num: '1M+',   label: 'Happy Travelers' },
+        ].map(({ num, label }, i, arr) => (
+          <div
+            key={label}
+            style={{
+              padding: '2rem',
+              textAlign: 'center',
+              borderRight: i < arr.length - 1 ? '0.5px solid var(--vg-border)' : 'none',
+            }}
+          >
+            <div className="vg-stat-num">{num}</div>
+            <div className="vg-stat-label">{label}</div>
           </div>
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-primary mb-2">120+</div>
-            <div className="text-gray-600 dark:text-gray-400">Countries</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-primary mb-2">1M+</div>
-            <div className="text-gray-600 dark:text-gray-400">Happy Travelers</div>
-          </div>
-        </div>
+        ))}
       </div>
     </section>
   );
