@@ -1,224 +1,632 @@
+/* ═══════════════════════════════════════════════════════════
+   PATH: src/app/globals.css
+   Va Travel — Void Gold Design System
+   ═══════════════════════════════════════════════════════════ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ──────────────────────────────────────────────────────────
+   DESIGN TOKENS — CSS Custom Properties
+   ────────────────────────────────────────────────────────── */
 @layer base {
   :root {
-    --background: 0 0% 95%;
-    --foreground: 240 14% 7%;
+    /* shadcn tokens (light) */
+    --background: 46 25% 96%;
+    --foreground: 30 60% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 240 14% 7%;
+    --card-foreground: 30 60% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 14% 7%;
-    --primary: 258 94% 61%;
+    --popover-foreground: 30 60% 8%;
+    --primary: 42 75% 43%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 6% 90%;
-    --secondary-foreground: 240 14% 7%;
-    --muted: 240 6% 90%;
-    --muted-foreground: 240 5% 35%;
-    --accent: 240 6% 90%;
-    --accent-foreground: 240 14% 7%;
+    --secondary: 40 20% 92%;
+    --secondary-foreground: 30 60% 8%;
+    --muted: 40 20% 92%;
+    --muted-foreground: 30 20% 40%;
+    --accent: 40 20% 92%;
+    --accent-foreground: 30 60% 8%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 240 6% 86%;
-    --input: 240 6% 86%;
-    --ring: 258 94% 61%;
-    --radius: 0.5rem;
+    --border: 40 15% 85%;
+    --input: 40 15% 85%;
+    --ring: 42 75% 43%;
+    --radius: 0rem; /* Sharp edges — Void Gold style */
 
-    /* Va Travel v3 — Light tokens */
-    --vt-bg:          #F2F2F7;
-    --vt-bg-card:     #FFFFFF;
-    --vt-bg-surface:  #E8E8EE;
-    --vt-bg-deep:     #DDDDE8;
-    --vt-text:        #111118;
-    --vt-text-2:      #55555E;
-    --vt-text-3:      #99999F;
-    --vt-brand:       #7C5CFC;
-    --vt-brand-hover: #6D4EE8;
-    --vt-brand-bg:    rgba(124,92,252,0.09);
-    --vt-brand-text:  #5B3ED4;
-    --vt-pi:          #CA8A04;
-    --vt-pi-bg:       rgba(234,179,8,0.10);
-    --vt-pi-text:     #A16207;
-    --vt-ok:          #0B5E49;
-    --vt-ok-bg:       rgba(29,158,117,0.10);
-    --vt-star:        #D97706;
-    --vt-border:      rgba(0,0,0,0.07);
-    --vt-border-2:    rgba(0,0,0,0.12);
-    --vt-nav-bg:      #FFFFFF;
-    --vt-nav-border:  rgba(0,0,0,0.06);
-    --color-pi:       #EAB308;
-
-    /* Va Travel v3 — Luxury dark palette (used in hero/sections) */
-    --void:  #03020A;
-    --s1:    #0A0814;
-    --s2:    #100E1E;
-    --gold:  #C9A227;
-    --gold2: #E8C255;
-    --gold3: #F0D070;
-    --gdim:  rgba(201,162,39,0.15);
-    --gdim2: rgba(201,162,39,0.06);
-    --t1:    #F2EEE6;
-    --t2:    rgba(242,238,230,0.55);
-    --t3:    rgba(242,238,230,0.22);
-    --green: #2ECC8A;
+    /* ── Void Gold Light Tokens ── */
+    --vg-bg:            #F8F6EF;
+    --vg-bg-card:       #FFFFFF;
+    --vg-bg-surface:    #EEEADC;
+    --vg-bg-deep:       #E3DED0;
+    --vg-text:          #1A1208;
+    --vg-text-2:        rgba(26,18,8,0.58);
+    --vg-text-3:        rgba(26,18,8,0.28);
+    --vg-gold:          #8A6412;
+    --vg-gold-2:        #A07820;
+    --vg-gold-3:        #C9A227;
+    --vg-gold-dim:      rgba(138,100,18,0.10);
+    --vg-gold-dim2:     rgba(138,100,18,0.05);
+    --vg-gold-border:   rgba(138,100,18,0.25);
+    --vg-gold-text:     #6B4C08;
+    --vg-border:        rgba(26,18,8,0.08);
+    --vg-border-2:      rgba(26,18,8,0.14);
+    --vg-nav-bg:        rgba(248,246,239,0.92);
+    --vg-nav-border:    rgba(26,18,8,0.07);
+    --vg-ok:            #0B5E49;
+    --vg-ok-bg:         rgba(29,158,117,0.10);
+    --vg-star:          #B07D10;
   }
 
   .dark {
-    --background: 240 47% 8%;
-    --foreground: 240 100% 97%;
-    --card: 240 44% 14%;
-    --card-foreground: 240 100% 97%;
-    --popover: 240 44% 14%;
-    --popover-foreground: 240 100% 97%;
-    --primary: 258 100% 75%;
-    --primary-foreground: 258 50% 10%;
-    --secondary: 240 33% 16%;
-    --secondary-foreground: 240 100% 97%;
-    --muted: 240 33% 16%;
-    --muted-foreground: 240 15% 60%;
-    --accent: 240 33% 16%;
-    --accent-foreground: 240 100% 97%;
+    /* shadcn tokens (dark) */
+    --background: 250 60% 3%;
+    --foreground: 42 25% 92%;
+    --card: 250 50% 6%;
+    --card-foreground: 42 25% 92%;
+    --popover: 250 50% 6%;
+    --popover-foreground: 42 25% 92%;
+    --primary: 42 65% 47%;
+    --primary-foreground: 250 60% 3%;
+    --secondary: 250 30% 10%;
+    --secondary-foreground: 42 25% 92%;
+    --muted: 250 30% 10%;
+    --muted-foreground: 42 15% 55%;
+    --accent: 250 30% 10%;
+    --accent-foreground: 42 25% 92%;
     --destructive: 0 62% 38%;
     --destructive-foreground: 0 0% 100%;
-    --border: 240 20% 22%;
-    --input: 240 20% 22%;
-    --ring: 258 100% 75%;
+    --border: 250 20% 14%;
+    --input: 250 20% 14%;
+    --ring: 42 65% 47%;
 
-    /* Va Travel v3 — Dark tokens */
-    --vt-bg:          #09091A;
-    --vt-bg-card:     #151530;
-    --vt-bg-surface:  #1A1A35;
-    --vt-bg-deep:     #21213E;
-    --vt-text:        #F0F0FF;
-    --vt-text-2:      rgba(240,240,255,0.55);
-    --vt-text-3:      rgba(240,240,255,0.30);
-    --vt-brand:       #9B7FFF;
-    --vt-brand-hover: #B09AFF;
-    --vt-brand-bg:    rgba(155,127,255,0.12);
-    --vt-brand-text:  #C4AAFF;
-    --vt-pi:          #F4C775;
-    --vt-pi-bg:       rgba(244,199,117,0.10);
-    --vt-pi-text:     #F4C775;
-    --vt-ok:          #5DCAA5;
-    --vt-ok-bg:       rgba(93,202,165,0.10);
-    --vt-star:        #F4C775;
-    --vt-border:      rgba(255,255,255,0.07);
-    --vt-border-2:    rgba(255,255,255,0.14);
-    --vt-nav-bg:      #0D0D22;
-    --vt-nav-border:  rgba(255,255,255,0.06);
+    /* ── Void Gold Dark Tokens ── */
+    --vg-bg:            #03020A;
+    --vg-bg-card:       #0E0C18;
+    --vg-bg-surface:    #09080F;
+    --vg-bg-deep:       #141220;
+    --vg-text:          #F2EEE6;
+    --vg-text-2:        rgba(242,238,230,0.55);
+    --vg-text-3:        rgba(242,238,230,0.22);
+    --vg-gold:          #C9A227;
+    --vg-gold-2:        #E8C255;
+    --vg-gold-3:        #F0D070;
+    --vg-gold-dim:      rgba(201,162,39,0.15);
+    --vg-gold-dim2:     rgba(201,162,39,0.06);
+    --vg-gold-border:   rgba(201,162,39,0.30);
+    --vg-gold-text:     #F0D070;
+    --vg-border:        rgba(242,238,230,0.07);
+    --vg-border-2:      rgba(242,238,230,0.13);
+    --vg-nav-bg:        rgba(3,2,10,0.92);
+    --vg-nav-border:    rgba(242,238,230,0.06);
+    --vg-ok:            #5DCAA5;
+    --vg-ok-bg:         rgba(93,202,165,0.10);
+    --vg-star:          #E8C255;
   }
 }
 
+/* ──────────────────────────────────────────────────────────
+   BASE RESET
+   ────────────────────────────────────────────────────────── */
 @layer base {
-  * { @apply border-border; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    background-color: var(--vt-bg);
-    color: var(--vt-text);
-    font-feature-settings: "rlig" 1, "calt" 1;
+    background-color: var(--vg-bg);
+    color: var(--vg-text);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* Global display/heading font */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 300;
+    color: var(--vg-text);
   }
 }
 
-/* ── Navbar ── */
-nav.vt-nav {
-  background-color: var(--vt-nav-bg) !important;
-  border-bottom: 0.5px solid var(--vt-nav-border) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+/* ──────────────────────────────────────────────────────────
+   VOID GOLD COMPONENT CLASSES
+   ────────────────────────────────────────────────────────── */
+@layer components {
+
+  /* ── Display Typography ── */
+  .vg-display {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 300;
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    color: var(--vg-text);
+  }
+
+  .vg-italic {
+    font-style: italic;
+    color: var(--vg-gold);
+  }
+
+  .vg-overline {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--vg-gold);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .vg-overline::before {
+    content: '';
+    width: 1.2rem;
+    height: 1px;
+    background: var(--vg-gold);
+    flex-shrink: 0;
+  }
+
+  /* ── Buttons ── */
+  .vg-btn-primary {
+    background: var(--vg-gold);
+    color: var(--vg-bg);
+    border: none;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    padding: 1rem 2.5rem;
+    transition: background 0.3s, transform 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .vg-btn-primary:hover {
+    background: var(--vg-gold-2);
+    transform: translateY(-1px);
+  }
+
+  .vg-btn-outline {
+    background: none;
+    border: 1px solid var(--vg-gold-border);
+    color: var(--vg-gold);
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    padding: 0.9rem 2rem;
+    transition: background 0.3s, border-color 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .vg-btn-outline:hover {
+    background: var(--vg-gold-dim);
+    border-color: var(--vg-gold);
+  }
+
+  /* ── Cards ── */
+  .vg-card {
+    background: var(--vg-bg-card);
+    border: 1px solid var(--vg-border);
+    transition: border-color 0.3s, background 0.3s;
+  }
+
+  .vg-card:hover {
+    border-color: var(--vg-gold-border);
+  }
+
+  .vg-card-dark {
+    background: var(--vg-bg-surface);
+    border: 1px solid var(--vg-border);
+  }
+
+  /* ── Inputs ── */
+  .vg-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--vg-border-2);
+    outline: none;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.05rem;
+    font-weight: 300;
+    color: var(--vg-text);
+    padding: 0.8rem 0;
+    letter-spacing: 0.02em;
+    transition: border-color 0.3s;
+  }
+
+  .vg-input:focus {
+    border-bottom-color: var(--vg-gold);
+  }
+
+  .vg-input::placeholder {
+    color: var(--vg-text-3);
+  }
+
+  /* ── Gold badge ── */
+  .vg-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    background: var(--vg-gold);
+    color: var(--vg-bg);
+    padding: 0.25rem 0.7rem;
+    display: inline-block;
+  }
+
+  .vg-badge-outline {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    background: var(--vg-gold-dim);
+    border: 1px solid var(--vg-gold-border);
+    color: var(--vg-gold);
+    padding: 0.25rem 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .vg-badge-outline .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--vg-gold);
+    animation: gold-pulse 2s infinite;
+  }
+
+  /* ── Divider ── */
+  .vg-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .vg-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, rgba(201,162,39,0.3), transparent);
+  }
+
+  /* ── Star rating ── */
+  .vg-stars {
+    color: var(--vg-star);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+  }
+
+  /* ── Stat number ── */
+  .vg-stat-num {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 300;
+    font-size: clamp(2.5rem, 4vw, 4rem);
+    color: var(--vg-gold);
+    line-height: 1;
+  }
+
+  .vg-stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--vg-text-3);
+    margin-top: 0.4rem;
+  }
+
+  /* ── Ticker ── */
+  .vg-ticker-wrap {
+    position: relative;
+    z-index: 3;
+    border-top: 1px solid var(--vg-border);
+    border-bottom: 1px solid var(--vg-border);
+    background: var(--vg-bg-surface);
+    overflow: hidden;
+    padding: 0.6rem 0;
+  }
+
+  .vg-ticker-inner {
+    display: inline-flex;
+    white-space: nowrap;
+    animation: ticker-scroll 35s linear infinite;
+  }
+
+  .vg-ticker-item {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--vg-text-2);
+    padding: 0 2.5rem;
+  }
+
+  .vg-ticker-item .tag {
+    color: var(--vg-gold);
+    margin-right: 0.4rem;
+  }
+
+  /* ── Section ── */
+  .vg-section {
+    position: relative;
+    padding: 8rem 7vw;
+    overflow: hidden;
+  }
+
+  /* ── Hotel card ── */
+  .vg-hotel-card {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--vg-bg-surface);
+    border: 1px solid var(--vg-border);
+    transition: border-color 0.4s;
+  }
+
+  .vg-hotel-card:hover {
+    border-color: var(--vg-gold-border);
+  }
+
+  .vg-hotel-card:hover .vg-hotel-thumb {
+    transform: scale(1.06);
+    filter: brightness(0.45) saturate(0.5);
+  }
+
+  .vg-hotel-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.5) saturate(0.6);
+    transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.5s;
+  }
+
+  /* ── Price tag ── */
+  .vg-price-tag {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    background: rgba(3, 2, 10, 0.82);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--vg-gold-border);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--vg-gold);
+    letter-spacing: 0.12em;
+    padding: 0.3rem 0.8rem;
+    z-index: 2;
+  }
+
+  /* ── Nav ── */
+  .vg-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 500;
+    background: var(--vg-nav-bg);
+    border-bottom: 0.5px solid var(--vg-nav-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: background 0.3s;
+  }
+
+  /* ── Reveal animation ── */
+  .vg-reveal {
+    opacity: 0;
+    transform: translateY(35px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+  }
+
+  .vg-reveal.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  .vg-reveal.d1 { transition-delay: 0.1s; }
+  .vg-reveal.d2 { transition-delay: 0.2s; }
+  .vg-reveal.d3 { transition-delay: 0.3s; }
+  .vg-reveal.d4 { transition-delay: 0.4s; }
+
+  /* ── Pi step ── */
+  .vg-pi-step {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    border: 1px solid var(--vg-border);
+    transition: border-color 0.3s, background 0.3s;
+    cursor: default;
+  }
+
+  .vg-pi-step:hover {
+    border-color: var(--vg-gold-border);
+    background: var(--vg-gold-dim2);
+  }
+
+  /* ── Feature item ── */
+  .vg-feat {
+    display: flex;
+    gap: 1.2rem;
+    align-items: flex-start;
+    padding: 1.3rem 1.5rem;
+    border: 1px solid var(--vg-border);
+    transition: border-color 0.4s, background 0.4s;
+    cursor: default;
+  }
+
+  .vg-feat:hover {
+    border-color: var(--vg-gold-border);
+    background: var(--vg-gold-dim2);
+  }
+
+  .vg-feat-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border: 1px solid var(--vg-gold-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--vg-gold);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
 }
 
-/* ── Dark mode overrides ── */
-.dark .bg-gray-50,
-.dark .bg-gray-900  { background-color: var(--vt-bg) !important; }
-.dark .bg-gray-800  { background-color: var(--vt-bg-card) !important; }
-.dark .bg-white     { background-color: var(--vt-bg-card) !important; }
-.dark .bg-background{ background-color: var(--vt-bg) !important; }
-.dark .bg-card      { background-color: var(--vt-bg-card) !important; }
-.dark .bg-muted     { background-color: var(--vt-bg-surface) !important; }
-.dark .text-gray-900,.dark .text-gray-800,.dark .text-gray-700 { color: var(--vt-text) !important; }
-.dark .text-gray-600,.dark .text-gray-500 { color: var(--vt-text-2) !important; }
-.dark .text-foreground { color: var(--vt-text) !important; }
-.dark .text-muted-foreground { color: var(--vt-text-2) !important; }
-.dark .border,.dark .border-gray-200,.dark .border-gray-700 { border-color: var(--vt-border) !important; }
-.dark input,.dark select,.dark textarea {
-  background-color: var(--vt-bg-surface) !important;
-  color: var(--vt-text) !important;
-  border-color: var(--vt-border-2) !important;
-}
-.dark .from-gray-900 { --tw-gradient-from: var(--vt-bg) !important; }
-.dark .to-gray-800   { --tw-gradient-to: var(--vt-bg-surface) !important; }
+/* ──────────────────────────────────────────────────────────
+   SHADCN COMPATIBILITY OVERRIDES
+   Keep existing components working with new tokens
+   ────────────────────────────────────────────────────────── */
+@layer base {
+  /* Map gray classes to new background tokens */
+  .bg-gray-50  { background-color: var(--vg-bg) !important; }
+  .bg-gray-100 { background-color: var(--vg-bg-surface) !important; }
+  .bg-white    { background-color: var(--vg-bg-card) !important; }
 
-/* ── Utility classes ── */
-.vt-pi-badge {
-  background-color: var(--vt-pi-bg);
-  color: var(--vt-pi);
-  border: 0.5px solid color-mix(in srgb, var(--vt-pi) 30%, transparent);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 10px;
-}
-.vt-btn-brand {
-  background-color: var(--vt-brand) !important;
-  color: #fff !important;
-  border: none;
-}
-.vt-btn-brand:hover  { background-color: var(--vt-brand-hover) !important; }
-.vt-btn-brand:active { transform: scale(0.97); }
-.text-vt-brand   { color: var(--vt-brand); }
-.text-vt-pi      { color: var(--vt-pi); }
-.bg-vt-card      { background-color: var(--vt-bg-card); }
-.bg-vt-surface   { background-color: var(--vt-bg-surface); }
-.text-pi  { color: var(--vt-pi); }
-.bg-pi    { background-color: var(--vt-pi); }
-.bg-pi-dark { background-color: var(--vt-pi-text); }
-.border-pi{ border-color: var(--vt-pi); }
-.hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-.hover-lift:hover { transform: translateY(-2px); }
+  .dark .bg-gray-900 { background-color: var(--vg-bg) !important; }
+  .dark .bg-gray-800 { background-color: var(--vg-bg-card) !important; }
+  .dark .bg-gray-700 { background-color: var(--vg-bg-surface) !important; }
+  .dark .bg-white    { background-color: var(--vg-bg-card) !important; }
 
-/* ── Grain overlay ── */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 4;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-  opacity: .02;
+  .dark .text-gray-900, .dark .text-gray-800 { color: var(--vg-text) !important; }
+  .dark .text-gray-600, .dark .text-gray-500 { color: var(--vg-text-2) !important; }
+  .dark .text-gray-400, .dark .text-gray-300 { color: var(--vg-text-3) !important; }
+
+  /* shadcn inputs */
+  .dark input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  .dark select,
+  .dark textarea {
+    background-color: var(--vg-bg-surface) !important;
+    color: var(--vg-text) !important;
+    border-color: var(--vg-border-2) !important;
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: var(--vg-text-3) !important;
+  }
+
+  /* Auth gradients */
+  .dark .from-gray-900 { --tw-gradient-from: var(--vg-bg) !important; }
+  .dark .to-gray-800   { --tw-gradient-to: var(--vg-bg-surface) !important; }
+  .dark .from-blue-50  { --tw-gradient-from: var(--vg-bg) !important; }
+  .dark .to-purple-50  { --tw-gradient-to: var(--vg-bg) !important; }
+
+  /* Primary color mapping to gold */
+  .text-primary { color: var(--vg-gold) !important; }
+  .bg-primary   { background-color: var(--vg-gold) !important; }
+  .border-primary { border-color: var(--vg-gold-border) !important; }
+  .ring-primary { --tw-ring-color: var(--vg-gold) !important; }
+
+  /* Pi color = gold in Void system */
+  .text-pi    { color: var(--vg-gold); }
+  .bg-pi      { background-color: var(--vg-gold); }
+  .border-pi  { border-color: var(--vg-gold-border); }
+  .bg-pi-dark { background-color: var(--vg-gold-text); }
 }
 
-/* ── Smooth theme transitions ── */
+/* ──────────────────────────────────────────────────────────
+   UTILITY HELPERS
+   ────────────────────────────────────────────────────────── */
+@layer utilities {
+  .text-vg-primary   { color: var(--vg-text); }
+  .text-vg-secondary { color: var(--vg-text-2); }
+  .text-vg-tertiary  { color: var(--vg-text-3); }
+  .text-vg-gold      { color: var(--vg-gold); }
+  .text-vg-ok        { color: var(--vg-ok); }
+
+  .bg-vg          { background-color: var(--vg-bg); }
+  .bg-vg-card     { background-color: var(--vg-bg-card); }
+  .bg-vg-surface  { background-color: var(--vg-bg-surface); }
+  .bg-vg-gold     { background-color: var(--vg-gold-dim); }
+
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* ──────────────────────────────────────────────────────────
+   SMOOTH THEME TRANSITION
+   ────────────────────────────────────────────────────────── */
 *, *::before, *::after {
   transition-property: background-color, border-color, color;
   transition-duration: 0.18s;
   transition-timing-function: ease;
 }
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
+[class*='animate-'], [class*='transition-'] {
+  transition: inherit;
+}
+
+/* ──────────────────────────────────────────────────────────
+   SCROLLBAR
+   ────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--vt-brand) 40%, transparent);
-  border-radius: 3px;
+  background: var(--vg-gold-border);
+  border-radius: 2px;
 }
 
-/* ── Live pulse animation ── */
-@keyframes livePulse {
-  0%,100%{ opacity:1; box-shadow:0 0 0 0 rgba(46,204,138,.5) }
-  60%{ box-shadow:0 0 0 6px rgba(46,204,138,0) }
+/* ──────────────────────────────────────────────────────────
+   GRAIN OVERLAY — subtle texture
+   ────────────────────────────────────────────────────────── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.022;
 }
-.live-dot { animation: livePulse 2s infinite; }
 
-/* ── Ticker ── */
-@keyframes tick { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-.ticker-animate { animation: tick 42s linear infinite; }
+/* ──────────────────────────────────────────────────────────
+   CURSOR — Void Gold custom cursor
+   ────────────────────────────────────────────────────────── */
+#vg-cursor {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  background: var(--vg-gold);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: screen;
+  transition: width 0.15s, height 0.15s;
+}
 
-/* ── Fade up ── */
-@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
-.fade-up { animation: fadeUp .7s forwards; }
+#vg-cursor-ring {
+  position: fixed;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(201,162,39,0.45);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9997;
+  transform: translate(-50%, -50%);
+}
 
-/* ── Reveal on scroll ── */
-.reveal { opacity:0; transform:translateY(28px); transition:opacity .85s ease,transform .85s ease; }
-.reveal.on { opacity:1; transform:none; }
-.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}
+@media (pointer: coarse) {
+  #vg-cursor, #vg-cursor-ring { display: none; }
+}
