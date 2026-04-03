@@ -1,279 +1,400 @@
+// PATH: src/components/sections/hero.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Search, MapPin, Calendar, Users, ArrowRight } from 'lucide-react';
 
-export function HeroSection({ locale }: { locale: string }) {
+interface HeroProps { locale: string; }
+
+const DESTINATIONS = [
+  'Paris, France', 'Tokyo, Japan', 'Dubai, UAE',
+  'New York, USA', 'London, UK', 'Bali, Indonesia',
+  'Rome, Italy', 'Sydney, Australia',
+];
+
+export function HeroSection({ locale }: HeroProps) {
   const router = useRouter();
-  const [searchVal, setSearchVal] = useState('');
-  const [hasWebGL, setHasWebGL] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [activeTab, setActiveTab] = useState('Hotels');
+  const [destination, setDestination] = useState('');
+  const [checkIn, setCheckIn] = useState('');
+  const [guests, setGuests] = useState('2');
+  const [placeholder, setPlaceholder] = useState(DESTINATIONS[0]);
 
+  const tabs = ['Hotels', 'Attractions', 'Restaurants', 'Ask AI'];
+
+  // Rotating placeholder
   useEffect(() => {
-    try {
-      const c = document.createElement('canvas');
-      const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
-      setHasWebGL(!!gl && gl instanceof WebGLRenderingContext);
-    } catch { setHasWebGL(false); }
+    let i = 0;
+    const id = setInterval(() => {
+      i = (i + 1) % DESTINATIONS.length;
+      setPlaceholder(DESTINATIONS[i]);
+    }, 2800);
+    return () => clearInterval(id);
+  }, []);
+
+  // Star field canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const stars = Array.from({ length: 180 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 0.9 + 0.2,
+      a: Math.random(),
+      speed: Math.random() * 0.004 + 0.002,
+    }));
+
+    let frame: number;
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        s.a += s.speed;
+        const alpha = (Math.sin(s.a) * 0.5 + 0.5) * 0.7 + 0.1;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(201,162,39,${alpha})`;
+        ctx.fill();
+      });
+      frame = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', resize);
+    };
   }, []);
 
   const handleSearch = () => {
-    const q = searchVal.trim();
-    if (!q) { document.getElementById('ai-section')?.scrollIntoView({ behavior: 'smooth' }); return; }
-    const input = document.getElementById('ai-input') as HTMLInputElement | null;
-    if (input) { input.value = q; }
-    document.getElementById('ai-section')?.scrollIntoView({ behavior: 'smooth' });
-    setTimeout(() => {
-      document.getElementById('ai-send-btn')?.click();
-    }, 400);
+    if (activeTab === 'Ask AI') {
+      router.push(`/${locale}/ai`);
+      return;
+    }
+    const pathMap: Record<string, string> = {
+      Hotels: 'hotels', Attractions: 'attractions', Restaurants: 'restaurants',
+    };
+    const path = pathMap[activeTab] || 'hotels';
+    router.push(`/${locale}/${path}${destination ? `?search=${encodeURIComponent(destination)}` : ''}`);
   };
 
   return (
-    <>
-      {/* Hero */}
-      <section
-        id="hero"
+    <section
+      style={{
+        position: 'relative',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        background: 'var(--vg-bg)',
+      }}
+    >
+      {/* Star canvas */}
+      <canvas
+        ref={canvasRef}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+        aria-hidden="true"
+      />
+
+      {/* Radial gold glow */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: '30%',
+          left: '50%',
+          transform: 'translate(-50%,-50%)',
+          width: '50vw',
+          height: '50vw',
+          maxWidth: 700,
+          background: 'radial-gradient(ellipse, rgba(201,162,39,0.06) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Content */}
+      <div
         style={{
           position: 'relative',
-          minHeight: '100vh',
-          overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'center',
-          background: 'var(--void)',
+          zIndex: 10,
+          width: '100%',
+          maxWidth: 900,
+          margin: '0 auto',
+          padding: '7rem 7vw 5rem',
+          textAlign: 'center',
         }}
       >
-        {/* CSS Globe fallback */}
-        {!hasWebGL && (
-          <div style={{
-            position: 'absolute',
-            right: '-10vw',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 'min(70vw,600px)',
-            height: 'min(70vw,600px)',
-            pointerEvents: 'none',
-          }}>
-            {[
-              { size: '100%', dur: '40s', dir: 'normal' },
-              { size: '75%',  dur: '28s', dir: 'reverse' },
-              { size: '55%',  dur: '20s', dir: 'normal' },
-              { size: '38%',  dur: '14s', dir: 'reverse' },
-            ].map((ring, i) => (
-              <div key={i} style={{
-                position: 'absolute',
-                top: '50%', left: '50%',
-                width: ring.size, height: ring.size,
-                borderRadius: '50%',
-                border: '1px solid rgba(201,162,39,.12)',
-                transform: 'translate(-50%,-50%)',
-                animation: `spin ${ring.dur} linear ${ring.dir} infinite`,
-              }} />
-            ))}
-            {[
-              { top: '25%', left: '62%', size: 8 },
-              { top: '38%', left: '78%', size: 6 },
-              { top: '55%', left: '55%', size: 10 },
-              { top: '65%', left: '72%', size: 8 },
-            ].map((dot, i) => (
-              <div key={i} style={{
-                position: 'absolute',
-                top: dot.top, left: dot.left,
-                width: dot.size, height: dot.size,
-                background: 'var(--gold)',
-                borderRadius: '50%',
-                boxShadow: '0 0 12px rgba(201,162,39,.6)',
-              }} />
-            ))}
-          </div>
-        )}
-
-        {/* Globe canvas (WebGL) */}
-        {hasWebGL && (
-          <canvas id="globe-canvas" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-        )}
-
-        {/* Content */}
-        <div style={{
-          position: 'relative',
-          zIndex: 2,
-          padding: '0 7vw',
-          maxWidth: 680,
-        }}>
-          {/* Tag */}
-          <div style={{
-            fontFamily: 'var(--font-mono, monospace)',
-            fontSize: '.52rem',
-            letterSpacing: '.4em',
+        {/* Overline */}
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.8rem',
+            fontFamily: 'var(--font-space-mono), monospace',
+            fontSize: '0.55rem',
+            letterSpacing: '0.35em',
             textTransform: 'uppercase',
-            color: 'var(--gold)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
-            marginBottom: '2.2rem',
-          }}>
-            Pi-Powered · AI-First · Global
-            <span style={{ display: 'inline-block', width: '3rem', height: 1, background: 'var(--gold)', opacity: .5 }} />
-          </div>
+            color: 'var(--vg-gold)',
+            marginBottom: '2rem',
+          }}
+        >
+          <span style={{ width: 24, height: 1, background: 'var(--vg-gold)', display: 'inline-block' }} />
+          AI · Pi Network · 120+ Countries
+          <span style={{ width: 24, height: 1, background: 'var(--vg-gold)', display: 'inline-block' }} />
+        </div>
 
-          {/* Headline */}
-          <h1 style={{
-            fontFamily: 'var(--font-serif, Georgia, serif)',
-            fontSize: 'clamp(3.5rem,7.5vw,7rem)',
+        {/* Headline */}
+        <h1
+          style={{
+            fontFamily: 'var(--font-cormorant), serif',
             fontWeight: 300,
-            lineHeight: .92,
-            letterSpacing: '-.01em',
-            color: 'var(--t1)',
+            fontSize: 'clamp(3rem, 8vw, 7rem)',
+            lineHeight: 0.88,
+            letterSpacing: '-0.01em',
+            color: 'var(--vg-text)',
             marginBottom: '1.8rem',
-          }}>
-            Beyond<br/>Every<br/>
-            <i style={{ fontStyle: 'italic', color: 'var(--gold)', display: 'block' }}>Horizon</i>
-          </h1>
+          }}
+        >
+          Beyond Every<br />
+          <em style={{ color: 'var(--vg-gold)', fontStyle: 'italic' }}>Horizon</em>
+        </h1>
 
-          {/* Subtitle */}
-          <p style={{
-            fontFamily: 'var(--font-sans, system-ui)',
+        <p
+          style={{
+            fontFamily: 'var(--font-dm-sans), sans-serif',
+            fontSize: 'clamp(0.9rem, 1.5vw, 1.1rem)',
             fontWeight: 300,
-            fontSize: '.92rem',
-            color: 'var(--t2)',
-            lineHeight: 1.85,
-            maxWidth: 400,
-            marginBottom: '.8rem',
-          }}>
-            The first luxury travel platform powered by artificial intelligence and Pi Network.
-            Every journey, perfectly orchestrated.
-          </p>
+            lineHeight: 1.75,
+            color: 'var(--vg-text-2)',
+            maxWidth: 560,
+            margin: '0 auto 3rem',
+          }}
+        >
+          The world's first AI-native travel platform powered by Pi Network.
+          Book hotels, attractions and restaurants in seconds.
+        </p>
 
-          {/* Live indicator */}
-          <div style={{
-            fontFamily: 'monospace',
-            fontSize: '.48rem',
-            letterSpacing: '.32em',
-            color: 'var(--green)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '.5rem',
-            marginBottom: '2.4rem',
-          }}>
-            <span style={{
-              width: 5, height: 5, borderRadius: '50%',
-              background: 'var(--green)',
-              display: 'inline-block',
-            }} className="live-dot" />
-            AI handles everything. You collect every commission.
+        {/* Search box */}
+        <div
+          style={{
+            background: 'var(--vg-bg-card)',
+            border: '1px solid var(--vg-border-2)',
+            maxWidth: 780,
+            margin: '0 auto',
+          }}
+        >
+          {/* Tabs */}
+          <div
+            style={{
+              display: 'flex',
+              borderBottom: '0.5px solid var(--vg-border)',
+            }}
+          >
+            {tabs.map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-space-mono), monospace',
+                  fontSize: '0.52rem',
+                  letterSpacing: '0.22em',
+                  textTransform: 'uppercase',
+                  color: activeTab === tab ? 'var(--vg-gold)' : 'var(--vg-text-3)',
+                  borderBottom: activeTab === tab ? '1px solid var(--vg-gold)' : 'none',
+                  marginBottom: activeTab === tab ? '-0.5px' : 0,
+                  transition: 'color 0.3s',
+                }}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
 
-          {/* Actions */}
-          <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => router.push(`/${locale}/hotels`)}
+          {/* Inputs row */}
+          <div style={{ display: 'flex', alignItems: 'stretch' }}>
+            {/* Destination */}
+            <div
               style={{
-                background: 'var(--gold)', color: 'var(--void)',
-                border: 'none', cursor: 'pointer',
-                fontFamily: 'monospace', fontSize: '.56rem',
-                letterSpacing: '.22em', textTransform: 'uppercase',
-                padding: '.9rem 2.2rem',
-                transition: 'background .3s, transform .2s',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--gold2)'; (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--gold)'; (e.currentTarget as HTMLButtonElement).style.transform = 'none'; }}
-            >
-              Begin Your Journey
-            </button>
-            <button
-              onClick={() => router.push(`/${locale}/hotels`)}
-              style={{
-                fontFamily: 'monospace', fontSize: '.56rem',
-                letterSpacing: '.2em', textTransform: 'uppercase',
-                color: 'var(--t2)', border: 'none', background: 'none',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '.5rem',
+                flex: 2,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                padding: '1rem 1.2rem',
+                borderRight: '0.5px solid var(--vg-border)',
               }}
             >
-              <span style={{ width: '1.5rem', height: 1, background: 'currentColor' }} />
-              Explore Hotels
-            </button>
-          </div>
+              <MapPin style={{ width: 14, height: 14, color: 'var(--vg-gold)', flexShrink: 0 }} />
+              <input
+                type="text"
+                value={destination}
+                onChange={e => setDestination(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                placeholder={placeholder}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  width: '100%',
+                  fontFamily: 'var(--font-cormorant), serif',
+                  fontSize: '1rem',
+                  fontWeight: 300,
+                  color: 'var(--vg-text)',
+                  letterSpacing: '0.02em',
+                }}
+              />
+            </div>
 
-          {/* Hero search */}
-          <div style={{
-            marginTop: '2rem',
-            display: 'flex',
-            background: 'rgba(10,8,20,.85)',
-            border: '1px solid rgba(201,162,39,.2)',
-            backdropFilter: 'blur(16px)',
-            maxWidth: 500,
-          }}>
-            <input
-              id="hero-search"
-              type="text"
-              placeholder="Where do you want to go? Ask Va…"
-              value={searchVal}
-              onChange={e => setSearchVal(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+            {/* Check in */}
+            <div
               style={{
-                flex: 1, background: 'none', border: 'none', outline: 'none',
-                fontFamily: 'Georgia, serif', fontSize: '.95rem', fontWeight: 300,
-                color: 'var(--t1)', padding: '.85rem 1.1rem', letterSpacing: '.02em',
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '1rem 1rem',
+                borderRight: '0.5px solid var(--vg-border)',
               }}
-            />
+            >
+              <Calendar style={{ width: 13, height: 13, color: 'var(--vg-text-3)', flexShrink: 0 }} />
+              <input
+                type="date"
+                value={checkIn}
+                onChange={e => setCheckIn(e.target.value)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  fontFamily: 'var(--font-dm-sans), sans-serif',
+                  fontSize: '0.8rem',
+                  color: checkIn ? 'var(--vg-text)' : 'var(--vg-text-3)',
+                  width: '100%',
+                }}
+              />
+            </div>
+
+            {/* Guests */}
+            <div
+              style={{
+                flex: 0.7,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '1rem 1rem',
+                borderRight: '0.5px solid var(--vg-border)',
+              }}
+            >
+              <Users style={{ width: 13, height: 13, color: 'var(--vg-text-3)', flexShrink: 0 }} />
+              <input
+                type="number"
+                min="1"
+                max="20"
+                value={guests}
+                onChange={e => setGuests(e.target.value)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  fontFamily: 'var(--font-dm-sans), sans-serif',
+                  fontSize: '0.8rem',
+                  color: 'var(--vg-text)',
+                  width: '3rem',
+                }}
+              />
+            </div>
+
+            {/* Search button */}
             <button
               onClick={handleSearch}
+              className="vg-btn-primary"
               style={{
-                background: 'var(--gold)', color: 'var(--void)',
-                border: 'none', cursor: 'pointer',
-                fontFamily: 'monospace', fontSize: '.5rem',
-                letterSpacing: '.18em', padding: '.85rem 1.2rem',
-                whiteSpace: 'nowrap', transition: 'background .3s',
+                padding: '1rem 1.6rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.55rem',
               }}
-              onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--gold2)'}
-              onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--gold)'}
             >
-              Ask Va AI →
+              <Search style={{ width: 13, height: 13 }} />
+              Search
             </button>
           </div>
         </div>
 
-        {/* Inline CSS for globe spin */}
-        <style>{`
-          @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
-        `}</style>
-      </section>
-
-      {/* Ticker */}
-      <div style={{
-        borderTop: '1px solid rgba(201,162,39,.12)',
-        borderBottom: '1px solid rgba(201,162,39,.12)',
-        background: 'rgba(10,8,20,.92)',
-        backdropFilter: 'blur(12px)',
-        overflow: 'hidden',
-        padding: '.65rem 0',
-        position: 'relative',
-        zIndex: 3,
-      }}>
-        <div className="ticker-animate" style={{ display: 'inline-flex', whiteSpace: 'nowrap' }}>
+        {/* Stats row */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '0',
+            marginTop: '4rem',
+            flexWrap: 'wrap',
+          }}
+        >
           {[
-            'Ahmed booked Aman Tokyo · 190π +19π commission',
-            'Santorini, Greece — from 210π',
-            'Sarah booked La Mamounia · 155π +15.5π commission',
-            'Paris — 3,100+ luxury listings',
-            'James booked Al Qasr Dubai · 420π +42π commission',
-            'Maldives — Overwater suites from 380π',
-            'Omar booked Maldives villa · 380π +38π commission',
-            'New York — from 250π / night',
-            'Ahmed booked Aman Tokyo · 190π +19π commission',
-            'Santorini, Greece — from 210π',
-            'Sarah booked La Mamounia · 155π +15.5π commission',
-            'Paris — 3,100+ luxury listings',
-          ].map((item, i) => (
-            <span key={i} style={{
-              fontFamily: 'monospace', fontSize: '.52rem',
-              letterSpacing: '.18em', textTransform: 'uppercase',
-              color: 'rgba(242,238,230,.55)', padding: '0 2.2rem',
-            }}>
-              <span style={{ color: 'var(--gold)', marginRight: '.4rem' }}>✦</span>
-              {item}
-            </span>
+            { num: '10K+', label: 'Hotels' },
+            { num: '50K+', label: 'Attractions' },
+            { num: '120+', label: 'Countries' },
+            { num: 'π AI', label: 'Powered' },
+          ].map((stat, i, arr) => (
+            <div
+              key={stat.label}
+              style={{
+                textAlign: 'center',
+                padding: '0 2.5rem',
+                borderRight: i < arr.length - 1 ? '0.5px solid var(--vg-border)' : 'none',
+              }}
+            >
+              <div className="vg-stat-num" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.2rem)' }}>
+                {stat.num}
+              </div>
+              <div className="vg-stat-label">{stat.label}</div>
+            </div>
           ))}
         </div>
       </div>
-    </>
+
+      {/* Scroll indicator */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '2rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '0.4rem',
+          color: 'var(--vg-text-3)',
+          animation: 'float 3s ease-in-out infinite',
+        }}
+      >
+        <div style={{ width: 1, height: 36, background: 'linear-gradient(to bottom, var(--vg-gold), transparent)' }} />
+        <span style={{
+          fontFamily: 'var(--font-space-mono), monospace',
+          fontSize: '0.45rem',
+          letterSpacing: '0.3em',
+          textTransform: 'uppercase',
+          color: 'var(--vg-text-3)',
+        }}>
+          Scroll
+        </span>
+      </div>
+    </section>
   );
 }
