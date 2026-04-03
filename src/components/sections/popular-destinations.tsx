@@ -1,136 +1,197 @@
-// src/components/sections/popular-destinations.tsx
-
+// PATH: src/components/sections/popular-destinations.tsx
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { MapPin, Star, ArrowRight } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { ArrowRight } from 'lucide-react';
 
-const destinations = [
+const DESTINATIONS = [
   {
-    id: 1,
-    name: 'Paris, France',
+    name: 'Paris',
+    country: 'France',
     slug: 'paris',
-    image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800',
+    image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&q=80',
     rating: 4.9,
     hotels: 1250,
-    attractions: 450,
-    description: 'The City of Light awaits with romantic streets and world-class cuisine',
+    desc: 'The City of Light — art, fashion and timeless romance',
   },
   {
-    id: 2,
-    name: 'Tokyo, Japan',
+    name: 'Tokyo',
+    country: 'Japan',
     slug: 'tokyo',
-    image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800',
+    image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=80',
     rating: 4.8,
     hotels: 2100,
-    attractions: 680,
-    description: 'Experience the perfect blend of tradition and cutting-edge technology',
+    desc: 'Ancient tradition meets neon-lit modernity',
   },
   {
-    id: 3,
-    name: 'Dubai, UAE',
+    name: 'Dubai',
+    country: 'UAE',
     slug: 'dubai',
-    image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800',
+    image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80',
     rating: 4.7,
     hotels: 850,
-    attractions: 320,
-    description: 'Modern luxury meets Arabian hospitality in this desert oasis',
+    desc: 'Luxury redefined in the desert sky',
   },
   {
-    id: 4,
-    name: 'New York, USA',
+    name: 'New York',
+    country: 'USA',
     slug: 'new-york',
-    image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800',
+    image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&q=80',
     rating: 4.8,
     hotels: 1800,
-    attractions: 520,
-    description: 'The city that never sleeps offers endless entertainment and culture',
+    desc: 'The city that never sleeps, never disappoints',
   },
   {
-    id: 5,
-    name: 'Rome, Italy',
+    name: 'Rome',
+    country: 'Italy',
     slug: 'rome',
-    image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800',
+    image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&q=80',
     rating: 4.9,
     hotels: 920,
-    attractions: 410,
-    description: 'Walk through history in the eternal city of ancient wonders',
+    desc: 'Walk through millennia of living history',
   },
   {
-    id: 6,
-    name: 'Bali, Indonesia',
+    name: 'Bali',
+    country: 'Indonesia',
     slug: 'bali',
-    image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800',
+    image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80',
     rating: 4.7,
     hotels: 650,
-    attractions: 280,
-    description: 'Tropical paradise with pristine beaches and spiritual temples',
+    desc: 'Sacred temples and emerald terraced rice fields',
   },
 ];
 
 export function PopularDestinations({ locale }: { locale: string }) {
-  const { t } = useTranslation('home');
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const els = sectionRef.current?.querySelectorAll('.vg-reveal');
+    if (!els) return;
+    const observer = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+      { threshold: 0.1 }
+    );
+    els.forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <section className="py-20 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Popular Destinations
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Explore the world's most amazing cities and create unforgettable memories
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {destinations.map((destination) => (
-            <Card key={destination.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300">
-              <div className="relative h-64 overflow-hidden">
-                <img
-                  src={destination.image}
-                  alt={destination.name}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  loading={destination.id <= 3 ? 'eager' : 'lazy'}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 text-white">
-                  <div className="flex items-center gap-2 mb-2">
-                    <MapPin className="h-4 w-4" />
-                    <h3 className="text-xl font-bold">{destination.name}</h3>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium">{destination.rating}</span>
-                  </div>
-                </div>
-              </div>
-              <CardContent className="p-6">
-                <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
-                  {destination.description}
-                </p>
-                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
-                  <span>{destination.hotels} Hotels</span>
-                  <span>{destination.attractions} Attractions</span>
-                </div>
-                <Button variant="outline" className="w-full group">
-                  Explore
-                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </CardContent>
-            </Card>
+    <section
+      ref={sectionRef}
+      className="vg-section"
+      style={{ background: 'var(--vg-bg-surface)' }}
+    >
+      {/* Ticker */}
+      <div className="vg-ticker-wrap" style={{ marginBottom: '4rem' }}>
+        <div className="vg-ticker-inner">
+          {[...DESTINATIONS, ...DESTINATIONS].map((d, i) => (
+            <span key={i} className="vg-ticker-item">
+              <span className="tag">◆</span>
+              {d.name}, {d.country}
+            </span>
           ))}
         </div>
+      </div>
 
-        <div className="text-center">
-          <Button size="lg" variant="default">
-            View All Destinations
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
+      {/* Header */}
+      <div className="vg-reveal" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '3rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <div className="vg-overline" style={{ marginBottom: '1rem' }}>Popular Destinations</div>
+          <h2 style={{
+            fontFamily: 'var(--font-cormorant), serif',
+            fontWeight: 300,
+            fontSize: 'clamp(2rem, 5vw, 4rem)',
+            color: 'var(--vg-text)',
+            lineHeight: 0.95,
+          }}>
+            Where Will You<br />
+            <em style={{ color: 'var(--vg-gold)', fontStyle: 'italic' }}>Go Next?</em>
+          </h2>
         </div>
+        <Link href={`/${locale}/cities`}>
+          <button className="vg-btn-outline">
+            All Destinations
+            <ArrowRight style={{ width: 12, height: 12 }} />
+          </button>
+        </Link>
+      </div>
+
+      {/* Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+        gap: '1px',
+        background: 'var(--vg-border)',
+      }}>
+        {DESTINATIONS.map((dest, i) => (
+          <Link
+            key={dest.slug}
+            href={`/${locale}/hotels?city=${dest.name}`}
+            style={{ textDecoration: 'none' }}
+          >
+            <div
+              className={`vg-hotel-card vg-reveal d${(i % 3) + 1}`}
+              style={{ height: 320, position: 'relative' }}
+            >
+              {/* Image */}
+              <Image
+                src={dest.image}
+                alt={dest.name}
+                fill
+                className="vg-hotel-thumb"
+                sizes="(max-width: 768px) 100vw, 33vw"
+                loading={i < 3 ? 'eager' : 'lazy'}
+              />
+
+              {/* Overlay */}
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(to top, rgba(3,2,10,0.90) 0%, rgba(3,2,10,0.2) 60%, transparent 100%)',
+                zIndex: 1,
+              }} />
+
+              {/* Price tag */}
+              <div className="vg-price-tag" style={{ zIndex: 2 }}>
+                ★ {dest.rating}
+              </div>
+
+              {/* Content */}
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1.5rem', zIndex: 2 }}>
+                <p style={{
+                  fontFamily: 'var(--font-space-mono), monospace',
+                  fontSize: '0.5rem',
+                  letterSpacing: '0.25em',
+                  textTransform: 'uppercase',
+                  color: 'var(--vg-gold)',
+                  marginBottom: '0.4rem',
+                }}>
+                  {dest.country} · {dest.hotels} hotels
+                </p>
+                <h3 style={{
+                  fontFamily: 'var(--font-cormorant), serif',
+                  fontWeight: 300,
+                  fontSize: '1.8rem',
+                  color: '#F2EEE6',
+                  lineHeight: 1,
+                  marginBottom: '0.4rem',
+                }}>
+                  {dest.name}
+                </h3>
+                <p style={{
+                  fontFamily: 'var(--font-dm-sans), sans-serif',
+                  fontSize: '0.75rem',
+                  color: 'rgba(242,238,230,0.6)',
+                  lineHeight: 1.5,
+                }}>
+                  {dest.desc}
+                </p>
+              </div>
+            </div>
+          </Link>
+        ))}
       </div>
     </section>
   );
