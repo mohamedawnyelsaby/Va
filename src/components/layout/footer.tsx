@@ -1,107 +1,168 @@
+// PATH: src/components/layout/footer.tsx
 'use client';
 
 import Link from 'next/link';
+import { Facebook, Twitter, Instagram, Linkedin, Mail } from 'lucide-react';
 
 interface FooterProps { locale: string; }
 
 export function Footer({ locale }: FooterProps) {
   const year = new Date().getFullYear();
 
-  const cols = {
-    Explore:  ['Hotels', 'Destinations', 'Restaurants', 'Attractions'],
-    Platform: ['AI Concierge', 'Pi Payments', 'Owner Dashboard', 'About'],
-    Legal:    ['Privacy', 'Terms', 'Support'],
-  };
+  const cols = [
+    {
+      title: 'Explore',
+      links: [
+        { label: 'Hotels',      href: `/${locale}/hotels` },
+        { label: 'Attractions', href: `/${locale}/attractions` },
+        { label: 'Restaurants', href: `/${locale}/restaurants` },
+        { label: 'Cities',      href: `/${locale}/cities` },
+        { label: 'AI Concierge', href: `/${locale}/ai` },
+      ],
+    },
+    {
+      title: 'Company',
+      links: [
+        { label: 'About',    href: `/${locale}/about` },
+        { label: 'Careers',  href: `/${locale}/careers` },
+        { label: 'Press',    href: `/${locale}/press` },
+        { label: 'Blog',     href: `/${locale}/blog` },
+        { label: 'Contact',  href: `/${locale}/contact` },
+      ],
+    },
+    {
+      title: 'Support',
+      links: [
+        { label: 'Help Center', href: `/${locale}/help` },
+        { label: 'Safety',      href: `/${locale}/safety` },
+        { label: 'Terms',       href: `/${locale}/terms` },
+        { label: 'Privacy',     href: `/${locale}/privacy` },
+        { label: 'Cookies',     href: `/${locale}/cookies` },
+      ],
+    },
+  ];
 
-  const links: Record<string, string[]> = {
-    Hotels: [`/${locale}/hotels`], Destinations: [`/${locale}/cities`],
-    Restaurants: [`/${locale}/restaurants`], Attractions: [`/${locale}/attractions`],
-    'AI Concierge': [`/${locale}/ai`], 'Pi Payments': [`/${locale}/wallet`],
-    'Owner Dashboard': [`/${locale}/dashboard`], About: [`/${locale}/about`],
-    Privacy: [`/${locale}/privacy`], Terms: [`/${locale}/terms`], Support: [`/${locale}/help`],
-  };
+  const socials = [
+    { Icon: Facebook,  href: 'https://facebook.com' },
+    { Icon: Twitter,   href: 'https://twitter.com' },
+    { Icon: Instagram, href: 'https://instagram.com' },
+    { Icon: Linkedin,  href: 'https://linkedin.com' },
+    { Icon: Mail,      href: 'mailto:support@vatravel.com' },
+  ];
 
   return (
-    <footer style={{ background: 'var(--s1)', borderTop: '1px solid rgba(201,162,39,.08)' }}>
-      <div style={{ padding: '5rem 7vw 2.5rem' }}>
+    <footer
+      style={{
+        background: 'var(--vg-bg-surface)',
+        borderTop: '0.5px solid var(--vg-border)',
+        padding: '4rem 7vw 2rem',
+      }}
+    >
+      {/* Top row */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '3rem', marginBottom: '3rem' }}
+        className="grid-cols-1 md:grid-cols-4">
 
-        {/* Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '2fr 1fr 1fr 1fr',
-          gap: '3.5rem',
-          marginBottom: '3.5rem',
-          paddingBottom: '2.5rem',
-          borderBottom: '1px solid rgba(201,162,39,.07)',
-        }}>
-          {/* Brand */}
-          <div>
-            <div style={{
-              fontFamily: 'Georgia, serif', fontSize: '1.65rem',
-              fontWeight: 300, letterSpacing: '.1em',
-              color: 'var(--t1)', marginBottom: '.9rem',
-            }}>
-              <b style={{ color: 'var(--gold)', fontWeight: 400 }}>Va</b> Travel
-            </div>
-            <p style={{
-              fontFamily: 'system-ui, sans-serif', fontSize: '.78rem',
-              color: 'var(--t2)', lineHeight: 1.75, maxWidth: 265,
-            }}>
-              The world's first AI-native luxury travel platform, built on Pi Network.
-              Where intelligence meets exploration.
-            </p>
+        {/* Brand */}
+        <div>
+          <div style={{
+            fontFamily: 'var(--font-cormorant), serif',
+            fontSize: '1.8rem',
+            fontWeight: 300,
+            letterSpacing: '0.15em',
+            color: 'var(--vg-text)',
+            marginBottom: '1rem',
+          }}>
+            <span style={{ color: 'var(--vg-gold)' }}>Va</span> Travel
           </div>
+          <p style={{
+            fontFamily: 'var(--font-dm-sans), sans-serif',
+            fontSize: '0.8rem',
+            lineHeight: 1.7,
+            color: 'var(--vg-text-2)',
+            maxWidth: '22rem',
+            marginBottom: '1.5rem',
+          }}>
+            The world's first AI-native luxury travel platform. Discover destinations, book experiences, and pay with Pi Network.
+          </p>
 
-          {/* Columns */}
-          {Object.entries(cols).map(([title, items]) => (
-            <div key={title}>
-              <div style={{
-                fontFamily: 'monospace', fontSize: '.46rem',
-                letterSpacing: '.35em', textTransform: 'uppercase',
-                color: 'var(--gold)', marginBottom: '1.1rem',
-              }}>{title}</div>
-              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
-                {items.map(item => (
-                  <li key={item}>
-                    <Link
-                      href={(links[item] || [`/${locale}`])[0]}
-                      style={{
-                        fontFamily: 'system-ui, sans-serif', fontSize: '.78rem',
-                        color: 'var(--t2)', textDecoration: 'none',
-                        transition: 'color .3s',
-                      }}
-                      onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.color = 'var(--t1)'}
-                      onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.color = 'var(--t2)'}
-                    >{item}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Pi badge */}
+          <div className="vg-badge-outline" style={{ display: 'inline-flex' }}>
+            <span className="dot" />
+            Pi Network Accepted
+          </div>
         </div>
 
-        {/* Bottom */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ fontFamily: 'monospace', fontSize: '.46rem', letterSpacing: '.14em', color: 'var(--t3)' }}>
-            © {year} Va Travel — Built on Pi Network · 100% Autonomous
+        {/* Link columns */}
+        {cols.map(col => (
+          <div key={col.title}>
+            <p
+              className="vg-overline"
+              style={{ marginBottom: '1.2rem', fontSize: '0.55rem' }}
+            >
+              {col.title}
+            </p>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+              {col.links.map(link => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    style={{
+                      fontFamily: 'var(--font-dm-sans), sans-serif',
+                      fontSize: '0.82rem',
+                      color: 'var(--vg-text-2)',
+                      textDecoration: 'none',
+                      transition: 'color 0.3s',
+                    }}
+                    onMouseEnter={e => ((e.target as HTMLElement).style.color = 'var(--vg-gold)')}
+                    onMouseLeave={e => ((e.target as HTMLElement).style.color = 'var(--vg-text-2)')}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
-          <div style={{ display: 'flex', gap: '.6rem' }}>
-            {['X', 'in', 'ig', 'π'].map(s => (
-              <button
-                key={s}
-                style={{
-                  width: 32, height: 32,
-                  border: '1px solid rgba(201,162,39,.18)',
-                  background: 'none', cursor: 'pointer',
-                  fontFamily: 'monospace', fontSize: '.5rem',
-                  color: 'var(--t2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'border-color .3s, color .3s',
-                }}
-                onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = 'var(--gold)'; b.style.color = 'var(--gold)'; }}
-                onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = 'rgba(201,162,39,.18)'; b.style.color = 'var(--t2)'; }}
-              >{s}</button>
-            ))}
-          </div>
+        ))}
+      </div>
+
+      {/* Divider */}
+      <div style={{ height: '0.5px', background: 'var(--vg-border)', margin: '2rem 0' }} />
+
+      {/* Bottom row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+        <p style={{ fontFamily: 'var(--font-space-mono), monospace', fontSize: '0.55rem', letterSpacing: '0.18em', color: 'var(--vg-text-3)', textTransform: 'uppercase' }}>
+          © {year} Va Travel — Made with care by Mohamed Awny
+        </p>
+
+        {/* Socials */}
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          {socials.map(({ Icon, href }) => (
+            <a
+              key={href}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                width: 30, height: 30,
+                border: '0.5px solid var(--vg-border-2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--vg-text-3)',
+                transition: 'border-color 0.3s, color 0.3s',
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = 'var(--vg-gold-border)';
+                el.style.color = 'var(--vg-gold)';
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = 'var(--vg-border-2)';
+                el.style.color = 'var(--vg-text-3)';
+              }}
+            >
+              <Icon style={{ width: 13, height: 13 }} />
+            </a>
+          ))}
         </div>
       </div>
     </footer>
