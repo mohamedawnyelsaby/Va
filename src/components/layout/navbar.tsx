@@ -1,257 +1,353 @@
+// PATH: src/components/layout/navbar.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Menu, X, Search, Globe, User, Settings, LogOut,
-  Calendar, Heart, Pi, Hotel, Map, UtensilsCrossed,
-  Building2, Sparkles,
+  Menu, X, Search, Globe,
+  User, Settings, LogOut, Calendar, Heart,
+  Hotel, Map, UtensilsCrossed, Building2, Sparkles,
 } from 'lucide-react';
 
-interface NavbarProps { locale: string; session: any; }
+interface NavbarProps {
+  locale: string;
+  session: any;
+}
 
 const languages = [
   { code: 'en', name: 'English',   flag: '🇬🇧' },
   { code: 'ar', name: 'العربية',  flag: '🇸🇦' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'es', name: 'Español',  flag: '🇪🇸' },
-  { code: 'de', name: 'Deutsch',  flag: '🇩🇪' },
-  { code: 'zh', name: '中文',     flag: '🇨🇳' },
-  { code: 'ja', name: '日本語',   flag: '🇯🇵' },
-  { code: 'ru', name: 'Русский',  flag: '🇷🇺' },
+  { code: 'fr', name: 'Français',  flag: '🇫🇷' },
+  { code: 'es', name: 'Español',   flag: '🇪🇸' },
+  { code: 'de', name: 'Deutsch',   flag: '🇩🇪' },
+  { code: 'zh', name: '中文',      flag: '🇨🇳' },
+  { code: 'ja', name: '日本語',    flag: '🇯🇵' },
+  { code: 'ru', name: 'Русский',   flag: '🇷🇺' },
+  { code: 'pt', name: 'Português', flag: '🇵🇹' },
+  { code: 'hi', name: 'हिंदी',    flag: '🇮🇳' },
 ];
 
 export function Navbar({ locale, session }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', handler);
+    return () => window.removeEventListener('scroll', handler);
+  }, []);
 
   const nav = [
     { name: 'Hotels',       href: `/${locale}/hotels`,      icon: Hotel },
     { name: 'Attractions',  href: `/${locale}/attractions`, icon: Map },
     { name: 'Restaurants',  href: `/${locale}/restaurants`, icon: UtensilsCrossed },
     { name: 'Cities',       href: `/${locale}/cities`,      icon: Building2 },
-    { name: 'AI Assistant', href: `/${locale}/ai`,          icon: Sparkles },
+    { name: 'AI Concierge', href: `/${locale}/ai`,          icon: Sparkles },
   ];
 
   const currentLang = languages.find(l => l.code === locale) || languages[0];
 
-  const btnBase: React.CSSProperties = {
-    width: 34, height: 34, borderRadius: 9,
-    border: '1px solid rgba(201,162,39,.18)',
-    background: 'transparent', cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    transition: 'border-color .3s, background .3s',
-  };
-
   return (
-    <nav style={{
-      position: 'fixed', top: 0, left: 0, right: 0,
-      zIndex: 600, padding: '1.4rem 1.8rem',
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      background: 'rgba(3,2,10,.85)',
-      backdropFilter: 'blur(14px)',
-      borderBottom: '1px solid rgba(201,162,39,.07)',
-    }}>
-      {/* Logo */}
-      <Link href={`/${locale}`} style={{
-        fontFamily: 'Georgia, serif', fontSize: '1.6rem',
-        fontWeight: 300, letterSpacing: '.2em', color: 'var(--t1)',
-        textDecoration: 'none',
-      }}>
-        <b style={{ color: 'var(--gold)', fontWeight: 400 }}>Va</b> Travel
-      </Link>
+    <nav
+      className="vg-nav"
+      style={{
+        background: scrolled
+          ? 'var(--vg-nav-bg)'
+          : 'transparent',
+        borderBottom: scrolled
+          ? '0.5px solid var(--vg-nav-border)'
+          : 'none',
+        transition: 'background 0.4s, border-color 0.4s',
+      }}
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex h-16 items-center justify-between">
 
-      {/* Desktop nav links */}
-      <ul style={{ display: 'flex', gap: '2rem', listStyle: 'none', margin: 0, padding: 0 }}
-          className="hidden md:flex">
-        {nav.map(item => (
-          <li key={item.name}>
-            <Link
-              href={item.href}
+          {/* Logo */}
+          <Link
+            href={`/${locale}`}
+            className="flex items-center gap-2"
+            style={{ textDecoration: 'none' }}
+          >
+            <div
               style={{
-                fontFamily: 'monospace', fontSize: '.5rem',
-                letterSpacing: '.28em', textTransform: 'uppercase',
-                color: 'rgba(242,238,230,.55)', textDecoration: 'none',
-                transition: 'color .3s',
+                fontFamily: 'var(--font-cormorant), serif',
+                fontSize: '1.5rem',
+                fontWeight: 300,
+                letterSpacing: '0.2em',
+                color: 'var(--vg-text)',
               }}
-              onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.color = 'var(--gold)'}
-              onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.color = 'rgba(242,238,230,.55)'}
             >
-              {item.name}
+              <span style={{ color: 'var(--vg-gold)' }}>Va</span>
+              {' '}Travel
+            </div>
+          </Link>
+
+          {/* Desktop nav links */}
+          <div className="hidden md:flex items-center gap-6">
+            {nav.map(item => (
+              <Link
+                key={item.name}
+                href={item.href}
+                style={{
+                  fontFamily: 'var(--font-space-mono), monospace',
+                  fontSize: '0.55rem',
+                  letterSpacing: '0.25em',
+                  textTransform: 'uppercase',
+                  color: 'var(--vg-text-3)',
+                  textDecoration: 'none',
+                  transition: 'color 0.3s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+                onMouseEnter={e => ((e.target as HTMLElement).style.color = 'var(--vg-gold)')}
+                onMouseLeave={e => ((e.target as HTMLElement).style.color = 'var(--vg-text-3)')}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </div>
+
+          {/* Right controls */}
+          <div className="flex items-center gap-2">
+
+            {/* Pi badge */}
+            <div className="vg-badge-outline hidden sm:flex">
+              <span className="dot" />
+              Pi Network
+            </div>
+
+            {/* Search */}
+            <Link href={`/${locale}/search`}>
+              <button
+                style={{
+                  width: 32, height: 32,
+                  border: '0.5px solid var(--vg-border-2)',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Search style={{ width: 14, height: 14, color: 'var(--vg-text-2)' }} />
+              </button>
             </Link>
-          </li>
-        ))}
-      </ul>
 
-      {/* Right controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem' }}>
+            {/* Theme toggle */}
+            <ThemeToggle size="sm" />
 
-        {/* Live indicator */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '.4rem',
-          fontFamily: 'monospace', fontSize: '.44rem', letterSpacing: '.18em',
-          color: 'var(--green)',
-        }}>
-          <span className="live-dot" style={{
-            width: 5, height: 5, background: 'var(--green)',
-            borderRadius: '50%', display: 'inline-block',
-          }} />
-          LIVE
+            {/* Language */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="hidden sm:flex items-center gap-1"
+                  style={{
+                    height: 32, padding: '0 10px',
+                    border: '0.5px solid var(--vg-border-2)',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    color: 'var(--vg-text-2)',
+                  }}
+                >
+                  <Globe style={{ width: 12, height: 12 }} />
+                  <span>{currentLang.flag}</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                style={{
+                  background: 'var(--vg-bg-card)',
+                  border: '0.5px solid var(--vg-border-2)',
+                }}
+              >
+                <DropdownMenuLabel style={{ color: 'var(--vg-text-3)', fontSize: 11 }}>
+                  Select Language
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator style={{ background: 'var(--vg-border)' }} />
+                {languages.map(lang => (
+                  <DropdownMenuItem key={lang.code} asChild>
+                    <Link
+                      href={`/${lang.code}`}
+                      style={{ color: 'var(--vg-text-2)', fontSize: 13 }}
+                    >
+                      {lang.flag} {lang.name}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* User menu */}
+            {session?.user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                    <Avatar style={{ width: 32, height: 32, outline: '1px solid var(--vg-gold-border)', outlineOffset: 1 }}>
+                      <AvatarImage src={session.user.image} />
+                      <AvatarFallback
+                        style={{ background: 'var(--vg-gold)', color: 'var(--vg-bg)', fontSize: 12 }}
+                      >
+                        {session.user.name?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  style={{
+                    width: 200,
+                    background: 'var(--vg-bg-card)',
+                    border: '0.5px solid var(--vg-border-2)',
+                  }}
+                >
+                  <DropdownMenuLabel>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--vg-text)', margin: 0 }}>
+                      {session.user.name}
+                    </p>
+                    <p style={{ fontSize: 11, color: 'var(--vg-text-3)', margin: 0 }}>
+                      {session.user.email}
+                    </p>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator style={{ background: 'var(--vg-border)' }} />
+                  {[
+                    { href: `/${locale}/dashboard`, icon: User,     label: 'Dashboard' },
+                    { href: `/${locale}/bookings`,  icon: Calendar, label: 'My Bookings' },
+                    { href: `/${locale}/favorites`, icon: Heart,    label: 'Favorites' },
+                    { href: `/${locale}/settings`,  icon: Settings, label: 'Settings' },
+                  ].map(item => (
+                    <DropdownMenuItem key={item.label} asChild>
+                      <Link href={item.href} style={{ color: 'var(--vg-text-2)', fontSize: 13 }}>
+                        <item.icon style={{ width: 14, height: 14, marginRight: 8 }} />
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator style={{ background: 'var(--vg-border)' }} />
+                  <DropdownMenuItem
+                    onClick={() => signOut({ callbackUrl: `/${locale}` })}
+                    style={{ color: '#E24B4A', fontSize: 13 }}
+                  >
+                    <LogOut style={{ width: 14, height: 14, marginRight: 8 }} />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="hidden sm:flex items-center gap-2">
+                <Link href={`/${locale}/auth/signin`}>
+                  <button
+                    style={{
+                      height: 32, padding: '0 14px',
+                      border: '0.5px solid var(--vg-border-2)',
+                      background: 'transparent',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      color: 'var(--vg-text-2)',
+                      fontFamily: 'var(--font-space-mono), monospace',
+                      letterSpacing: '0.1em',
+                    }}
+                  >
+                    Sign in
+                  </button>
+                </Link>
+                <Link href={`/${locale}/auth/signup`}>
+                  <button className="vg-btn-primary" style={{ padding: '0.5rem 1.2rem', fontSize: '0.55rem' }}>
+                    Get started
+                  </button>
+                </Link>
+              </div>
+            )}
+
+            {/* Mobile toggle */}
+            <button
+              className="md:hidden"
+              onClick={() => setMobileOpen(v => !v)}
+              style={{
+                width: 32, height: 32,
+                border: '0.5px solid var(--vg-border-2)',
+                background: 'transparent',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {mobileOpen
+                ? <X style={{ width: 15, height: 15, color: 'var(--vg-text-2)' }} />
+                : <Menu style={{ width: 15, height: 15, color: 'var(--vg-text-2)' }} />}
+            </button>
+          </div>
         </div>
 
-        {/* Search */}
-        <Link href={`/${locale}/search`}>
-          <button style={btnBase}>
-            <Search style={{ width: 15, height: 15, color: 'rgba(242,238,230,.55)' }} />
-          </button>
-        </Link>
-
-        {/* Theme */}
-        <ThemeToggle size="sm" />
-
-        {/* Language */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button style={{ ...btnBase }} className="hidden sm:flex">
-              <Globe style={{ width: 13, height: 13, color: 'rgba(242,238,230,.55)' }} />
-              <span style={{ marginLeft: 4, fontSize: 12 }}>{currentLang.flag}</span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" style={{ background: 'rgba(10,8,20,.96)', border: '1px solid rgba(201,162,39,.18)', borderRadius: 8 }}>
-            <DropdownMenuLabel style={{ color: 'rgba(242,238,230,.3)', fontSize: 11 }}>Language</DropdownMenuLabel>
-            <DropdownMenuSeparator style={{ background: 'rgba(201,162,39,.1)' }} />
-            {languages.map(lang => (
-              <DropdownMenuItem key={lang.code} asChild>
-                <Link href={`/${lang.code}`} style={{ color: 'rgba(242,238,230,.55)', fontSize: 13, display: 'flex', gap: 8 }}>
-                  {lang.flag} {lang.name}
+        {/* Mobile menu */}
+        {mobileOpen && (
+          <div style={{ borderTop: '0.5px solid var(--vg-border)', padding: '1rem 0' }}>
+            <div className="flex flex-col gap-4">
+              {nav.map(item => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  style={{
+                    fontFamily: 'var(--font-space-mono), monospace',
+                    fontSize: '0.6rem',
+                    letterSpacing: '0.25em',
+                    textTransform: 'uppercase',
+                    color: 'var(--vg-text-2)',
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                  }}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <item.icon style={{ width: 14, height: 14 }} />
+                  {item.name}
                 </Link>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* User or auth buttons */}
-        {session?.user ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                <Avatar style={{ width: 34, height: 34, outline: '2px solid var(--gold)', outlineOffset: 1 }}>
-                  <AvatarImage src={session.user.image} />
-                  <AvatarFallback style={{ background: 'var(--gold)', color: 'var(--void)', fontSize: 12, fontWeight: 600 }}>
-                    {session.user.name?.charAt(0).toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" style={{ width: 220, background: 'rgba(10,8,20,.96)', border: '1px solid rgba(201,162,39,.18)', borderRadius: 8 }}>
-              <DropdownMenuLabel>
-                <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--t1)', margin: 0 }}>{session.user.name}</p>
-                <p style={{ fontSize: 11, color: 'var(--t3)', margin: 0 }}>{session.user.email}</p>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator style={{ background: 'rgba(201,162,39,.1)' }} />
-              {[
-                { href: `/${locale}/dashboard`, icon: User,     label: 'Dashboard' },
-                { href: `/${locale}/bookings`,  icon: Calendar, label: 'My Bookings' },
-                { href: `/${locale}/favorites`, icon: Heart,    label: 'Favorites' },
-                { href: `/${locale}/settings`,  icon: Settings, label: 'Settings' },
-              ].map(item => (
-                <DropdownMenuItem key={item.label} asChild>
-                  <Link href={item.href} style={{ color: 'rgba(242,238,230,.55)', fontSize: 13 }}>
-                    <item.icon style={{ width: 14, height: 14, marginRight: 8 }} />
-                    {item.label}
-                  </Link>
-                </DropdownMenuItem>
               ))}
-              <DropdownMenuSeparator style={{ background: 'rgba(201,162,39,.1)' }} />
-              <DropdownMenuItem style={{ background: 'rgba(201,162,39,.06)' }}>
-                <Pi style={{ width: 14, height: 14, marginRight: 8, color: 'var(--gold)' }} />
-                <span style={{ color: 'var(--gold)', fontWeight: 500, fontSize: 13 }}>
-                  π {session.user.piBalance?.toFixed(2) || '0.00'}
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator style={{ background: 'rgba(201,162,39,.1)' }} />
-              <DropdownMenuItem onClick={() => signOut({ callbackUrl: `/${locale}` })} style={{ color: '#E24B4A', fontSize: 13 }}>
-                <LogOut style={{ width: 14, height: 14, marginRight: 8 }} />
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <div className="hidden sm:flex" style={{ gap: '.5rem', display: 'flex' }}>
-            <Link href={`/${locale}/auth/signin`}>
-              <button style={{
-                height: 34, padding: '0 14px', borderRadius: 9,
-                border: '1px solid rgba(201,162,39,.3)',
-                background: 'transparent', cursor: 'pointer',
-                fontSize: 13, fontWeight: 500, color: 'rgba(242,238,230,.55)',
-              }}>Sign in</button>
-            </Link>
-            <Link href={`/${locale}/auth/signup`}>
-              <button style={{
-                height: 34, padding: '0 14px', borderRadius: 9,
-                background: 'var(--gold)', border: 'none',
-                cursor: 'pointer', fontSize: 13, fontWeight: 500, color: 'var(--void)',
-              }}>Get started</button>
-            </Link>
+              <div style={{ height: '0.5px', background: 'var(--vg-border)' }} />
+              <div className="flex items-center gap-2">
+                <span style={{ fontSize: 12, color: 'var(--vg-text-3)' }}>Theme</span>
+                <ThemeToggle size="sm" />
+              </div>
+              {!session?.user && (
+                <div className="flex flex-col gap-2">
+                  <Link href={`/${locale}/auth/signin`} onClick={() => setMobileOpen(false)}>
+                    <button style={{
+                      width: '100%', height: 36,
+                      border: '0.5px solid var(--vg-border-2)',
+                      background: 'transparent',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      color: 'var(--vg-text-2)',
+                    }}>
+                      Sign in
+                    </button>
+                  </Link>
+                  <Link href={`/${locale}/auth/signup`} onClick={() => setMobileOpen(false)}>
+                    <button className="vg-btn-primary" style={{ width: '100%', padding: '0.7rem', fontSize: '0.6rem' }}>
+                      Get started
+                    </button>
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         )}
-
-        {/* Mobile toggle */}
-        <button
-          className="md:hidden"
-          onClick={() => setMobileOpen(v => !v)}
-          style={btnBase}
-        >
-          {mobileOpen
-            ? <X style={{ width: 16, height: 16, color: 'rgba(242,238,230,.55)' }} />
-            : <Menu style={{ width: 16, height: 16, color: 'rgba(242,238,230,.55)' }} />}
-        </button>
       </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div style={{
-          position: 'absolute', top: '100%', left: 0, right: 0,
-          background: 'rgba(3,2,10,.97)', backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(201,162,39,.1)',
-          padding: '1rem 1.8rem 1.5rem',
-          display: 'flex', flexDirection: 'column', gap: '1rem',
-        }}>
-          {nav.map(item => (
-            <Link
-              key={item.name}
-              href={item.href}
-              onClick={() => setMobileOpen(false)}
-              style={{
-                fontFamily: 'monospace', fontSize: '.54rem',
-                letterSpacing: '.22em', textTransform: 'uppercase',
-                color: 'rgba(242,238,230,.55)', textDecoration: 'none',
-                display: 'flex', alignItems: 'center', gap: '.7rem',
-              }}
-            >
-              <item.icon style={{ width: 15, height: 15 }} />
-              {item.name}
-            </Link>
-          ))}
-          <div style={{ height: 1, background: 'rgba(201,162,39,.1)' }} />
-          {!session?.user && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
-              <Link href={`/${locale}/auth/signin`} onClick={() => setMobileOpen(false)}>
-                <button style={{ width: '100%', height: 38, borderRadius: 9, border: '1px solid rgba(201,162,39,.3)', background: 'transparent', color: 'rgba(242,238,230,.55)', cursor: 'pointer', fontSize: 14 }}>Sign in</button>
-              </Link>
-              <Link href={`/${locale}/auth/signup`} onClick={() => setMobileOpen(false)}>
-                <button style={{ width: '100%', height: 38, borderRadius: 9, background: 'var(--gold)', border: 'none', color: 'var(--void)', cursor: 'pointer', fontSize: 14, fontWeight: 500 }}>Get started</button>
-              </Link>
-            </div>
-          )}
-        </div>
-      )}
     </nav>
   );
 }
