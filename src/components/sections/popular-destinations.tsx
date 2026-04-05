@@ -1,197 +1,85 @@
-// PATH: src/components/sections/popular-destinations.tsx
 'use client';
-
+// PATH: src/components/sections/popular-destinations.tsx
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 
 const DESTINATIONS = [
-  {
-    name: 'Paris',
-    country: 'France',
-    slug: 'paris',
-    image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&q=80',
-    rating: 4.9,
-    hotels: 1250,
-    desc: 'The City of Light — art, fashion and timeless romance',
-  },
-  {
-    name: 'Tokyo',
-    country: 'Japan',
-    slug: 'tokyo',
-    image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=80',
-    rating: 4.8,
-    hotels: 2100,
-    desc: 'Ancient tradition meets neon-lit modernity',
-  },
-  {
-    name: 'Dubai',
-    country: 'UAE',
-    slug: 'dubai',
-    image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80',
-    rating: 4.7,
-    hotels: 850,
-    desc: 'Luxury redefined in the desert sky',
-  },
-  {
-    name: 'New York',
-    country: 'USA',
-    slug: 'new-york',
-    image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&q=80',
-    rating: 4.8,
-    hotels: 1800,
-    desc: 'The city that never sleeps, never disappoints',
-  },
-  {
-    name: 'Rome',
-    country: 'Italy',
-    slug: 'rome',
-    image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&q=80',
-    rating: 4.9,
-    hotels: 920,
-    desc: 'Walk through millennia of living history',
-  },
-  {
-    name: 'Bali',
-    country: 'Indonesia',
-    slug: 'bali',
-    image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80',
-    rating: 4.7,
-    hotels: 650,
-    desc: 'Sacred temples and emerald terraced rice fields',
-  },
+  { city: 'Dubai',     country: 'UAE',     price: '1,200 π', img: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80', tag: 'Luxury' },
+  { city: 'Tokyo',     country: 'Japan',   price: '980 π',   img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=80', tag: 'Culture' },
+  { city: 'Paris',     country: 'France',  price: '1,100 π', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&q=80', tag: 'Romance' },
+  { city: 'Maldives',  country: 'Maldives',price: '2,400 π', img: 'https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=800&q=80', tag: 'Beach' },
+  { city: 'New York',  country: 'USA',     price: '1,350 π', img: 'https://images.unsplash.com/photo-1546436836-07a91091f160?w=800&q=80', tag: 'Urban' },
+  { city: 'Bali',      country: 'Indonesia',price:'750 π',   img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80', tag: 'Nature' },
+];
+
+const TICKER_ITEMS = [
+  'Dubai', 'Tokyo', 'Paris', 'Maldives', 'New York', 'Bali',
+  'London', 'Barcelona', 'Singapore', 'Cairo', 'Sydney', 'Istanbul',
 ];
 
 export function PopularDestinations({ locale }: { locale: string }) {
-  const sectionRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const els = sectionRef.current?.querySelectorAll('.vg-reveal');
-    if (!els) return;
     const observer = new IntersectionObserver(
-      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
-      { threshold: 0.1 }
+      (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+      { threshold: 0.06 }
     );
-    els.forEach(el => observer.observe(el));
+    sectionRef.current?.querySelectorAll('.vg-reveal').forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
 
   return (
-    <section
-      ref={sectionRef}
-      className="vg-section"
-      style={{ background: 'var(--vg-bg-surface)' }}
-    >
-      {/* Ticker */}
-      <div className="vg-ticker-wrap" style={{ marginBottom: '4rem' }}>
-        <div className="vg-ticker-inner">
-          {[...DESTINATIONS, ...DESTINATIONS].map((d, i) => (
-            <span key={i} className="vg-ticker-item">
-              <span className="tag">◆</span>
-              {d.name}, {d.country}
-            </span>
-          ))}
-        </div>
-      </div>
-
+    <section ref={sectionRef} style={{ background: 'var(--vg-bg-surface)', padding: 'clamp(4rem,8vw,7rem) 0' }}>
       {/* Header */}
-      <div className="vg-reveal" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '3rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div style={{ padding: '0 clamp(1.5rem,7vw,5rem)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '3rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <div className="vg-overline" style={{ marginBottom: '1rem' }}>Popular Destinations</div>
-          <h2 style={{
-            fontFamily: 'var(--font-cormorant), serif',
-            fontWeight: 300,
-            fontSize: 'clamp(2rem, 5vw, 4rem)',
-            color: 'var(--vg-text)',
-            lineHeight: 0.95,
-          }}>
-            Where Will You<br />
-            <em style={{ color: 'var(--vg-gold)', fontStyle: 'italic' }}>Go Next?</em>
+          <div className="vg-overline vg-reveal" style={{ marginBottom: '0.9rem' }}>Popular Destinations</div>
+          <h2 className="vg-display vg-reveal d1" style={{ fontSize: 'clamp(2rem,5vw,3.8rem)' }}>
+            Where Will You <em className="vg-italic">Go?</em>
           </h2>
         </div>
-        <Link href={`/${locale}/cities`}>
-          <button className="vg-btn-outline">
-            All Destinations
-            <ArrowRight style={{ width: 12, height: 12 }} />
-          </button>
+        <Link href={`/${locale}/hotels`} className="vg-btn-outline vg-reveal d2" style={{ textDecoration: 'none' }}>
+          View All <ArrowRight size={12} />
         </Link>
       </div>
 
       {/* Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-        gap: '1px',
-        background: 'var(--vg-border)',
-      }}>
+      <div style={{ padding: '0 clamp(1.5rem,7vw,5rem)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1px', background: 'var(--vg-border)', marginBottom: '0' }}>
         {DESTINATIONS.map((dest, i) => (
           <Link
-            key={dest.slug}
-            href={`/${locale}/hotels?city=${dest.name}`}
-            style={{ textDecoration: 'none' }}
+            key={dest.city}
+            href={`/${locale}/hotels?city=${dest.city}`}
+            className={`vg-hotel-card vg-reveal d${(i % 4) + 1}`}
+            style={{ height: '280px', display: 'block', textDecoration: 'none' }}
           >
-            <div
-              className={`vg-hotel-card vg-reveal d${(i % 3) + 1}`}
-              style={{ height: 320, position: 'relative' }}
-            >
-              {/* Image */}
-              <Image
-                src={dest.image}
-                alt={dest.name}
-                fill
-                className="vg-hotel-thumb"
-                sizes="(max-width: 768px) 100vw, 33vw"
-                loading={i < 3 ? 'eager' : 'lazy'}
-              />
+            <img src={dest.img} alt={dest.city} className="vg-hotel-thumb" style={{ position: 'absolute', inset: 0 }} />
+            <div className="vg-price-tag">{dest.price}</div>
 
-              {/* Overlay */}
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                background: 'linear-gradient(to top, rgba(3,2,10,0.90) 0%, rgba(3,2,10,0.2) 60%, transparent 100%)',
-                zIndex: 1,
-              }} />
+            {/* Tag */}
+            <div style={{ position: 'absolute', top: '1.1rem', left: '1.1rem', background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', padding: '0.2rem 0.6rem', fontFamily: 'var(--font-space-mono)', fontSize: '0.44rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--vg-gold)', zIndex: 2 }}>
+              {dest.tag}
+            </div>
 
-              {/* Price tag */}
-              <div className="vg-price-tag" style={{ zIndex: 2 }}>
-                ★ {dest.rating}
-              </div>
-
-              {/* Content */}
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1.5rem', zIndex: 2 }}>
-                <p style={{
-                  fontFamily: 'var(--font-space-mono), monospace',
-                  fontSize: '0.5rem',
-                  letterSpacing: '0.25em',
-                  textTransform: 'uppercase',
-                  color: 'var(--vg-gold)',
-                  marginBottom: '0.4rem',
-                }}>
-                  {dest.country} · {dest.hotels} hotels
-                </p>
-                <h3 style={{
-                  fontFamily: 'var(--font-cormorant), serif',
-                  fontWeight: 300,
-                  fontSize: '1.8rem',
-                  color: '#F2EEE6',
-                  lineHeight: 1,
-                  marginBottom: '0.4rem',
-                }}>
-                  {dest.name}
-                </h3>
-                <p style={{
-                  fontFamily: 'var(--font-dm-sans), sans-serif',
-                  fontSize: '0.75rem',
-                  color: 'rgba(242,238,230,0.6)',
-                  lineHeight: 1.5,
-                }}>
-                  {dest.desc}
-                </p>
-              </div>
+            {/* Label */}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(3,2,10,0.9) 0%, transparent 100%)', padding: '2rem 1.2rem 1.1rem', zIndex: 2 }}>
+              <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.6rem', fontWeight: 300, color: 'var(--vg-text)', lineHeight: 1 }}>{dest.city}</div>
+              <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.46rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--vg-text-3)', marginTop: '0.3rem' }}>{dest.country}</div>
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* Ticker */}
+      <div className="vg-ticker-wrap" style={{ marginTop: '3rem' }}>
+        <div className="vg-ticker-inner">
+          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+            <span key={i} className="vg-ticker-item">
+              <span className="tag">◆</span>{item}
+            </span>
+          ))}
+        </div>
       </div>
     </section>
   );
