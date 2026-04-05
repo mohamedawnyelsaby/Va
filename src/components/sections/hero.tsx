@@ -203,7 +203,7 @@ function StarCanvas() {
 }
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
-export function Hero({ locale }: { locale: string }) {
+export function HeroSection({ locale }: { locale: string }) {
   const [activeTab, setActiveTab]   = useState('hotels');
   const [query,     setQuery]       = useState('');
   const [isMobile,  setIsMobile]    = useState(false);
@@ -351,4 +351,3 @@ export function Hero({ locale }: { locale: string }) {
       </div>
     </section>
   );
-}
