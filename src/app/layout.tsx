@@ -18,18 +18,35 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" dir="ltr"
+    <html
+      lang="en"
+      dir="ltr"
       className={`${cormorant.variable} ${dmSans.variable} ${spaceMono.variable} ${cairo.variable}`}
-      suppressHydrationWarning>
+      suppressHydrationWarning
+    >
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <meta name="theme-color" content="#C9A227" />
-        <Script src="https://sdk.minepi.com/pi-sdk.js" strategy="beforeInteractive" />
       </head>
-      <body style={{ fontFamily: 'var(--font-dm-sans), system-ui, sans-serif', background: 'var(--vg-bg)', color: 'var(--vg-text)' }} suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <div id="vg-cursor" aria-hidden="true" />
         <div id="vg-cursor-ring" aria-hidden="true" />
-        <Providers>{children}</Providers>
+
+        <Providers>
+          {children}
+        </Providers>
+
+        <Script src="https://sdk.minepi.com/pi-sdk.js" strategy="afterInteractive" />
+        <Script id="vg-cursor-script" strategy="afterInteractive">{`
+          (function(){
+            var dot=document.getElementById('vg-cursor');
+            var ring=document.getElementById('vg-cursor-ring');
+            if(!dot||!ring)return;
+            var rx=0,ry=0,mx=0,my=0;
+            document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px';});
+            (function loop(){rx+=(mx-rx)*0.12;ry+=(my-ry)*0.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop);})();
+          })();
+        `}</Script>
       </body>
     </html>
   );
