@@ -1,164 +1,79 @@
-// PATH: src/components/sections/how-it-works.tsx
 'use client';
-
+// PATH: src/components/sections/how-it-works.tsx
 import { useEffect, useRef } from 'react';
-import { Search, CheckCircle, Plane, Star } from 'lucide-react';
+import { UserCircle, Search, CreditCard, Plane } from 'lucide-react';
 
 const STEPS = [
-  {
-    num: '01',
-    Icon: Search,
-    title: 'Search & Discover',
-    desc: 'Browse thousands of hotels, attractions, and restaurants worldwide with our AI-powered search engine.',
-  },
-  {
-    num: '02',
-    Icon: CheckCircle,
-    title: 'Compare & Choose',
-    desc: 'Read verified reviews, compare prices, and get AI recommendations tailored to your preferences.',
-  },
-  {
-    num: '03',
-    Icon: Plane,
-    title: 'Book Instantly',
-    desc: 'Confirm your booking in seconds using Pi Network, credit card, or any supported payment method.',
-  },
-  {
-    num: '04',
-    Icon: Star,
-    title: 'Earn & Return',
-    desc: 'Share your experience, write reviews, and earn Pi cashback rewards for every contribution.',
-  },
+  { icon: UserCircle, num: '01', title: 'Create Account',   desc: 'Sign up with your Pi Wallet in seconds. No credit card required.' },
+  { icon: Search,     num: '02', title: 'Discover',         desc: 'Browse AI-curated hotels, restaurants, and attractions worldwide.' },
+  { icon: CreditCard, num: '03', title: 'Book with Pi',     desc: 'Pay seamlessly using Pi Network — the world\'s most accessible crypto.' },
+  { icon: Plane,      num: '04', title: 'Travel & Earn',    desc: 'Enjoy your trip and earn Pi rewards for every booking and review.' },
 ];
 
-export function HowItWorks({ locale }: { locale: string }) {
-  const sectionRef = useRef<HTMLDivElement>(null);
+const BOTTOM_STATS = [
+  { num: '< 60s', label: 'Average booking time' },
+  { num: '0%',    label: 'Hidden fees' },
+  { num: '24/7',  label: 'Support available' },
+];
+
+export function HowItWorks() {
+  const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const els = sectionRef.current?.querySelectorAll('.vg-reveal');
-    if (!els) return;
     const observer = new IntersectionObserver(
-      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
-      { threshold: 0.1 }
+      (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+      { threshold: 0.07 }
     );
-    els.forEach(el => observer.observe(el));
+    sectionRef.current?.querySelectorAll('.vg-reveal').forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
 
   return (
-    <section ref={sectionRef} className="vg-section">
+    <section ref={sectionRef} style={{ background: 'var(--vg-bg)', padding: 'clamp(4rem,8vw,7rem) clamp(1.5rem,7vw,5rem)' }}>
       {/* Header */}
-      <div className="vg-reveal" style={{ textAlign: 'center', marginBottom: '4rem' }}>
-        <div className="vg-overline" style={{ justifyContent: 'center', marginBottom: '1.2rem' }}>
-          The Process
-        </div>
-        <h2 style={{
-          fontFamily: 'var(--font-cormorant), serif',
-          fontWeight: 300,
-          fontSize: 'clamp(2rem, 5vw, 4rem)',
-          color: 'var(--vg-text)',
-          lineHeight: 0.95,
-        }}>
-          Four Steps to Your<br />
-          <em style={{ color: 'var(--vg-gold)', fontStyle: 'italic' }}>Perfect Journey</em>
+      <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
+        <div className="vg-overline vg-reveal" style={{ justifyContent: 'center', marginBottom: '1rem' }}>How It Works</div>
+        <h2 className="vg-display vg-reveal d1" style={{ fontSize: 'clamp(2rem,5vw,3.8rem)' }}>
+          Four Steps to <em className="vg-italic">Adventure</em>
         </h2>
       </div>
 
       {/* Steps */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '0',
-        border: '0.5px solid var(--vg-border)',
-      }}>
-        {STEPS.map(({ num, Icon, title, desc }, i) => (
-          <div
-            key={num}
-            className={`vg-reveal d${i + 1}`}
-            style={{
-              padding: '2.5rem 2rem',
-              borderRight: i < STEPS.length - 1 ? '0.5px solid var(--vg-border)' : 'none',
-              position: 'relative',
-              transition: 'background 0.4s',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--vg-gold-dim2)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-          >
-            {/* Step number */}
-            <div style={{
-              fontFamily: 'var(--font-cormorant), serif',
-              fontSize: '4rem',
-              fontWeight: 300,
-              color: 'var(--vg-gold-border)',
-              lineHeight: 1,
-              marginBottom: '1.2rem',
-              userSelect: 'none',
-            }}>
-              {num}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1px', background: 'var(--vg-border)', marginBottom: '4rem' }}>
+        {STEPS.map((step, i) => {
+          const Icon = step.icon;
+          return (
+            <div
+              key={step.num}
+              className={`vg-pi-step vg-reveal d${i + 1}`}
+              style={{ flexDirection: 'column', alignItems: 'flex-start', padding: '2rem 1.5rem', background: 'var(--vg-bg-card)' }}
+            >
+              {/* Number */}
+              <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.5rem', letterSpacing: '0.25em', color: 'var(--vg-gold)', marginBottom: '1.2rem' }}>
+                {step.num}
+              </div>
+              {/* Icon */}
+              <div className="vg-feat-icon" style={{ marginBottom: '1.1rem' }}>
+                <Icon size={14} strokeWidth={1.5} />
+              </div>
+              {/* Text */}
+              <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.25rem', fontWeight: 300, color: 'var(--vg-text)', marginBottom: '0.6rem' }}>
+                {step.title}
+              </div>
+              <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.78rem', color: 'var(--vg-text-2)', lineHeight: 1.7, margin: 0 }}>
+                {step.desc}
+              </p>
             </div>
-
-            {/* Icon */}
-            <div style={{
-              width: 38,
-              height: 38,
-              border: '0.5px solid var(--vg-gold-border)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--vg-gold)',
-              marginBottom: '1.2rem',
-            }}>
-              <Icon style={{ width: 16, height: 16 }} />
-            </div>
-
-            {/* Text */}
-            <h3 style={{
-              fontFamily: 'var(--font-cormorant), serif',
-              fontWeight: 400,
-              fontSize: '1.2rem',
-              color: 'var(--vg-text)',
-              marginBottom: '0.6rem',
-            }}>
-              {title}
-            </h3>
-            <p style={{
-              fontFamily: 'var(--font-dm-sans), sans-serif',
-              fontSize: '0.78rem',
-              lineHeight: 1.65,
-              color: 'var(--vg-text-2)',
-            }}>
-              {desc}
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* Stats row */}
-      <div
-        className="vg-reveal"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          marginTop: '4rem',
-          border: '0.5px solid var(--vg-border)',
-        }}
-      >
-        {[
-          { num: '10K+',  label: 'Hotels Worldwide' },
-          { num: '50K+',  label: 'Attractions Listed' },
-          { num: '120+',  label: 'Countries Covered' },
-          { num: '1M+',   label: 'Happy Travelers' },
-        ].map(({ num, label }, i, arr) => (
-          <div
-            key={label}
-            style={{
-              padding: '2rem',
-              textAlign: 'center',
-              borderRight: i < arr.length - 1 ? '0.5px solid var(--vg-border)' : 'none',
-            }}
-          >
-            <div className="vg-stat-num">{num}</div>
-            <div className="vg-stat-label">{label}</div>
+      {/* Bottom stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1.5rem', borderTop: '1px solid var(--vg-border)', paddingTop: '3rem', textAlign: 'center' }}>
+        {BOTTOM_STATS.map((s) => (
+          <div key={s.label} className="vg-reveal">
+            <div className="vg-stat-num">{s.num}</div>
+            <div className="vg-stat-label">{s.label}</div>
           </div>
         ))}
       </div>
