@@ -1,353 +1,195 @@
-// PATH: src/components/layout/navbar.tsx
 'use client';
-
-import { useState, useEffect } from 'react';
+// PATH: src/components/layout/navbar.tsx
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useTheme } from 'next-themes';
+import { Globe, Menu, X, Sun, Moon, User, LogOut } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  Menu, X, Search, Globe,
-  User, Settings, LogOut, Calendar, Heart,
-  Hotel, Map, UtensilsCrossed, Building2, Sparkles,
-} from 'lucide-react';
 
-interface NavbarProps {
-  locale: string;
-  session: any;
-}
-
-const languages = [
-  { code: 'en', name: 'English',   flag: '🇬🇧' },
-  { code: 'ar', name: 'العربية',  flag: '🇸🇦' },
-  { code: 'fr', name: 'Français',  flag: '🇫🇷' },
-  { code: 'es', name: 'Español',   flag: '🇪🇸' },
-  { code: 'de', name: 'Deutsch',   flag: '🇩🇪' },
-  { code: 'zh', name: '中文',      flag: '🇨🇳' },
-  { code: 'ja', name: '日本語',    flag: '🇯🇵' },
-  { code: 'ru', name: 'Русский',   flag: '🇷🇺' },
-  { code: 'pt', name: 'Português', flag: '🇵🇹' },
-  { code: 'hi', name: 'हिंदी',    flag: '🇮🇳' },
+const LANGS = [
+  { code: 'en', label: 'English' },
+  { code: 'ar', label: 'العربية' },
+  { code: 'fr', label: 'Français' },
+  { code: 'es', label: 'Español' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'zh', label: '中文' },
 ];
 
-export function Navbar({ locale, session }: NavbarProps) {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+const NAV_LINKS = [
+  { href: '/hotels',       label: 'Hotels' },
+  { href: '/attractions',  label: 'Attractions' },
+  { href: '/restaurants',  label: 'Restaurants' },
+  { href: '/ai-assistant', label: 'AI Assistant' },
+];
+
+export function Navbar({ locale }: { locale: string }) {
+  const { theme, setTheme } = useTheme();
+  const { data: session } = useSession();
+  const [scrolled,    setScrolled]    = useState(false);
+  const [mobileOpen,  setMobileOpen]  = useState(false);
+  const [langOpen,    setLangOpen]    = useState(false);
+  const [userOpen,    setUserOpen]    = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
+  const userRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', handler);
-    return () => window.removeEventListener('scroll', handler);
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const nav = [
-    { name: 'Hotels',       href: `/${locale}/hotels`,      icon: Hotel },
-    { name: 'Attractions',  href: `/${locale}/attractions`, icon: Map },
-    { name: 'Restaurants',  href: `/${locale}/restaurants`, icon: UtensilsCrossed },
-    { name: 'Cities',       href: `/${locale}/cities`,      icon: Building2 },
-    { name: 'AI Concierge', href: `/${locale}/ai`,          icon: Sparkles },
-  ];
-
-  const currentLang = languages.find(l => l.code === locale) || languages[0];
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false);
+      if (userRef.current && !userRef.current.contains(e.target as Node)) setUserOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   return (
     <nav
       className="vg-nav"
       style={{
-        background: scrolled
-          ? 'var(--vg-nav-bg)'
-          : 'transparent',
-        borderBottom: scrolled
-          ? '0.5px solid var(--vg-nav-border)'
-          : 'none',
-        transition: 'background 0.4s, border-color 0.4s',
+        borderBottomColor: scrolled ? 'var(--vg-gold-border)' : 'var(--vg-nav-border)',
+        padding: '0 clamp(1rem, 5vw, 4rem)',
       }}
     >
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '64px' }}>
+        {/* Logo */}
+        <Link href={`/${locale}`} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', textDecoration: 'none' }}>
+          <span style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.5rem', fontWeight: 300, color: 'var(--vg-text)', letterSpacing: '-0.01em' }}>
+            Va<span style={{ color: 'var(--vg-gold)', fontStyle: 'italic' }}> Travel</span>
+          </span>
+        </Link>
 
-          {/* Logo */}
-          <Link
-            href={`/${locale}`}
-            className="flex items-center gap-2"
-            style={{ textDecoration: 'none' }}
-          >
-            <div
+        {/* Desktop links */}
+        <div style={{ display: 'flex', gap: '2.2rem', alignItems: 'center' }} className="hidden md:flex">
+          {NAV_LINKS.map((l) => (
+            <Link
+              key={l.href}
+              href={`/${locale}${l.href}`}
               style={{
-                fontFamily: 'var(--font-cormorant), serif',
-                fontSize: '1.5rem',
-                fontWeight: 300,
+                fontFamily: 'var(--font-space-mono)',
+                fontSize: '0.52rem',
                 letterSpacing: '0.2em',
-                color: 'var(--vg-text)',
+                textTransform: 'uppercase',
+                color: 'var(--vg-text-2)',
+                textDecoration: 'none',
+                transition: 'color 0.2s',
               }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--vg-gold)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--vg-text-2)')}
             >
-              <span style={{ color: 'var(--vg-gold)' }}>Va</span>
-              {' '}Travel
-            </div>
-          </Link>
-
-          {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-6">
-            {nav.map(item => (
-              <Link
-                key={item.name}
-                href={item.href}
-                style={{
-                  fontFamily: 'var(--font-space-mono), monospace',
-                  fontSize: '0.55rem',
-                  letterSpacing: '0.25em',
-                  textTransform: 'uppercase',
-                  color: 'var(--vg-text-3)',
-                  textDecoration: 'none',
-                  transition: 'color 0.3s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                }}
-                onMouseEnter={e => ((e.target as HTMLElement).style.color = 'var(--vg-gold)')}
-                onMouseLeave={e => ((e.target as HTMLElement).style.color = 'var(--vg-text-3)')}
-              >
-                {item.name}
-              </Link>
-            ))}
-          </div>
-
-          {/* Right controls */}
-          <div className="flex items-center gap-2">
-
-            {/* Pi badge */}
-            <div className="vg-badge-outline hidden sm:flex">
-              <span className="dot" />
-              Pi Network
-            </div>
-
-            {/* Search */}
-            <Link href={`/${locale}/search`}>
-              <button
-                style={{
-                  width: 32, height: 32,
-                  border: '0.5px solid var(--vg-border-2)',
-                  background: 'transparent',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Search style={{ width: 14, height: 14, color: 'var(--vg-text-2)' }} />
-              </button>
+              {l.label}
             </Link>
-
-            {/* Theme toggle */}
-            <ThemeToggle size="sm" />
-
-            {/* Language */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="hidden sm:flex items-center gap-1"
-                  style={{
-                    height: 32, padding: '0 10px',
-                    border: '0.5px solid var(--vg-border-2)',
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                    color: 'var(--vg-text-2)',
-                  }}
-                >
-                  <Globe style={{ width: 12, height: 12 }} />
-                  <span>{currentLang.flag}</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                style={{
-                  background: 'var(--vg-bg-card)',
-                  border: '0.5px solid var(--vg-border-2)',
-                }}
-              >
-                <DropdownMenuLabel style={{ color: 'var(--vg-text-3)', fontSize: 11 }}>
-                  Select Language
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator style={{ background: 'var(--vg-border)' }} />
-                {languages.map(lang => (
-                  <DropdownMenuItem key={lang.code} asChild>
-                    <Link
-                      href={`/${lang.code}`}
-                      style={{ color: 'var(--vg-text-2)', fontSize: 13 }}
-                    >
-                      {lang.flag} {lang.name}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* User menu */}
-            {session?.user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                    <Avatar style={{ width: 32, height: 32, outline: '1px solid var(--vg-gold-border)', outlineOffset: 1 }}>
-                      <AvatarImage src={session.user.image} />
-                      <AvatarFallback
-                        style={{ background: 'var(--vg-gold)', color: 'var(--vg-bg)', fontSize: 12 }}
-                      >
-                        {session.user.name?.charAt(0).toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  style={{
-                    width: 200,
-                    background: 'var(--vg-bg-card)',
-                    border: '0.5px solid var(--vg-border-2)',
-                  }}
-                >
-                  <DropdownMenuLabel>
-                    <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--vg-text)', margin: 0 }}>
-                      {session.user.name}
-                    </p>
-                    <p style={{ fontSize: 11, color: 'var(--vg-text-3)', margin: 0 }}>
-                      {session.user.email}
-                    </p>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator style={{ background: 'var(--vg-border)' }} />
-                  {[
-                    { href: `/${locale}/dashboard`, icon: User,     label: 'Dashboard' },
-                    { href: `/${locale}/bookings`,  icon: Calendar, label: 'My Bookings' },
-                    { href: `/${locale}/favorites`, icon: Heart,    label: 'Favorites' },
-                    { href: `/${locale}/settings`,  icon: Settings, label: 'Settings' },
-                  ].map(item => (
-                    <DropdownMenuItem key={item.label} asChild>
-                      <Link href={item.href} style={{ color: 'var(--vg-text-2)', fontSize: 13 }}>
-                        <item.icon style={{ width: 14, height: 14, marginRight: 8 }} />
-                        {item.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator style={{ background: 'var(--vg-border)' }} />
-                  <DropdownMenuItem
-                    onClick={() => signOut({ callbackUrl: `/${locale}` })}
-                    style={{ color: '#E24B4A', fontSize: 13 }}
-                  >
-                    <LogOut style={{ width: 14, height: 14, marginRight: 8 }} />
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <div className="hidden sm:flex items-center gap-2">
-                <Link href={`/${locale}/auth/signin`}>
-                  <button
-                    style={{
-                      height: 32, padding: '0 14px',
-                      border: '0.5px solid var(--vg-border-2)',
-                      background: 'transparent',
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      color: 'var(--vg-text-2)',
-                      fontFamily: 'var(--font-space-mono), monospace',
-                      letterSpacing: '0.1em',
-                    }}
-                  >
-                    Sign in
-                  </button>
-                </Link>
-                <Link href={`/${locale}/auth/signup`}>
-                  <button className="vg-btn-primary" style={{ padding: '0.5rem 1.2rem', fontSize: '0.55rem' }}>
-                    Get started
-                  </button>
-                </Link>
-              </div>
-            )}
-
-            {/* Mobile toggle */}
-            <button
-              className="md:hidden"
-              onClick={() => setMobileOpen(v => !v)}
-              style={{
-                width: 32, height: 32,
-                border: '0.5px solid var(--vg-border-2)',
-                background: 'transparent',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {mobileOpen
-                ? <X style={{ width: 15, height: 15, color: 'var(--vg-text-2)' }} />
-                : <Menu style={{ width: 15, height: 15, color: 'var(--vg-text-2)' }} />}
-            </button>
-          </div>
+          ))}
         </div>
 
-        {/* Mobile menu */}
-        {mobileOpen && (
-          <div style={{ borderTop: '0.5px solid var(--vg-border)', padding: '1rem 0' }}>
-            <div className="flex flex-col gap-4">
-              {nav.map(item => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  style={{
-                    fontFamily: 'var(--font-space-mono), monospace',
-                    fontSize: '0.6rem',
-                    letterSpacing: '0.25em',
-                    textTransform: 'uppercase',
-                    color: 'var(--vg-text-2)',
-                    textDecoration: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.6rem',
-                  }}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  <item.icon style={{ width: 14, height: 14 }} />
-                  {item.name}
-                </Link>
-              ))}
-              <div style={{ height: '0.5px', background: 'var(--vg-border)' }} />
-              <div className="flex items-center gap-2">
-                <span style={{ fontSize: 12, color: 'var(--vg-text-3)' }}>Theme</span>
-                <ThemeToggle size="sm" />
+        {/* Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {/* Theme */}
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--vg-text-2)', display: 'flex', padding: '0.4rem' }}
+            title="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
+
+          {/* Language */}
+          <div ref={langRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setLangOpen(!langOpen)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--vg-text-2)', display: 'flex', padding: '0.4rem' }}
+              title="Language"
+            >
+              <Globe size={15} />
+            </button>
+            {langOpen && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 0.5rem)', right: 0,
+                background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)',
+                minWidth: '140px', zIndex: 999,
+              }}>
+                {LANGS.map((l) => (
+                  <Link
+                    key={l.code}
+                    href={`/${l.code}`}
+                    onClick={() => setLangOpen(false)}
+                    style={{
+                      display: 'block', padding: '0.6rem 1rem',
+                      fontFamily: 'var(--font-space-mono)', fontSize: '0.52rem',
+                      letterSpacing: '0.15em', color: l.code === locale ? 'var(--vg-gold)' : 'var(--vg-text-2)',
+                      textDecoration: 'none', background: l.code === locale ? 'var(--vg-gold-dim)' : 'none',
+                    }}
+                  >
+                    {l.label}
+                  </Link>
+                ))}
               </div>
-              {!session?.user && (
-                <div className="flex flex-col gap-2">
-                  <Link href={`/${locale}/auth/signin`} onClick={() => setMobileOpen(false)}>
-                    <button style={{
-                      width: '100%', height: 36,
-                      border: '0.5px solid var(--vg-border-2)',
-                      background: 'transparent',
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      color: 'var(--vg-text-2)',
-                    }}>
-                      Sign in
-                    </button>
+            )}
+          </div>
+
+          {/* User */}
+          {session ? (
+            <div ref={userRef} style={{ position: 'relative' }}>
+              <button
+                onClick={() => setUserOpen(!userOpen)}
+                style={{ background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', cursor: 'pointer', color: 'var(--vg-gold)', display: 'flex', padding: '0.5rem' }}
+              >
+                <User size={14} />
+              </button>
+              {userOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 0.5rem)', right: 0,
+                  background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)',
+                  minWidth: '180px', zIndex: 999,
+                }}>
+                  <div style={{ padding: '0.8rem 1rem', borderBottom: '1px solid var(--vg-border)', fontFamily: 'var(--font-space-mono)', fontSize: '0.5rem', letterSpacing: '0.15em', color: 'var(--vg-text-2)' }}>
+                    {session.user?.name || session.user?.email}
+                  </div>
+                  <Link href={`/${locale}/profile`} onClick={() => setUserOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1rem', fontFamily: 'var(--font-space-mono)', fontSize: '0.5rem', letterSpacing: '0.15em', color: 'var(--vg-text-2)', textDecoration: 'none' }}>
+                    <User size={12} /> Profile
                   </Link>
-                  <Link href={`/${locale}/auth/signup`} onClick={() => setMobileOpen(false)}>
-                    <button className="vg-btn-primary" style={{ width: '100%', padding: '0.7rem', fontSize: '0.6rem' }}>
-                      Get started
-                    </button>
-                  </Link>
+                  <button onClick={() => signOut()} style={{ display: 'flex', width: '100%', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1rem', fontFamily: 'var(--font-space-mono)', fontSize: '0.5rem', letterSpacing: '0.15em', color: 'var(--vg-text-2)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                    <LogOut size={12} /> Sign Out
+                  </button>
                 </div>
               )}
             </div>
-          </div>
-        )}
+          ) : (
+            <Link href={`/${locale}/auth/signin`} className="vg-btn-primary" style={{ padding: '0.6rem 1.3rem', textDecoration: 'none' }}>
+              Sign In
+            </Link>
+          )}
+
+          {/* Mobile toggle */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--vg-text-2)', display: 'flex', padding: '0.4rem' }}
+          >
+            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div style={{ borderTop: '1px solid var(--vg-border)', paddingBottom: '1rem' }}>
+          {NAV_LINKS.map((l) => (
+            <Link
+              key={l.href}
+              href={`/${locale}${l.href}`}
+              onClick={() => setMobileOpen(false)}
+              style={{ display: 'block', padding: '0.85rem 0', fontFamily: 'var(--font-space-mono)', fontSize: '0.54rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--vg-text-2)', textDecoration: 'none', borderBottom: '1px solid var(--vg-border)' }}
+            >
+              {l.label}
+            </Link>
+          ))}
+        </div>
+      )}
     </nav>
   );
 }
