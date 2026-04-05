@@ -4,12 +4,12 @@ import { useEffect, useRef } from 'react';
 import { Sparkles, Globe, ShieldCheck, Zap, CreditCard, HeartHandshake } from 'lucide-react';
 
 const FEATURES = [
-  { icon: Sparkles,      title: 'AI-Curated Travel',    desc: 'Personalised recommendations powered by Claude AI, learning your preferences for every journey.' },
-  { icon: Globe,         title: 'Global Reach',         desc: '180+ countries, 50,000+ properties, and millions of experiences available at your fingertips.' },
-  { icon: CreditCard,    title: 'Pi Payments',          desc: 'Seamlessly book hotels, tours, and dining using Pi Network — the future of travel payments.' },
-  { icon: ShieldCheck,   title: 'Verified Listings',    desc: 'Every property and attraction is manually reviewed to ensure the highest quality standards.' },
-  { icon: Zap,           title: 'Instant Booking',      desc: 'Real-time availability and confirmed reservations in seconds, no waiting required.' },
-  { icon: HeartHandshake,'title': 'Concierge Support',  desc: '24/7 multilingual support from human experts and AI to handle every travel request.' },
+  { icon: Sparkles,       title: 'AI-Curated Travel',  desc: 'Personalised recommendations powered by Claude AI, learning your preferences for every journey.' },
+  { icon: Globe,          title: 'Global Reach',        desc: '180+ countries, 50,000+ properties, and millions of experiences available at your fingertips.' },
+  { icon: CreditCard,     title: 'Pi Payments',         desc: 'Seamlessly book hotels, tours, and dining using Pi Network — the future of travel payments.' },
+  { icon: ShieldCheck,    title: 'Verified Listings',   desc: 'Every property and attraction is manually reviewed to ensure the highest quality standards.' },
+  { icon: Zap,            title: 'Instant Booking',     desc: 'Real-time availability and confirmed reservations in seconds, no waiting required.' },
+  { icon: HeartHandshake, title: 'Concierge Support',   desc: '24/7 multilingual support from human experts and AI to handle every travel request.' },
 ];
 
 export function FeaturesSection({ locale }: { locale: string }) {
@@ -27,7 +27,6 @@ export function FeaturesSection({ locale }: { locale: string }) {
 
   return (
     <section ref={sectionRef} style={{ background: 'var(--vg-bg)', padding: 'clamp(4rem,8vw,7rem) clamp(1.5rem,7vw,5rem)' }}>
-      {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
         <div className="vg-overline vg-reveal" style={{ justifyContent: 'center', marginBottom: '1rem' }}>
           Why Va Travel
@@ -37,7 +36,6 @@ export function FeaturesSection({ locale }: { locale: string }) {
         </h2>
       </div>
 
-      {/* Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 0 }}>
         {FEATURES.map((feat, i) => {
           const Icon = feat.icon;
@@ -64,3 +62,4 @@ export function FeaturesSection({ locale }: { locale: string }) {
       </div>
     </section>
   );
+}
