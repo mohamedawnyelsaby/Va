@@ -12,7 +12,7 @@ const FEATURES = [
   { icon: HeartHandshake,'title': 'Concierge Support',  desc: '24/7 multilingual support from human experts and AI to handle every travel request.' },
 ];
 
-export function Features() {
+export function FeaturesSection({ locale }: { locale: string }) {
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -64,4 +64,3 @@ export function Features() {
       </div>
     </section>
   );
-}
