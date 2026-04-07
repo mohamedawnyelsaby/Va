@@ -27,31 +27,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <meta name="theme-color" content="#C9A227" />
-        {/* Anti-flash: set dark BEFORE first paint */}
-        <script dangerouslySetInnerHTML={{ __html: `
-(function(){
-  try{
-    var t=localStorage.getItem('theme');
-    if(t==='light'){document.documentElement.classList.remove('dark');}
-    else{document.documentElement.classList.add('dark');}
-  }catch(e){document.documentElement.classList.add('dark');}
-})();
-        `}} />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('va-travel-theme');if(t==='light'){document.documentElement.classList.remove('dark');}else{document.documentElement.classList.add('dark');}}catch(e){document.documentElement.classList.add('dark');}})();` }} />
       </head>
-      <body suppressHydrationWarning style={{ direction: 'ltr' }}>
+      <body suppressHydrationWarning>
         <div id="vg-cursor" aria-hidden="true" />
         <div id="vg-cursor-ring" aria-hidden="true" />
         <Providers>{children}</Providers>
         <Script src="https://sdk.minepi.com/pi-sdk.js" strategy="afterInteractive" />
-        <Script id="vg-cursor-js" strategy="afterInteractive">{`
-(function(){
-  var d=document.getElementById('vg-cursor'),r=document.getElementById('vg-cursor-ring');
-  if(!d||!r)return;
-  var rx=0,ry=0,mx=0,my=0;
-  document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;d.style.left=mx+'px';d.style.top=my+'px';});
-  (function loop(){rx+=(mx-rx)*0.12;ry+=(my-ry)*0.12;r.style.left=rx+'px';r.style.top=ry+'px';requestAnimationFrame(loop);})();
-})();
-        `}</Script>
+        <Script id="vg-cursor-js" strategy="afterInteractive">{`(function(){var d=document.getElementById('vg-cursor'),r=document.getElementById('vg-cursor-ring');if(!d||!r)return;var rx=0,ry=0,mx=0,my=0;document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;d.style.left=mx+'px';d.style.top=my+'px';});(function loop(){rx+=(mx-rx)*0.12;ry+=(my-ry)*0.12;r.style.left=rx+'px';r.style.top=ry+'px';requestAnimationFrame(loop);})();})();`}</Script>
       </body>
     </html>
   );
