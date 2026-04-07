@@ -15,18 +15,21 @@ export default function LocaleLayout({
 }) {
   const { locale } = params;
   if (!locales.includes(locale)) notFound();
-
   const isRTL = rtlLocales.includes(locale);
 
   return (
     <div
       lang={locale}
       dir={isRTL ? 'rtl' : 'ltr'}
-      style={isRTL ? { fontFamily: 'var(--font-cairo), system-ui, sans-serif' } : undefined}
+      style={{
+        direction: isRTL ? 'rtl' : 'ltr',
+        fontFamily: isRTL ? 'var(--font-cairo), system-ui, sans-serif' : undefined,
+        minHeight: '100vh',
+      }}
     >
-      <Navbar locale={locale} />
+      <Navbar locale={locale} isRTL={isRTL} />
       <main>{children}</main>
-      <Footer locale={locale} />
+      <Footer locale={locale} isRTL={isRTL} />
     </div>
   );
 }
