@@ -2,8 +2,9 @@
 import { notFound } from 'next/navigation';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
+import PageTransition from '@/components/ui/PageTransition';
 
-const locales = ['en', 'ar', 'fr', 'es', 'de', 'zh', 'ja', 'ru'];
+const locales    = ['en', 'ar', 'fr', 'es', 'de', 'zh', 'ja', 'ru'];
 const rtlLocales = ['ar'];
 
 export default function LocaleLayout({
@@ -22,14 +23,16 @@ export default function LocaleLayout({
       lang={locale}
       dir={isRTL ? 'rtl' : 'ltr'}
       style={{
-        direction: isRTL ? 'rtl' : 'ltr',
+        direction:  isRTL ? 'rtl' : 'ltr',
         fontFamily: isRTL ? 'var(--font-cairo), system-ui, sans-serif' : undefined,
-        minHeight: '100vh',
+        minHeight:  '100vh',
       }}
     >
-      <Navbar locale={locale} isRTL={isRTL} />
-      <main>{children}</main>
-      <Footer locale={locale} isRTL={isRTL} />
+      <PageTransition>
+        <Navbar locale={locale} isRTL={isRTL} />
+        <main>{children}</main>
+        <Footer locale={locale} isRTL={isRTL} />
+      </PageTransition>
     </div>
   );
 }
