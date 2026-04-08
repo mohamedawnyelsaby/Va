@@ -4,6 +4,7 @@ import { Cormorant_Garamond, DM_Sans, Space_Mono, Cairo } from 'next/font/google
 import Script from 'next/script';
 import './globals.css';
 import { Providers } from '@/components/providers';
+import GoldenCursorTrail from '@/components/ui/GoldenCursorTrail';
 
 const cormorant = Cormorant_Garamond({ subsets: ['latin'], weight: ['300','400','600'], style: ['normal','italic'], variable: '--font-cormorant', display: 'swap' });
 const dmSans    = DM_Sans({ subsets: ['latin'], weight: ['300','400','500'], variable: '--font-dm-sans', display: 'swap' });
@@ -30,11 +31,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('va-travel-theme');if(t==='light'){document.documentElement.classList.remove('dark');}else{document.documentElement.classList.add('dark');}}catch(e){document.documentElement.classList.add('dark');}})();` }} />
       </head>
       <body suppressHydrationWarning>
-        <div id="vg-cursor" aria-hidden="true" />
-        <div id="vg-cursor-ring" aria-hidden="true" />
+        <GoldenCursorTrail />
         <Providers>{children}</Providers>
         <Script src="https://sdk.minepi.com/pi-sdk.js" strategy="afterInteractive" />
-        <Script id="vg-cursor-js" strategy="afterInteractive">{`(function(){var d=document.getElementById('vg-cursor'),r=document.getElementById('vg-cursor-ring');if(!d||!r)return;var rx=0,ry=0,mx=0,my=0;document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;d.style.left=mx+'px';d.style.top=my+'px';});(function loop(){rx+=(mx-rx)*0.12;ry+=(my-ry)*0.12;r.style.left=rx+'px';r.style.top=ry+'px';requestAnimationFrame(loop);})();})();`}</Script>
       </body>
     </html>
   );
