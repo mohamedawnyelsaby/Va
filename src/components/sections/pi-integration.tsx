@@ -3,12 +3,13 @@
 import { useEffect, useRef } from 'react';
 import { Coins, ShieldCheck, Globe, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
+import AnimatedCounter from '@/components/ui/AnimatedCounter';
 
 const PILLARS = [
-  { icon: Coins,       title: 'Earn Pi Rewards',     desc: 'Receive Pi for every booking, review, and referral you make on the platform.' },
-  { icon: ShieldCheck, title: 'Secure Payments',      desc: 'Pi Network blockchain ensures every transaction is transparent and tamper-proof.' },
-  { icon: Globe,       title: 'Global Acceptance',    desc: 'Use Pi at thousands of verified properties and experiences worldwide.' },
-  { icon: TrendingUp,  title: 'Growing Ecosystem',    desc: 'Be part of the world\'s largest crypto community with 47M+ active users.' },
+  { icon: Coins,       title: 'Earn Pi Rewards',   desc: 'Receive Pi for every booking, review, and referral you make on the platform.' },
+  { icon: ShieldCheck, title: 'Secure Payments',    desc: 'Pi Network blockchain ensures every transaction is transparent and tamper-proof.' },
+  { icon: Globe,       title: 'Global Acceptance',  desc: 'Use Pi at thousands of verified properties and experiences worldwide.' },
+  { icon: TrendingUp,  title: 'Growing Ecosystem',  desc: "Be part of the world's largest crypto community with 47M+ active users." },
 ];
 
 const PI_STEPS = [
@@ -16,6 +17,14 @@ const PI_STEPS = [
   { step: '02', text: 'Browse and select from thousands of verified listings.' },
   { step: '03', text: 'Confirm your booking — pay instantly with Pi.' },
   { step: '04', text: 'Travel, earn rewards, and leave verified reviews.' },
+];
+
+// الأرقام المنفصلة عن الـ suffix عشان AnimatedCounter يشتغل عليها
+const BOTTOM_STATS = [
+  { to: 47,  suffix: 'M+', label: 'Pi Users'            },
+  { to: 190, suffix: '+',  label: 'Countries'            },
+  { to: 0,   suffix: '%',  label: 'Transaction Fees'     },
+  { to: 100, suffix: '%',  label: 'Blockchain Secured'   },
 ];
 
 export function PiIntegration({ locale }: { locale: string }) {
@@ -33,10 +42,7 @@ export function PiIntegration({ locale }: { locale: string }) {
   return (
     <section
       ref={sectionRef}
-      style={{
-        background: 'var(--vg-bg-surface)',
-        padding: 'clamp(4rem,8vw,7rem) clamp(1.5rem,7vw,5rem)',
-      }}
+      style={{ background: 'var(--vg-bg-surface)', padding: 'clamp(4rem,8vw,7rem) clamp(1.5rem,7vw,5rem)' }}
     >
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
@@ -46,26 +52,27 @@ export function PiIntegration({ locale }: { locale: string }) {
         <h2 className="vg-display vg-reveal d1" style={{ fontSize: 'clamp(2rem,5vw,3.8rem)' }}>
           Pay with <em className="vg-italic">Pi</em>
         </h2>
-        <p className="vg-reveal d2" style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.88rem', color: 'var(--vg-text-2)', maxWidth: '500px', margin: '1.2rem auto 0', lineHeight: 1.75 }}>
+        <p className="vg-reveal d2" style={{
+          fontFamily: 'var(--font-dm-sans)', fontSize: '0.88rem',
+          color: 'var(--vg-text-2)', maxWidth: '500px',
+          margin: '1.2rem auto 0', lineHeight: 1.75,
+        }}>
           Va Travel is one of the first luxury travel platforms natively integrated with Pi Network payments.
         </p>
       </div>
 
-      {/* Main layout — stacks on mobile */}
+      {/* Main layout */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '2rem',
-        marginBottom: '4rem',
+        gap: '2rem', marginBottom: '4rem',
       }}>
-        {/* LEFT — Pi steps card */}
-        <div
-          className="vg-card vg-reveal"
-          style={{ padding: '2rem' }}
-        >
+
+        {/* Pi Steps card */}
+        <div className="vg-card vg-reveal" style={{ padding: '2rem' }}>
           <div style={{
-            fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.5rem', letterSpacing: '0.25em', textTransform: 'uppercase',
+            fontFamily: 'var(--font-space-mono)', fontSize: '0.5rem',
+            letterSpacing: '0.25em', textTransform: 'uppercase' as const,
             color: 'var(--vg-gold)', marginBottom: '1.8rem',
           }}>
             How to Pay with Pi
@@ -97,13 +104,11 @@ export function PiIntegration({ locale }: { locale: string }) {
           </Link>
         </div>
 
-        {/* RIGHT — Pillars grid */}
+        {/* Pillars grid */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '1px',
-          background: 'var(--vg-border)',
-          alignSelf: 'start',
+          gap: '1px', background: 'var(--vg-border)', alignSelf: 'start',
         }}>
           {PILLARS.map((p, i) => {
             const Icon = p.icon;
@@ -136,7 +141,7 @@ export function PiIntegration({ locale }: { locale: string }) {
         </div>
       </div>
 
-      {/* Bottom stat bar */}
+      {/* Bottom stat bar — أرقام متحركة */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
@@ -145,14 +150,15 @@ export function PiIntegration({ locale }: { locale: string }) {
         paddingTop: '2.5rem',
         textAlign: 'center',
       }}>
-        {[
-          { num: '47M+', label: 'Pi Users' },
-          { num: '190+', label: 'Countries' },
-          { num: '0%',   label: 'Transaction Fees' },
-          { num: '100%', label: 'Blockchain Secured' },
-        ].map((s) => (
+        {BOTTOM_STATS.map((s) => (
           <div key={s.label} className="vg-reveal">
-            <div className="vg-stat-num" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.4rem)' }}>{s.num}</div>
+            <div className="vg-stat-num" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.4rem)' }}>
+              <AnimatedCounter
+                to={s.to}
+                suffix={s.suffix}
+                duration={s.to > 100 ? 1800 : 1200}
+              />
+            </div>
             <div className="vg-stat-label">{s.label}</div>
           </div>
         ))}
