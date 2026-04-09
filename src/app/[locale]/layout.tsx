@@ -2,7 +2,6 @@
 import { notFound } from 'next/navigation';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
-import PageTransition from '@/components/ui/PageTransition';
 
 const locales    = ['en', 'ar', 'fr', 'es', 'de', 'zh', 'ja', 'ru'];
 const rtlLocales = ['ar'];
@@ -28,11 +27,9 @@ export default function LocaleLayout({
         minHeight:  '100vh',
       }}
     >
-      <PageTransition>
-        <Navbar locale={locale} isRTL={isRTL} />
-        <main>{children}</main>
-        <Footer locale={locale} isRTL={isRTL} />
-      </PageTransition>
+      <Navbar locale={locale} isRTL={isRTL} />
+      <main>{children}</main>
+      <Footer locale={locale} isRTL={isRTL} />
     </div>
   );
 }
