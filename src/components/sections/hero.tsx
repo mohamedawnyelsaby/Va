@@ -4,142 +4,177 @@ import { useEffect, useRef, useState } from 'react';
 import { Search, Hotel, Utensils, MapPin, Bot, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
-/* ── Land polygons ── */
-const LAND: Array<[number,number,number,number]> = [
-  [-25,35,50,72],[-20,-35,55,37],[25,5,145,55],[100,-45,155,10],
-  [-140,25,-55,60],[-82,-56,-34,13],[130,30,145,46],[95,-8,141,8],
-  [-25,63,-13,66],[-5,48,10,60],[-170,55,-50,75],
-];
-function land(lat: number, lon: number) {
-  for (const [a,b,c,d] of LAND) if (lon>=a&&lon<=c&&lat>=b&&lat<=d) return true;
-  return false;
-}
-
-/* ── Globe — حجم ثابت 440 — مبيتمسحش أبداً ── */
-function Globe() {
-  const cv  = useRef<HTMLCanvasElement>(null);
-  const rot = useRef(0);
-  const raf = useRef(0);
+/* ── Three.js Globe — نفس الكرة الأصلية بالضبط ── */
+function ThreeGlobe() {
+  const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = cv.current;
-    if (!el) return;
-    const ctx = el.getContext('2d');
-    if (!ctx) return;
+    const mount = mountRef.current;
+    if (!mount) return;
 
-    const S = 440;
-    el.width = S; el.height = S;
+    // Load Three.js dynamically
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    script.async = true;
+    script.onload = () => initGlobe();
+    document.head.appendChild(script);
 
-    const cx = S/2, cy = S/2, R = S * 0.43;
-    const N = 2200, PHI = Math.PI * (3 - Math.sqrt(5));
+    let renderer: any, animId: number;
 
-    const pts = Array.from({ length: N }, (_, i) => {
-      const y   = 1 - (i / (N - 1)) * 2;
-      const r   = Math.sqrt(1 - y * y);
-      const t   = PHI * i;
-      const lat = Math.asin(y) * 180 / Math.PI;
-      const lon = Math.atan2(Math.sin(t) * r, Math.cos(t) * r) * 180 / Math.PI;
-      return { lat, lon, land: land(lat, lon) };
-    });
+    function initGlobe() {
+      const THREE = (window as any).THREE;
+      if (!THREE || !mount) return;
 
-    function draw() {
-      ctx!.clearRect(0, 0, S, S);
+      const W = mount.offsetWidth || 600;
+      const H = mount.offsetHeight || 600;
 
-      const g = ctx!.createRadialGradient(cx, cy, R*.75, cx, cy, R*1.1);
-      g.addColorStop(0, 'rgba(201,162,39,0.10)');
-      g.addColorStop(1, 'rgba(201,162,39,0)');
-      ctx!.beginPath(); ctx!.arc(cx, cy, R*1.1, 0, Math.PI*2);
-      ctx!.fillStyle = g; ctx!.fill();
+      // Renderer
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+      renderer.setSize(W, H);
+      renderer.domElement.style.position = 'absolute';
+      renderer.domElement.style.inset = '0';
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
+      mount.appendChild(renderer.domElement);
 
-      for (const lat of [-60,-30,0,30,60]) {
-        const lr = lat * Math.PI / 180;
-        const rl = R * Math.cos(lr);
-        const yl = cy - R * Math.sin(lr);
-        if (rl < 4) continue;
-        ctx!.beginPath();
-        ctx!.ellipse(cx, yl, rl, rl*.16, 0, 0, Math.PI*2);
-        ctx!.strokeStyle = 'rgba(201,162,39,0.07)';
-        ctx!.lineWidth = .5; ctx!.stroke();
+      const scene  = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 1000);
+      camera.position.set(0, 0, 3.2);
+
+      // Wireframe globe
+      const geo     = new THREE.SphereGeometry(1.15, 64, 64);
+      const wireMat = new THREE.MeshBasicMaterial({
+        color: 0xC9A227, wireframe: true, opacity: 0.08, transparent: true,
+      });
+      const wireSphere = new THREE.Mesh(geo, wireMat);
+      scene.add(wireSphere);
+
+      // Glow sphere
+      const glowGeo = new THREE.SphereGeometry(1.18, 32, 32);
+      const glowMat = new THREE.MeshBasicMaterial({ color: 0xC9A227, transparent: true, opacity: 0.03 });
+      const glow    = new THREE.Mesh(glowGeo, glowMat);
+      scene.add(glow);
+
+      // Equator ring
+      const ringGeo = new THREE.RingGeometry(1.22, 1.235, 120);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0xC9A227, transparent: true, opacity: 0.18, side: THREE.DoubleSide,
+      });
+      const equator = new THREE.Mesh(ringGeo, ringMat);
+      equator.rotation.x = Math.PI / 2;
+      scene.add(equator);
+
+      // Tilted orbit ring
+      const orbitGeo = new THREE.RingGeometry(1.4, 1.415, 120);
+      const orbitMat = new THREE.MeshBasicMaterial({
+        color: 0xC9A227, transparent: true, opacity: 0.09, side: THREE.DoubleSide,
+      });
+      const orbit = new THREE.Mesh(orbitGeo, orbitMat);
+      orbit.rotation.x = Math.PI / 3;
+      orbit.rotation.z = Math.PI / 6;
+      scene.add(orbit);
+
+      // Stars
+      const starGeo = new THREE.BufferGeometry();
+      const starPos = new Float32Array(2000 * 3);
+      for (let i = 0; i < 2000 * 3; i++) starPos[i] = (Math.random() - 0.5) * 80;
+      starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+      const starMat = new THREE.PointsMaterial({
+        color: 0xC9A227, size: 0.025, transparent: true, opacity: 0.45,
+      });
+      scene.add(new THREE.Points(starGeo, starMat));
+
+      // City dots
+      const cities = [
+        { lat: 25.2,  lon: 55.3   }, // Dubai
+        { lat: 35.7,  lon: 139.7  }, // Tokyo
+        { lat: 48.9,  lon: 2.3    }, // Paris
+        { lat: 30.0,  lon: 31.2   }, // Cairo
+        { lat: 40.7,  lon: -74.0  }, // New York
+        { lat: -8.4,  lon: 115.2  }, // Bali
+        { lat: 4.2,   lon: 73.5   }, // Maldives
+        { lat: 31.6,  lon: -8.0   }, // Marrakech
+      ];
+      const dotMat = new THREE.MeshBasicMaterial({ color: 0xE8C255 });
+      cities.forEach(c => {
+        const phi   = (90 - c.lat) * Math.PI / 180;
+        const theta = (c.lon + 180) * Math.PI / 180;
+        const r     = 1.16;
+        const x     = -(r * Math.sin(phi) * Math.cos(theta));
+        const z     =   r * Math.sin(phi) * Math.sin(theta);
+        const y     =   r * Math.cos(phi);
+        const dot   = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), dotMat);
+        dot.position.set(x, y, z);
+        wireSphere.add(dot);
+      });
+
+      // Mouse parallax
+      let mouseX = 0;
+      const onMouse = (e: MouseEvent) => {
+        mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+      };
+      window.addEventListener('mousemove', onMouse);
+
+      // Resize
+      const onResize = () => {
+        if (!mount) return;
+        const nW = mount.offsetWidth;
+        const nH = mount.offsetHeight;
+        camera.aspect = nW / nH;
+        camera.updateProjectionMatrix();
+        renderer.setSize(nW, nH);
+      };
+      window.addEventListener('resize', onResize);
+
+      // Animate
+      function animate() {
+        animId = requestAnimationFrame(animate);
+        wireSphere.rotation.y += 0.0018;
+        wireSphere.rotation.x += 0.0003;
+        glow.rotation.y       -= 0.0008;
+        orbit.rotation.z      += 0.0006;
+        camera.position.x     += (mouseX * 0.35 - camera.position.x) * 0.04;
+        renderer.render(scene, camera);
       }
+      animate();
 
-      for (const p of pts) {
-        const lr = p.lat * Math.PI / 180;
-        const lo = (p.lon + rot.current) * Math.PI / 180;
-        const x3 = Math.cos(lr) * Math.cos(lo);
-        const y3 = Math.sin(lr);
-        const z3 = Math.cos(lr) * Math.sin(lo);
-        if (z3 < -.05) continue;
-        const px = cx + R*x3, py = cy - R*y3;
-        const dp = Math.max(0, (z3+1)/2);
-        ctx!.beginPath();
-        if (p.land) {
-          ctx!.arc(px, py, 1.5, 0, Math.PI*2);
-          ctx!.fillStyle = `rgba(201,162,39,${(.28+dp*.72).toFixed(2)})`;
-        } else {
-          ctx!.arc(px, py, .7, 0, Math.PI*2);
-          ctx!.fillStyle = `rgba(242,238,230,${(.015+dp*.055).toFixed(3)})`;
-        }
-        ctx!.fill();
-      }
-
-      ctx!.beginPath(); ctx!.arc(cx, cy, R, 0, Math.PI*2);
-      ctx!.strokeStyle = 'rgba(201,162,39,0.13)';
-      ctx!.lineWidth = .8; ctx!.stroke();
-
-      rot.current += .22;
-      raf.current = requestAnimationFrame(draw);
+      // Cleanup refs for return
+      (mount as any)._cleanup = () => {
+        window.removeEventListener('mousemove', onMouse);
+        window.removeEventListener('resize', onResize);
+        cancelAnimationFrame(animId);
+        renderer.dispose();
+        if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
+      };
     }
 
-    raf.current = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(raf.current);
-  }, []); // [] مهمة — بيشتغل مرة واحدة بس
-
-  return <canvas ref={cv} style={{ display: 'block' }} />;
-}
-
-/* ── Stars ── */
-function Stars() {
-  const cv = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const el = cv.current; if (!el) return;
-    const ctx = el.getContext('2d'); if (!ctx) return;
-    const resize = () => { el.width = el.offsetWidth; el.height = el.offsetHeight; };
-    resize(); window.addEventListener('resize', resize);
-    const s = Array.from({ length: 150 }, () => ({
-      x: Math.random(), y: Math.random(),
-      r: Math.random() * 1.1 + .3, a: Math.random(),
-      sp: Math.random() * .004 + .001, d: Math.random() > .5 ? 1 : -1,
-    }));
-    let r = 0;
-    const draw = () => {
-      ctx.clearRect(0, 0, el.width, el.height);
-      for (const p of s) {
-        p.a += p.sp * p.d; if (p.a > 1 || p.a < .1) p.d *= -1;
-        ctx.beginPath(); ctx.arc(p.x*el.width, p.y*el.height, p.r, 0, Math.PI*2);
-        ctx.fillStyle = `rgba(201,162,39,${p.a.toFixed(2)})`; ctx.fill();
-      }
-      r = requestAnimationFrame(draw);
+    return () => {
+      if ((mount as any)._cleanup) (mount as any)._cleanup();
+      if (document.head.contains(script)) document.head.removeChild(script);
     };
-    draw();
-    return () => { cancelAnimationFrame(r); window.removeEventListener('resize', resize); };
   }, []);
+
   return (
-    <canvas ref={cv} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none' }} />
+    <div
+      ref={mountRef}
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+    />
   );
 }
 
 /* ── Tabs ── */
 const TABS = [
-  { id:'hotels',      label:'Hotels',      Icon:Hotel,    href:'/hotels'       },
-  { id:'attractions', label:'Attractions', Icon:MapPin,   href:'/attractions'  },
-  { id:'restaurants', label:'Restaurants', Icon:Utensils, href:'/restaurants'  },
-  { id:'ai',          label:'AI',          Icon:Bot,      href:'/ai-assistant' },
+  { id: 'hotels',      label: 'Hotels',      Icon: Hotel,    href: '/hotels'       },
+  { id: 'attractions', label: 'Attractions', Icon: MapPin,   href: '/attractions'  },
+  { id: 'restaurants', label: 'Restaurants', Icon: Utensils, href: '/restaurants'  },
+  { id: 'ai',          label: 'AI',          Icon: Bot,      href: '/ai-assistant' },
 ];
 const STATS = [
-  { num:'180+', label:'Countries'   },
-  { num:'50K+', label:'Properties'  },
-  { num:'2M+',  label:'Travelers'   },
-  { num:'π',    label:'Pi Payments' },
+  { num: '180+', label: 'Countries'   },
+  { num: '50K+', label: 'Properties'  },
+  { num: '2M+',  label: 'Travelers'   },
+  { num: 'π',    label: 'Pi Payments' },
 ];
 
 /* ── Hero ── */
@@ -159,85 +194,112 @@ export function HeroSection({ locale }: { locale: string }) {
 
   return (
     <section style={{
-      position:'relative', minHeight:'100vh', background:'var(--vg-bg)',
-      display:'flex', alignItems:'center', overflow:'hidden',
-      paddingTop:'64px', direction:'ltr',
+      position:   'relative',
+      minHeight:  '100vh',
+      background: 'var(--vg-bg)',
+      display:    'flex',
+      alignItems: 'center',
+      overflow:   'hidden',
+      paddingTop: '64px',
+      direction:  'ltr',
     }}>
-      <Stars />
 
+      {/* Three.js Globe — يملأ الخلفية كلها */}
+      <ThreeGlobe />
+
+      {/* Vignette — يغمق الجانب الأيسر عشان النص يُقرأ */}
       <div style={{
-        position:'absolute', inset:0,
-        background:'radial-gradient(ellipse 90% 80% at 60% 50%, transparent 35%, var(--vg-bg) 88%)',
-        pointerEvents:'none',
+        position:   'absolute',
+        inset:      0,
+        background: 'radial-gradient(ellipse 70% 90% at 15% 50%, rgba(3,2,10,0.92) 0%, rgba(3,2,10,0.55) 45%, transparent 75%)',
+        pointerEvents: 'none',
+        zIndex:     1,
       }} />
 
-      {/* CSS للـ Globe — موبايل vs ديسكتوب بدون re-mount */}
-      <style>{`
-        .globe-wrap {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          z-index: 1;
-        }
-        @media (max-width: 767px) {
-          .globe-wrap {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -45%) scale(0.68);
-            opacity: 0.22;
-            pointer-events: none;
-            z-index: 0;
-          }
-        }
-      `}</style>
-
+      {/* Content */}
       <div style={{
-        position:'relative', zIndex:2,
-        width:'100%', maxWidth:'1280px',
-        margin:'0 auto',
-        padding:'clamp(2rem,6vw,4rem) clamp(1.25rem,5vw,4rem)',
-        display:'grid',
-        gridTemplateColumns: mob ? '1fr' : 'minmax(0,1fr) auto',
-        gap: mob ? '2rem' : '5rem',
-        alignItems:'center',
+        position:  'relative',
+        zIndex:    2,
+        width:     '100%',
+        maxWidth:  '1280px',
+        margin:    '0 auto',
+        padding:   'clamp(2rem,6vw,4rem) clamp(1.25rem,5vw,4rem)',
       }}>
+        <div style={{ maxWidth: '580px' }}>
 
-        {/* Left — content */}
-        <div>
-          <div className="vg-overline" style={{ marginBottom:'1.4rem' }}>
-            Void Gold Travel Intelligence
+          {/* Tag */}
+          <div style={{
+            fontFamily:    'var(--font-space-mono)',
+            fontSize:      '.55rem',
+            letterSpacing: '.4em',
+            textTransform: 'uppercase' as const,
+            color:         'var(--vg-gold)',
+            display:       'flex',
+            alignItems:    'center',
+            gap:           '1rem',
+            marginBottom:  '2.5rem',
+          }}>
+            Pi-Powered · AI-First · Global
+            <span style={{ width: '4rem', height: '1px', background: 'var(--vg-gold)', opacity: .5 }} />
           </div>
 
-          <h1 className="vg-display" style={{ fontSize:'clamp(2.6rem,7.5vw,5.8rem)', marginBottom:'1.3rem', lineHeight:.93 }}>
-            The World<br /><em className="vg-italic">Awaits</em> You
+          {/* Heading */}
+          <h1 style={{
+            fontFamily:    'var(--font-cormorant)',
+            fontSize:      'clamp(4rem,7.5vw,7rem)',
+            fontWeight:    300,
+            lineHeight:    .92,
+            letterSpacing: '-.01em',
+            marginBottom:  '2rem',
+            color:         'var(--vg-text)',
+          }}>
+            The World<br />
+            <em style={{ fontStyle: 'italic', color: 'var(--vg-gold)', display: 'block' }}>Awaits</em>
+            You
           </h1>
 
+          {/* Sub */}
           <p style={{
-            fontFamily:'var(--font-dm-sans)', fontSize:'clamp(.8rem,1.7vw,.93rem)',
-            color:'var(--vg-text-2)', lineHeight:1.78, maxWidth:'430px', marginBottom:'2.2rem',
+            fontFamily:   'var(--font-dm-sans)',
+            fontWeight:   300,
+            fontSize:     '.95rem',
+            color:        'var(--vg-text-2)',
+            lineHeight:   1.85,
+            maxWidth:     '400px',
+            marginBottom: '3rem',
           }}>
             Discover extraordinary destinations. Book with Pi. AI-curated experiences for the discerning traveller.
           </p>
 
-          {/* Search */}
-          <div style={{ background:'var(--vg-bg-card)', border:'1px solid var(--vg-border)', marginBottom:'2.2rem' }}>
-            <div style={{ display:'flex', borderBottom:'1px solid var(--vg-border)' }}>
+          {/* Search box */}
+          <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', marginBottom: '2.5rem' }}>
+            {/* Tabs */}
+            <div style={{ display: 'flex', borderBottom: '1px solid var(--vg-border)' }}>
               {TABS.map(({ id, label, Icon }) => {
                 const on = tab === id;
                 return (
                   <button key={id} onClick={() => setTab(id)} style={{
-                    flex:1, padding: mob ? '.65rem .2rem' : '.7rem .4rem',
+                    flex:         1,
+                    padding:      mob ? '.65rem .2rem' : '.7rem .4rem',
                     background:   on ? 'var(--vg-gold-dim)' : 'none',
                     border:       'none',
                     borderBottom: on ? '2px solid var(--vg-gold)' : '2px solid transparent',
-                    cursor:'pointer', color: on ? 'var(--vg-gold)' : 'var(--vg-text-3)',
-                    display:'flex', flexDirection:'column', alignItems:'center', gap:'.28rem',
-                    transition:'all .2s',
+                    cursor:       'pointer',
+                    color:        on ? 'var(--vg-gold)' : 'var(--vg-text-3)',
+                    display:      'flex',
+                    flexDirection:'column' as const,
+                    alignItems:   'center',
+                    gap:          '.28rem',
+                    transition:   'all .2s',
                   }}>
                     <Icon size={mob ? 14 : 13} />
                     {!mob && (
-                      <span style={{ fontFamily:'var(--font-space-mono)', fontSize:'.4rem', letterSpacing:'.14em', textTransform:'uppercase' as const }}>
+                      <span style={{
+                        fontFamily:    'var(--font-space-mono)',
+                        fontSize:      '.4rem',
+                        letterSpacing: '.14em',
+                        textTransform: 'uppercase' as const,
+                      }}>
                         {label}
                       </span>
                     )}
@@ -245,19 +307,39 @@ export function HeroSection({ locale }: { locale: string }) {
                 );
               })}
             </div>
-            <div style={{ display:'flex', direction:'ltr' }}>
-              <div style={{ flex:1, display:'flex', alignItems:'center', gap:'.65rem', padding:'.85rem 1rem' }}>
-                <Search size={14} color="var(--vg-text-3)" style={{ flexShrink:0 }} />
+
+            {/* Input row */}
+            <div style={{ display: 'flex', direction: 'ltr' }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '.65rem', padding: '.85rem 1rem' }}>
+                <Search size={14} color="var(--vg-text-3)" style={{ flexShrink: 0 }} />
                 <input
-                  value={q} onChange={e => setQ(e.target.value)}
+                  value={q}
+                  onChange={e => setQ(e.target.value)}
                   placeholder={`Search ${cur.label.toLowerCase()}…`}
-                  style={{ flex:1, background:'none', border:'none', outline:'none', fontFamily:'var(--font-dm-sans)', fontSize:'.88rem', color:'var(--vg-text)', minWidth:0 }}
+                  style={{
+                    flex:       1,
+                    background: 'none',
+                    border:     'none',
+                    outline:    'none',
+                    fontFamily: 'var(--font-dm-sans)',
+                    fontSize:   '.88rem',
+                    color:      'var(--vg-text)',
+                    minWidth:   0,
+                  }}
                 />
               </div>
               <Link
                 href={`/${locale}${cur.href}${q ? `?q=${encodeURIComponent(q)}` : ''}`}
                 className="vg-btn-primary"
-                style={{ textDecoration:'none', borderLeft:'1px solid var(--vg-gold-border)', display:'flex', alignItems:'center', gap:'.4rem', padding:'.85rem 1rem', flexShrink:0 }}
+                style={{
+                  textDecoration: 'none',
+                  borderLeft:     '1px solid var(--vg-gold-border)',
+                  display:        'flex',
+                  alignItems:     'center',
+                  gap:            '.4rem',
+                  padding:        '.85rem 1rem',
+                  flexShrink:     0,
+                }}
               >
                 <ArrowRight size={14} />
                 {!mob && <span>Search</span>}
@@ -266,21 +348,16 @@ export function HeroSection({ locale }: { locale: string }) {
           </div>
 
           {/* Stats */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
             {STATS.map(s => (
               <div key={s.label}>
-                <div className="vg-stat-num" style={{ fontSize:'clamp(1.3rem,2.8vw,2.2rem)' }}>{s.num}</div>
-                <div className="vg-stat-label" style={{ fontSize:'.42rem' }}>{s.label}</div>
+                <div className="vg-stat-num" style={{ fontSize: 'clamp(1.3rem,2.8vw,2.2rem)' }}>{s.num}</div>
+                <div className="vg-stat-label" style={{ fontSize: '.42rem' }}>{s.label}</div>
               </div>
             ))}
           </div>
-        </div>
 
-        {/* Globe — دايماً في الـ DOM، CSS بيتحكم في مكانه */}
-        <div className="globe-wrap">
-          <Globe />
         </div>
-
       </div>
     </section>
   );
