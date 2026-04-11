@@ -1,476 +1,354 @@
 'use client';
-
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  MapPin,
-  Star,
-  Heart,
-  Share2,
-  Wifi,
-  Coffee,
-  Dumbbell,
-  Utensils,
-  Calendar,
-  Users,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { MapPin, Star, Heart, Share2, Wifi, Coffee, Dumbbell, Utensils, Calendar, Users, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
-interface City {
-  name: string;
-  country: string;
+function Spinner() {
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{
+          width: '40px', height: '40px', border: '1px solid var(--vg-gold-border)',
+          borderTop: '1px solid var(--vg-gold)', borderRadius: '50%',
+          animation: 'spin 1s linear infinite', margin: '0 auto 1rem',
+        }} />
+        <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.48rem', letterSpacing: '0.3em', color: 'var(--vg-text-3)', textTransform: 'uppercase' }}>
+          Loading Hotel
+        </div>
+      </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
 }
 
-interface User {
-  name: string;
-  avatar?: string;
-}
-
-interface Review {
-  id: string;
-  user: User;
-  rating: number;
-  title?: string;
-  comment: string;
-  createdAt: string;
-}
-
-interface RoomType {
-  type: string;
-  description: string;
-  price: number;
-}
-
-interface Hotel {
-  id: string;
-  name: string;
-  city: City;
-  starRating: number;
-  rating: number;
-  reviewCount: number;
-  images: string[];
-  thumbnail: string;
-  description: string;
-  amenities: string[];
-  roomTypes: RoomType[];
-  reviews?: Review[];
-  currency: string;
-  pricePerNight: number;
-}
-
-interface BookingData {
-  checkIn: string;
-  checkOut: string;
-  guests: number;
-  rooms: number;
-}
+const AMENITY_ICONS: Record<string, any> = {
+  WiFi: Wifi, Breakfast: Coffee, Gym: Dumbbell, Restaurant: Utensils, Pool: Coffee,
+};
 
 export default function HotelDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-
-  // ✅ FIXED: get locale from params
   const locale = (params.locale as string) || 'en';
 
-  const [hotel, setHotel] = useState<Hotel | null>(null);
+  const [hotel, setHotel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [selectedRoom, setSelectedRoom] = useState<RoomType | null>(null);
-  const [bookingData, setBookingData] = useState<BookingData>({
-    checkIn: '',
-    checkOut: '',
-    guests: 1,
-    rooms: 1,
-  });
+  const [currentImg, setCurrentImg] = useState(0);
+  const [selectedRoom, setSelectedRoom] = useState<any>(null);
+  const [isFav, setIsFav] = useState(false);
+  const [bookingData, setBookingData] = useState({ checkIn: '', checkOut: '', guests: 1, rooms: 1 });
 
-  const fetchHotelDetails = useCallback(async () => {
+  const fetchHotel = useCallback(async () => {
     try {
-      const response = await fetch(`/api/hotels/${params.id}`);
-      if (!response.ok) throw new Error('Failed to fetch hotel');
-      const data = await response.json();
+      const res = await fetch(`/api/hotels/${params.id}`);
+      if (!res.ok) throw new Error('Not found');
+      const data = await res.json();
       setHotel(data);
-      if (data.roomTypes?.length > 0) {
-        setSelectedRoom(data.roomTypes[0]);
-      }
-    } catch (error) {
-      console.error('Failed to fetch hotel:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load hotel details',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
+      if (data.roomTypes?.length > 0) setSelectedRoom(data.roomTypes[0]);
+    } catch {
+      toast({ title: 'Error', description: 'Failed to load hotel', variant: 'destructive' });
+    } finally { setLoading(false); }
   }, [params.id, toast]);
 
-  useEffect(() => {
-    fetchHotelDetails();
-  }, [fetchHotelDetails]);
+  useEffect(() => { fetchHotel(); }, [fetchHotel]);
 
   const handleBooking = () => {
     if (!bookingData.checkIn || !bookingData.checkOut) {
-      toast({
-        title: 'Required Fields',
-        description: 'Please select check-in and check-out dates',
-        variant: 'destructive',
-      });
-      return;
+      toast({ title: 'Required', description: 'Please select dates', variant: 'destructive' }); return;
     }
-
-    if (!hotel || !selectedRoom) {
-      toast({
-        title: 'Error',
-        description: 'Please select a room',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const query = new URLSearchParams({
-      itemId:    hotel.id,
-      itemType:  'Hotel',
-      roomType:  selectedRoom.type,
-      checkIn:   bookingData.checkIn,
-      checkOut:  bookingData.checkOut,
-      guests:    bookingData.guests.toString(),
-      rooms:     bookingData.rooms.toString(),
+    const q = new URLSearchParams({
+      itemId: hotel.id, itemType: 'Hotel',
+      roomType: selectedRoom?.type || 'Standard',
+      checkIn: bookingData.checkIn, checkOut: bookingData.checkOut,
+      guests: bookingData.guests.toString(), rooms: bookingData.rooms.toString(),
     });
-
-    // ✅ FIXED: include locale in redirect
-    router.push(`/${locale}/booking?${query}`);
+    router.push(`/${locale}/booking?${q}`);
   };
 
-  const handlePreviousImage = () => {
-    if (!hotel?.images) return;
-    setCurrentImageIndex((i) => (i === 0 ? hotel.images.length - 1 : i - 1));
-  };
+  const today = new Date().toISOString().split('T')[0];
 
-  const handleNextImage = () => {
-    if (!hotel?.images) return;
-    setCurrentImageIndex((i) => (i === hotel.images.length - 1 ? 0 : i + 1));
-  };
+  const nights = bookingData.checkIn && bookingData.checkOut
+    ? Math.max(1, Math.ceil((new Date(bookingData.checkOut).getTime() - new Date(bookingData.checkIn).getTime()) / 86400000))
+    : 0;
+  const pricePerNight = selectedRoom?.price || hotel?.pricePerNight || 0;
+  const subtotal = pricePerNight * nights * bookingData.rooms;
+  const total = subtotal * 1.1;
 
-  const getTodayDate = () => new Date().toISOString().split('T')[0];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
+  if (loading) return <Spinner />;
+  if (!hotel) return (
+    <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '60px' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '3rem', color: 'var(--vg-text-3)', marginBottom: '1rem' }}>Hotel Not Found</div>
+        <Link href={`/${locale}/hotels`} className="vg-btn-outline" style={{ textDecoration: 'none' }}>← Back to Hotels</Link>
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (!hotel) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Hotel Not Found</h2>
-          <Button onClick={() => router.push(`/${locale}/hotels`)}>Back to Hotels</Button>
-        </div>
-      </div>
-    );
-  }
+  const images = hotel.images?.length > 0 ? hotel.images : [hotel.thumbnail];
 
-  const amenityIcons: Record<string, typeof Wifi> = {
-    WiFi: Wifi,
-    Pool: Coffee,
-    Gym: Dumbbell,
-    Restaurant: Utensils,
+  const inputStyle = {
+    width: '100%', boxSizing: 'border-box' as const,
+    background: 'var(--vg-bg-surface)', border: '1px solid var(--vg-border)',
+    padding: '0.75rem 0.85rem', fontFamily: 'var(--font-dm-sans)',
+    fontSize: '0.84rem', color: 'var(--vg-text)', outline: 'none', transition: 'border-color 0.2s',
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
+    <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', paddingTop: '60px' }}>
 
-        {/* Image Gallery */}
-        <div className="mb-8">
-          <div className="relative h-[500px] rounded-2xl overflow-hidden">
-            <Image
-              src={hotel.images?.[currentImageIndex] || hotel.thumbnail}
-              alt={hotel.name}
-              fill
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+      {/* Back nav */}
+      <div style={{ padding: '1.2rem clamp(1.5rem,7vw,5rem)', borderBottom: '1px solid var(--vg-border)', background: 'var(--vg-bg-surface)' }}>
+        <Link href={`/${locale}/hotels`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', fontFamily: 'var(--font-space-mono)', fontSize: '0.46rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--vg-text-3)', transition: 'color 0.2s' }}
+          onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'var(--vg-gold)'}
+          onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--vg-text-3)'}>
+          <ArrowLeft size={13} /> Back to Hotels
+        </Link>
+      </div>
 
-            {(hotel.images?.length ?? 0) > 1 && (
-              <>
-                <button
-                  onClick={handlePreviousImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full hover:bg-white transition-colors"
-                  aria-label="Previous image"
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-                <button
-                  onClick={handleNextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full hover:bg-white transition-colors"
-                  aria-label="Next image"
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
-              </>
-            )}
+      {/* Gallery */}
+      <div style={{ position: 'relative', height: 'clamp(280px,50vw,520px)', overflow: 'hidden' }}>
+        <Image src={images[currentImg] || hotel.thumbnail} alt={hotel.name} fill style={{ objectFit: 'cover', filter: 'brightness(0.55) saturate(0.7)' }} priority />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,2,10,0.9) 0%, transparent 50%)' }} />
 
-            <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h1 className="text-4xl font-bold mb-2">{hotel.name}</h1>
-                  <div className="flex items-center gap-4 mb-2">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-5 w-5" />
-                      <span>{hotel.city?.name}, {hotel.city?.country}</span>
-                    </div>
-                    <div className="flex">
-                      {Array.from({ length: hotel.starRating }).map((_, i) => (
-                        <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-2xl">{hotel.rating?.toFixed(1)}</span>
-                    <span>({hotel.reviewCount} reviews)</span>
-                  </div>
+        {/* Nav arrows */}
+        {images.length > 1 && (<>
+          <button onClick={() => setCurrentImg(i => i === 0 ? images.length - 1 : i - 1)}
+            style={{ position: 'absolute', left: '1.5rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(3,2,10,0.7)', border: '1px solid var(--vg-gold-border)', width: '40px', height: '40px', cursor: 'pointer', color: 'var(--vg-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>
+            <ChevronLeft size={16} />
+          </button>
+          <button onClick={() => setCurrentImg(i => i === images.length - 1 ? 0 : i + 1)}
+            style={{ position: 'absolute', right: '1.5rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(3,2,10,0.7)', border: '1px solid var(--vg-gold-border)', width: '40px', height: '40px', cursor: 'pointer', color: 'var(--vg-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>
+            <ChevronRight size={16} />
+          </button>
+          {/* Dots */}
+          <div style={{ position: 'absolute', bottom: '8rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '0.4rem', zIndex: 3 }}>
+            {images.map((_: any, i: number) => (
+              <button key={i} onClick={() => setCurrentImg(i)} style={{ width: i === currentImg ? '20px' : '6px', height: '6px', background: i === currentImg ? 'var(--vg-gold)' : 'rgba(255,255,255,0.4)', border: 'none', cursor: 'pointer', transition: 'all 0.3s', padding: 0 }} />
+            ))}
+          </div>
+        </>)}
+
+        {/* Hotel info overlay */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '2rem clamp(1.5rem,7vw,5rem)', zIndex: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <div style={{ display: 'flex', gap: '2px', marginBottom: '0.5rem' }}>
+                {Array.from({ length: hotel.starRating || 0 }).map((_: any, s: number) => (
+                  <span key={s} style={{ color: 'var(--vg-star)', fontSize: '0.8rem' }}>★</span>
+                ))}
+              </div>
+              <h1 style={{ fontFamily: 'var(--font-cormorant)', fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 300, color: '#F2EEE6', lineHeight: 1, marginBottom: '0.5rem' }}>
+                {hotel.name}
+              </h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <MapPin size={13} color="rgba(242,238,230,0.7)" />
+                  <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.82rem', color: 'rgba(242,238,230,0.7)' }}>
+                    {hotel.city?.name || hotel.city}, {hotel.city?.country || hotel.country}
+                  </span>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="secondary" size="icon">
-                    <Heart className="h-5 w-5" />
-                  </Button>
-                  <Button variant="secondary" size="icon">
-                    <Share2 className="h-5 w-5" />
-                  </Button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Star size={13} style={{ color: 'var(--vg-star)', fill: 'var(--vg-star)' }} />
+                  <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.8rem', color: 'var(--vg-gold)' }}>{hotel.rating?.toFixed(1)}</span>
+                  <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.76rem', color: 'rgba(242,238,230,0.5)' }}>({hotel.reviewCount} reviews)</span>
                 </div>
               </div>
             </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button onClick={() => setIsFav(!isFav)} style={{ width: '40px', height: '40px', background: 'rgba(3,2,10,0.7)', border: '1px solid var(--vg-gold-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isFav ? 'var(--vg-gold)' : 'rgba(242,238,230,0.6)' }}>
+                <Heart size={15} style={{ fill: isFav ? 'var(--vg-gold)' : 'none' }} />
+              </button>
+              <button style={{ width: '40px', height: '40px', background: 'rgba(3,2,10,0.7)', border: '1px solid var(--vg-gold-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(242,238,230,0.6)' }}>
+                <Share2 size={15} />
+              </button>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Main content */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: '2rem', padding: '2.5rem clamp(1.5rem,7vw,5rem)', maxWidth: '1400px', margin: '0 auto' }}
+        className="hotel-detail-grid">
+        <style>{`@media(max-width:900px){.hotel-detail-grid{grid-template-columns:1fr!important}}`}</style>
 
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-
-            {/* Description */}
-            <Card>
-              <CardHeader><CardTitle>About This Hotel</CardTitle></CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed">{hotel.description}</p>
-              </CardContent>
-            </Card>
-
-            {/* Amenities */}
-            {hotel.amenities?.length > 0 && (
-              <Card>
-                <CardHeader><CardTitle>Amenities</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {hotel.amenities.map((amenity: string) => {
-                      const Icon = amenityIcons[amenity] || Wifi;
-                      return (
-                        <div key={amenity} className="flex items-center gap-2">
-                          <Icon className="h-5 w-5 text-primary" />
-                          <span>{amenity}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Room Types */}
-            {hotel.roomTypes?.length > 0 && (
-              <Card>
-                <CardHeader><CardTitle>Select Your Room</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {hotel.roomTypes.map((room: RoomType) => (
-                      <div
-                        key={room.type}
-                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                          selectedRoom?.type === room.type
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                        onClick={() => setSelectedRoom(room)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-semibold text-lg">{room.type}</h4>
-                            <p className="text-sm text-muted-foreground">{room.description}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-2xl font-bold">
-                              {formatCurrency(room.price, hotel.currency)}
-                            </p>
-                            <p className="text-sm text-muted-foreground">per night</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Reviews */}
-            {hotel.reviews && hotel.reviews.length > 0 && (
-              <Card>
-                <CardHeader><CardTitle>Guest Reviews</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {hotel.reviews.slice(0, 5).map((review: Review) => (
-                      <div key={review.id} className="border-b pb-6 last:border-0">
-                        <div className="flex items-start gap-4">
-                          <Avatar>
-                            <AvatarImage src={review.user?.avatar} />
-                            <AvatarFallback>
-                              {review.user?.name?.charAt(0) || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-2">
-                              <div>
-                                <p className="font-semibold">{review.user?.name}</p>
-                                <div className="flex">
-                                  {Array.from({ length: review.rating }).map((_, i) => (
-                                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                  ))}
-                                </div>
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                {formatDate(new Date(review.createdAt), 'en-US', {
-                                  month: 'short',
-                                  year: 'numeric',
-                                })}
-                              </p>
-                            </div>
-                            {review.title && (
-                              <h4 className="font-semibold mb-1">{review.title}</h4>
-                            )}
-                            <p className="text-muted-foreground">{review.comment}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+        {/* Left column */}
+        <div>
+          {/* Description */}
+          <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', padding: '2rem', marginBottom: '1px' }}>
+            <div className="vg-overline" style={{ marginBottom: '1rem' }}>About This Hotel</div>
+            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.88rem', color: 'var(--vg-text-2)', lineHeight: 1.8 }}>
+              {hotel.description}
+            </p>
           </div>
 
-          {/* Booking Card */}
-          <div>
-            <Card className="sticky top-8">
-              <CardHeader><CardTitle>Book Your Stay</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
+          {/* Amenities */}
+          {hotel.amenities?.length > 0 && (
+            <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', borderTop: 'none', padding: '2rem', marginBottom: '1px' }}>
+              <div className="vg-overline" style={{ marginBottom: '1.2rem' }}>Amenities</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.5rem' }}>
+                {hotel.amenities.map((a: string) => {
+                  const Icon = AMENITY_ICONS[a] || Wifi;
+                  return (
+                    <div key={a} className="vg-pi-step" style={{ padding: '0.65rem 0.8rem' }}>
+                      <Icon size={13} color="var(--vg-gold)" />
+                      <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.8rem', color: 'var(--vg-text-2)' }}>{a}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Check-in</label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <input
-                      type="date"
-                      min={getTodayDate()}
-                      value={bookingData.checkIn}
-                      onChange={(e) => setBookingData({ ...bookingData, checkIn: e.target.value })}
-                      className="w-full pl-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Check-out</label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <input
-                      type="date"
-                      min={bookingData.checkIn || getTodayDate()}
-                      value={bookingData.checkOut}
-                      onChange={(e) => setBookingData({ ...bookingData, checkOut: e.target.value })}
-                      className="w-full pl-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Guests</label>
-                    <div className="relative">
-                      <Users className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <input
-                        type="number"
-                        min="1"
-                        value={bookingData.guests}
-                        onChange={(e) =>
-                          setBookingData({ ...bookingData, guests: parseInt(e.target.value) || 1 })
-                        }
-                        className="w-full pl-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      />
+          {/* Room types */}
+          {hotel.roomTypes?.length > 0 && (
+            <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', borderTop: 'none', padding: '2rem', marginBottom: '1px' }}>
+              <div className="vg-overline" style={{ marginBottom: '1.2rem' }}>Select Room Type</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--vg-border)' }}>
+                {hotel.roomTypes.map((room: any) => (
+                  <div key={room.type} onClick={() => setSelectedRoom(room)}
+                    style={{
+                      background: selectedRoom?.type === room.type ? 'var(--vg-gold-dim)' : 'var(--vg-bg-card)',
+                      border: selectedRoom?.type === room.type ? '1px solid var(--vg-gold-border)' : '0px',
+                      padding: '1.2rem 1.4rem', cursor: 'pointer',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      transition: 'background 0.2s',
+                    }}>
+                    <div>
+                      <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.15rem', fontWeight: 300, color: selectedRoom?.type === room.type ? 'var(--vg-gold)' : 'var(--vg-text)', marginBottom: '0.3rem' }}>
+                        {room.type}
+                      </div>
+                      <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.76rem', color: 'var(--vg-text-3)' }}>{room.description}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div className="vg-stat-num" style={{ fontSize: '1.3rem' }}>{formatCurrency(room.price, hotel.currency)}</div>
+                      <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.42rem', letterSpacing: '0.15em', color: 'var(--vg-text-3)' }}>PER NIGHT</div>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Rooms</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={bookingData.rooms}
-                      onChange={(e) =>
-                        setBookingData({ ...bookingData, rooms: parseInt(e.target.value) || 1 })
-                      }
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Reviews */}
+          {hotel.reviews?.length > 0 && (
+            <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', borderTop: 'none', padding: '2rem' }}>
+              <div className="vg-overline" style={{ marginBottom: '1.5rem' }}>Guest Reviews</div>
+              {hotel.reviews.slice(0, 5).map((review: any) => (
+                <div key={review.id} style={{ paddingBottom: '1.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--vg-border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                    <div>
+                      <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.88rem', color: 'var(--vg-text)', marginBottom: '0.25rem' }}>{review.user?.name}</div>
+                      <div style={{ display: 'flex', gap: '2px' }}>
+                        {Array.from({ length: review.rating }).map((_: any, s: number) => (
+                          <span key={s} style={{ color: 'var(--vg-star)', fontSize: '0.65rem' }}>★</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.44rem', letterSpacing: '0.15em', color: 'var(--vg-text-3)' }}>
+                      {new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                    </div>
+                  </div>
+                  {review.title && <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1rem', color: 'var(--vg-text)', marginBottom: '0.4rem' }}>{review.title}</div>}
+                  <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.82rem', color: 'var(--vg-text-2)', lineHeight: 1.7, margin: 0 }}>{review.comment}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Sticky booking card */}
+        <div>
+          <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-gold-border)', position: 'sticky', top: '80px' }}>
+            {/* Top gold bar */}
+            <div style={{ height: '2px', background: 'linear-gradient(to right, var(--vg-gold), var(--vg-gold-2))' }} />
+
+            <div style={{ padding: '1.8rem' }}>
+              <div className="vg-overline" style={{ marginBottom: '1.2rem' }}>Book Your Stay</div>
+
+              {/* Price display */}
+              <div style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--vg-border)' }}>
+                <span className="vg-stat-num" style={{ fontSize: '2rem' }}>{formatCurrency(pricePerNight, hotel.currency)}</span>
+                <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.44rem', letterSpacing: '0.15em', color: 'var(--vg-text-3)', marginLeft: '0.5rem' }}>/ NIGHT</span>
+              </div>
+
+              {/* Dates */}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.44rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--vg-text-3)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
+                  <Calendar size={11} /> Check-in
+                </label>
+                <input type="date" min={today} value={bookingData.checkIn}
+                  onChange={e => setBookingData({ ...bookingData, checkIn: e.target.value })}
+                  style={inputStyle}
+                  onFocus={e => e.target.style.borderColor = 'var(--vg-gold-border)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--vg-border)'} />
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.44rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--vg-text-3)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
+                  <Calendar size={11} /> Check-out
+                </label>
+                <input type="date" min={bookingData.checkIn || today} value={bookingData.checkOut}
+                  onChange={e => setBookingData({ ...bookingData, checkOut: e.target.value })}
+                  style={inputStyle}
+                  onFocus={e => e.target.style.borderColor = 'var(--vg-gold-border)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--vg-border)'} />
+              </div>
+
+              {/* Guests + rooms */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                <div>
+                  <label style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.44rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--vg-text-3)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
+                    <Users size={11} /> Guests
+                  </label>
+                  <input type="number" min={1} max={20} value={bookingData.guests}
+                    onChange={e => setBookingData({ ...bookingData, guests: parseInt(e.target.value) || 1 })}
+                    style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = 'var(--vg-gold-border)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--vg-border)'} />
+                </div>
+                <div>
+                  <label style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.44rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--vg-text-3)', marginBottom: '0.5rem', display: 'block' }}>Rooms</label>
+                  <input type="number" min={1} max={10} value={bookingData.rooms}
+                    onChange={e => setBookingData({ ...bookingData, rooms: parseInt(e.target.value) || 1 })}
+                    style={inputStyle}
+                    onFocus={e => e.target.style.borderColor = 'var(--vg-gold-border)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--vg-border)'} />
+                </div>
+              </div>
+
+              {/* Price breakdown */}
+              {nights > 0 && (
+                <div style={{ background: 'var(--vg-bg-surface)', padding: '1rem', marginBottom: '1.2rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.8rem', color: 'var(--vg-text-3)' }}>
+                      {formatCurrency(pricePerNight, hotel.currency)} × {nights}n × {bookingData.rooms}rm
+                    </span>
+                    <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.8rem', color: 'var(--vg-text-2)' }}>{formatCurrency(subtotal, hotel.currency)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.8rem', color: 'var(--vg-text-3)' }}>Service fee (10%)</span>
+                    <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.8rem', color: 'var(--vg-text-2)' }}>{formatCurrency(subtotal * 0.1, hotel.currency)}</span>
+                  </div>
+                  <div style={{ height: '1px', background: 'var(--vg-border)', margin: '0.5rem 0' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.48rem', letterSpacing: '0.15em', color: 'var(--vg-text-2)' }}>TOTAL</span>
+                    <span className="vg-stat-num" style={{ fontSize: '1.1rem' }}>{formatCurrency(total, hotel.currency)}</span>
                   </div>
                 </div>
+              )}
 
-                <div className="border-t pt-4">
-                  <div className="flex justify-between mb-2">
-                    <span>Price per night</span>
-                    <span className="font-semibold">
-                      {formatCurrency(selectedRoom?.price || hotel.pricePerNight, hotel.currency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <span>Service fee (10%)</span>
-                    <span className="font-semibold">
-                      {formatCurrency(
-                        (selectedRoom?.price || hotel.pricePerNight) * 0.1,
-                        hotel.currency
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                    <span>Total</span>
-                    <span>
-                      {formatCurrency(
-                        (selectedRoom?.price || hotel.pricePerNight) * 1.1,
-                        hotel.currency
-                      )}
-                    </span>
-                  </div>
-                </div>
+              <button onClick={handleBooking} className="vg-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1.1rem', fontSize: '0.54rem' }}>
+                Book Now — π {pricePerNight > 0 ? pricePerNight.toFixed(2) : '—'}/night
+              </button>
 
-                <Button className="w-full" size="lg" onClick={handleBooking}>
-                  Book Now
-                </Button>
-
-                <p className="text-xs text-center text-muted-foreground">
-                  Free cancellation up to 24 hours before check-in
-                </p>
-              </CardContent>
-            </Card>
+              <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.7rem', color: 'var(--vg-text-3)', textAlign: 'center', marginTop: '0.75rem' }}>
+                Free cancellation up to 24 hours before check-in
+              </p>
+            </div>
           </div>
-
         </div>
       </div>
     </div>
