@@ -6,14 +6,14 @@ import { Footer } from '@/components/layout/footer';
 const locales    = ['en', 'ar', 'fr', 'es', 'de', 'zh', 'ja', 'ru'];
 const rtlLocales = ['ar'];
 
-export default function LocaleLayout({
+export default async function LocaleLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
-  const { locale } = params;
+  const { locale } = await params;
   if (!locales.includes(locale)) notFound();
   const isRTL = rtlLocales.includes(locale);
 
