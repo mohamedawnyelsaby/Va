@@ -1,12 +1,7 @@
-// src/app/components/PaymentFlow.tsx
-// ✅ FIXED: Proper paymentId passing, better error handling
 'use client';
-
 import { useState } from 'react';
 import { usePi } from '@/components/providers/pi-provider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pi, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function PaymentFlow({ booking }: { booking: any }) {
   const { isAvailable, authenticate, createPayment, sdkStatus } = usePi();
@@ -16,220 +11,145 @@ export default function PaymentFlow({ booking }: { booking: any }) {
   const [cashback, setCashback] = useState<number | null>(null);
 
   const handlePiPayment = async () => {
-    if (!isAvailable) {
-      setError('⚠️ Pi SDK غير متاح. افتح التطبيق في Pi Browser.');
-      setStatus('error');
-      return;
-    }
-
-    setLoading(true);
-    setStatus('processing');
-    setError('');
-
+    if (!isAvailable) { setError('Please open this app in Pi Browser.'); setStatus('error'); return; }
+    setLoading(true); setStatus('processing'); setError('');
     try {
-      // ✅ Always authenticate with payments scope before paying
       await authenticate(['username', 'payments']);
-
-      // Step 1: Create payment record in backend
       const createRes = await fetch('/api/payments/pi/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          bookingId: booking.id,
-          amount: booking.amount,
-          memo: `Va Travel - ${booking.hotelName || booking.itemName || 'Booking'}`,
-        }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: booking.id, amount: booking.amount, memo: `Va Travel - ${booking.hotelName || booking.itemName || 'Booking'}` }),
       });
-
-      if (!createRes.ok) {
-        const err = await createRes.json();
-        throw new Error(err.error || 'فشل إنشاء الدفع');
-      }
-
+      if (!createRes.ok) throw new Error((await createRes.json()).error || 'Failed to create payment');
       const { paymentId, amount, memo } = await createRes.json();
-      console.log('✅ Payment record created:', paymentId);
 
-      // Step 2: Pi SDK payment flow
-      await createPayment(
-        {
-          amount,
-          memo,
-          metadata: {
-            bookingId: booking.id,
-            paymentId,
-          },
+      await createPayment({ amount, memo, metadata: { bookingId: booking.id, paymentId } }, {
+        onReadyForServerApproval: async (piPaymentId: string) => {
+          const res = await fetch('/api/payments/pi/approve', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paymentId, piPaymentId }),
+          });
+          if (!res.ok) throw new Error('Approval failed');
         },
-        {
-          onReadyForServerApproval: async (piPaymentId: string) => {
-            console.log('📝 Approving payment:', piPaymentId);
-
-            // ✅ Send BOTH paymentId (ours) and piPaymentId (Pi SDK's)
-            const approveRes = await fetch('/api/payments/pi/approve', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId, piPaymentId }),
-            });
-
-            if (!approveRes.ok) {
-              const err = await approveRes.json().catch(() => ({}));
-              throw new Error(err.error || 'فشل الموافقة على الدفع');
-            }
-
-            console.log('✅ Payment approved');
-          },
-
-          onReadyForServerCompletion: async (piPaymentId: string, txid: string) => {
-            console.log('⛓️ Completing payment:', txid);
-
-            const completeRes = await fetch('/api/payments/pi/complete', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId, piPaymentId, txid }),
-            });
-
-            if (!completeRes.ok) {
-              const err = await completeRes.json().catch(() => ({}));
-              throw new Error(err.error || 'فشل إتمام الدفع');
-            }
-
-            const result = await completeRes.json();
-            console.log('🎉 Payment complete! Cashback:', result.cashback);
-
-            setCashback(result.cashback);
-            setStatus('success');
-            setLoading(false);
-          },
-
-          onCancel: () => {
-            setError('تم إلغاء الدفع من المستخدم');
-            setStatus('error');
-            setLoading(false);
-          },
-
-          onError: (err: Error) => {
-            setError(err?.message || 'حدث خطأ في الدفع');
-            setStatus('error');
-            setLoading(false);
-          },
-        }
-      );
+        onReadyForServerCompletion: async (piPaymentId: string, txid: string) => {
+          const res = await fetch('/api/payments/pi/complete', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paymentId, piPaymentId, txid }),
+          });
+          if (!res.ok) throw new Error('Completion failed');
+          const result = await res.json();
+          setCashback(result.cashback); setStatus('success'); setLoading(false);
+        },
+        onCancel: () => { setError('Payment cancelled.'); setStatus('error'); setLoading(false); },
+        onError: (err: Error) => { setError(err?.message || 'Payment error'); setStatus('error'); setLoading(false); },
+      });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'خطأ غير معروف';
-      console.error('Payment flow error:', message);
-      setError(message);
-      setStatus('error');
-      setLoading(false);
+      setError(err instanceof Error ? err.message : 'Unknown error'); setStatus('error'); setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      {/* Booking Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>ملخص الحجز</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">الفندق:</span>
-            <span className="font-semibold">{booking.hotelName || booking.itemName}</span>
-          </div>
-          {booking.checkIn && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">تسجيل الوصول:</span>
-              <span>{booking.checkIn}</span>
-            </div>
-          )}
-          {booking.checkOut && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">المغادرة:</span>
-              <span>{booking.checkOut}</span>
-            </div>
-          )}
-          <div className="border-t pt-2 flex justify-between text-lg font-bold">
-            <span>الإجمالي:</span>
-            <span className="text-primary">π {booking.amount}</span>
-          </div>
-        </CardContent>
-      </Card>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--vg-border)' }}>
 
-      {/* Payment Button */}
-      <Card>
-        <CardHeader>
-          <CardTitle>الدفع بـ Pi Network</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {status !== 'success' && (
-            <Button
-              className="w-full h-14 bg-gradient-to-r from-[#00b3a5] to-[#26c6da] hover:opacity-90 text-white text-lg"
+      {/* Summary Card */}
+      <div style={{ background: 'var(--vg-bg-card)', padding: '1.8rem' }}>
+        <div style={{ height: '1px', background: 'linear-gradient(to right, transparent, var(--vg-gold), transparent)', marginBottom: '1.5rem', opacity: 0.6 }} />
+        <div className="vg-overline" style={{ marginBottom: '1.2rem' }}>Payment Summary</div>
+
+        {[
+          { label: 'Hotel', value: booking.hotelName || booking.itemName },
+          booking.checkIn && { label: 'Check-in', value: booking.checkIn },
+          booking.checkOut && { label: 'Check-out', value: booking.checkOut },
+        ].filter(Boolean).map((row: any) => (
+          <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--vg-border)' }}>
+            <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.8rem', color: 'var(--vg-text-3)' }}>{row.label}</span>
+            <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.84rem', color: 'var(--vg-text-2)', maxWidth: '60%', textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.value}</span>
+          </div>
+        ))}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--vg-gold-border)' }}>
+          <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.48rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--vg-text-2)' }}>Total</span>
+          <span className="vg-stat-num" style={{ fontSize: '1.5rem' }}>π {booking.amount}</span>
+        </div>
+      </div>
+
+      {/* Payment CTA */}
+      <div style={{ background: 'var(--vg-bg-card)', padding: '1.8rem' }}>
+        <div className="vg-overline" style={{ marginBottom: '1.2rem' }}>Pay with Pi Network</div>
+
+        {status !== 'success' && (
+          <>
+            <button
               onClick={handlePiPayment}
               disabled={loading || !isAvailable}
+              style={{
+                width: '100%', padding: '1.1rem',
+                background: loading ? 'var(--vg-gold-dim)' : !isAvailable ? 'var(--vg-bg-surface)' : 'var(--vg-gold)',
+                border: !isAvailable ? '1px solid var(--vg-border)' : 'none',
+                cursor: loading || !isAvailable ? 'not-allowed' : 'pointer',
+                color: !isAvailable ? 'var(--vg-text-3)' : 'var(--vg-bg)',
+                fontFamily: 'var(--font-space-mono)',
+                fontSize: '0.52rem', letterSpacing: '0.22em', textTransform: 'uppercase',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem',
+                transition: 'all 0.3s',
+                marginBottom: '1rem',
+              }}
             >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  جاري معالجة الدفع...
-                </>
-              ) : (
-                <>
-                  <Pi className="mr-2 h-5 w-5" />
-                  ادفع بـ Pi Network
-                  <span className="mr-2 text-xs bg-white/20 px-2 py-1 rounded">
-                    +2% كاشباك
-                  </span>
-                </>
-              )}
-            </Button>
-          )}
+              {loading
+                ? <><Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> Processing...</>
+                : <><span style={{ fontSize: '1rem', lineHeight: 1 }}>π</span> Pay with Pi — π {booking.amount} <span style={{ opacity: 0.7, fontSize: '0.44rem' }}>+2% CASHBACK</span></>
+              }
+            </button>
 
-          {!isAvailable && (
-            <p className="text-sm text-center text-amber-600 bg-amber-50 p-3 rounded">
-              ⚠️ يرجى فتح التطبيق في Pi Browser لإتمام الدفع
-            </p>
-          )}
+            {!isAvailable && (
+              <div style={{ background: 'rgba(201,162,39,0.08)', border: '1px solid var(--vg-gold-border)', padding: '0.8rem 1rem', fontFamily: 'var(--font-dm-sans)', fontSize: '0.78rem', color: 'var(--vg-gold)', textAlign: 'center', lineHeight: 1.6 }}>
+                Please open this app in Pi Browser to complete payment.
+              </div>
+            )}
 
-          <div className="p-3 bg-muted rounded text-xs text-muted-foreground">
-            حالة SDK: <strong>{sdkStatus}</strong> | متاح: <strong>{isAvailable ? '✅' : '❌'}</strong>
-          </div>
-        </CardContent>
-      </Card>
+            <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.4rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--vg-text-3)', textAlign: 'center' }}>
+              SDK: {sdkStatus} · Pi: {isAvailable ? '✓' : '✗'}
+            </div>
+          </>
+        )}
 
-      {/* Success */}
-      {status === 'success' && (
-        <Card className="border-green-500 bg-green-50 dark:bg-green-900/20">
-          <CardContent className="pt-6 text-center space-y-2">
-            <CheckCircle className="h-12 w-12 text-green-600 mx-auto" />
-            <h3 className="text-lg font-bold text-green-900 dark:text-green-100">
-              تم الدفع بنجاح! 🎉
-            </h3>
-            <p className="text-sm text-green-700 dark:text-green-300">
-              تم تأكيد حجزك
+        {/* Success state */}
+        {status === 'success' && (
+          <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.25)', padding: '2rem', textAlign: 'center' }}>
+            <CheckCircle size={40} style={{ color: '#10b981', margin: '0 auto 1rem' }} />
+            <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.8rem', fontWeight: 300, color: 'var(--vg-text)', marginBottom: '0.5rem' }}>
+              Payment <em style={{ color: '#10b981', fontStyle: 'italic' }}>Successful!</em>
+            </div>
+            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.82rem', color: 'var(--vg-text-2)', marginBottom: '0.5rem' }}>
+              Your booking is confirmed.
             </p>
             {cashback !== null && (
-              <p className="text-sm font-semibold text-green-600">
-                💰 حصلت على {cashback.toFixed(4)} Pi كاشباك!
-              </p>
+              <div style={{ background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', padding: '0.6rem 1rem', display: 'inline-block', marginTop: '0.5rem' }}>
+                <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.5rem', letterSpacing: '0.15em', color: 'var(--vg-gold)' }}>
+                  +π {cashback.toFixed(4)} CASHBACK EARNED
+                </span>
+              </div>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
 
-      {/* Error */}
-      {status === 'error' && error && (
-        <Card className="border-red-500 bg-red-50 dark:bg-red-900/20">
-          <CardContent className="pt-6 flex items-center gap-3">
-            <AlertCircle className="h-6 w-6 text-red-600 shrink-0" />
+        {/* Error state */}
+        {status === 'error' && error && (
+          <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.25)', padding: '1rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.8rem' }}>
+            <AlertCircle size={18} style={{ color: '#ef4444', flexShrink: 0 }} />
             <div>
-              <h3 className="font-semibold text-red-900 dark:text-red-100">فشل الدفع</h3>
-              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+              <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.46rem', letterSpacing: '0.15em', color: '#ef4444', marginBottom: '0.2rem' }}>PAYMENT FAILED</div>
+              <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.78rem', color: 'rgba(239,68,68,0.8)', margin: 0 }}>{error}</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
 
-      <p className="text-xs text-center text-muted-foreground">
-        🔒 جميع المدفوعات مؤمّنة بتقنية البلوكتشين
-      </p>
+        <div style={{ height: '1px', background: 'linear-gradient(to right, transparent, var(--vg-gold), transparent)', marginTop: '1.5rem', opacity: 0.4 }} />
+        <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.68rem', color: 'var(--vg-text-3)', textAlign: 'center', marginTop: '0.8rem', lineHeight: 1.6 }}>
+          🔒 All payments secured by Pi Network blockchain
+        </p>
+      </div>
+
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 }
