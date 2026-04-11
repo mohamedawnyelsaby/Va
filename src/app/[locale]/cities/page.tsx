@@ -4,8 +4,24 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, Hotel, Star } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+
+function SkeletonCard() {
+  return (
+    <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', overflow: 'hidden' }}>
+      <div style={{ height: '220px', background: 'var(--vg-bg-surface)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,transparent 0%,rgba(201,162,39,0.06) 50%,transparent 100%)', animation: 'shimmer 1.8s infinite' }} />
+      </div>
+      <div style={{ padding: '1rem' }}>
+        {[60, 40].map((w, i) => (
+          <div key={i} style={{ height: '9px', background: 'var(--vg-bg-surface)', marginBottom: '0.5rem', width: `${w}%`, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,transparent 0%,rgba(201,162,39,0.06) 50%,transparent 100%)', animation: `shimmer 1.8s infinite ${i * 0.2}s` }} />
+          </div>
+        ))}
+      </div>
+      <style>{`@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
+    </div>
+  );
+}
 
 export default function CitiesPage() {
   const { locale } = useParams();
@@ -20,40 +36,65 @@ export default function CitiesPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-12">
-        <h1 className="text-4xl font-bold mb-4">All Cities</h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-10">Browse all available destinations</p>
+    <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', paddingTop: '60px' }}>
+
+      {/* Header */}
+      <div style={{ background: 'var(--vg-bg-surface)', borderBottom: '1px solid var(--vg-border)', padding: 'clamp(3rem,6vw,5rem) clamp(1.5rem,7vw,5rem)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 0, right: 0, width: '40%', height: '100%', background: 'radial-gradient(ellipse at right top, rgba(201,162,39,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div className="vg-overline" style={{ marginBottom: '1rem' }}>Destinations</div>
+        <h1 className="vg-display" style={{ fontSize: 'clamp(2rem,5vw,3.8rem)', marginBottom: '0.5rem' }}>
+          All <em className="vg-italic">Cities</em>
+        </h1>
+        <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.88rem', color: 'var(--vg-text-2)' }}>
+          Browse all available destinations
+        </p>
+      </div>
+
+      <div style={{ padding: 'clamp(2rem,5vw,4rem) clamp(1.5rem,7vw,5rem)' }}>
         {loading ? (
-          <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1px', background: 'var(--vg-border)' }}>
+            {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
         ) : cities.length === 0 ? (
-          <div className="text-center py-20 text-gray-500">No cities found</div>
+          <div style={{ textAlign: 'center', padding: '6rem 2rem' }}>
+            <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '3rem', color: 'var(--vg-text-3)' }}>No Cities Found</div>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1px', background: 'var(--vg-border)' }}>
             {cities.map((city: any) => (
-              <Link key={city.id} href={`/${locale}/hotels?city=${city.name}`}>
-                <Card className="group overflow-hidden hover:shadow-xl transition-all cursor-pointer">
-                  <div className="relative h-48 overflow-hidden">
-                    <Image
-                      src={city.thumbnail || city.images?.[0] || 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600'}
-                      alt={city.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-4 left-4 text-white">
-                      <h2 className="text-2xl font-bold">{city.name}</h2>
-                      <div className="flex items-center gap-1 text-sm"><MapPin className="h-3 w-3" />{city.country}</div>
+              <Link key={city.id} href={`/${locale}/hotels?city=${city.name}`}
+                style={{ textDecoration: 'none', display: 'block', background: 'var(--vg-bg-card)' }}
+                className="vg-hotel-card">
+                <div style={{ position: 'relative', height: '220px', overflow: 'hidden' }}>
+                  <Image
+                    src={city.thumbnail || city.images?.[0] || 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600'}
+                    alt={city.name} fill sizes="(max-width:768px)100vw,33vw"
+                    className="vg-hotel-thumb" style={{ position: 'absolute' }}
+                  />
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '2rem 1.2rem 0.8rem', background: 'linear-gradient(to top, rgba(3,2,10,0.9) 0%, transparent 100%)', zIndex: 2 }}>
+                    <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '2rem', fontWeight: 300, color: '#F2EEE6', lineHeight: 1 }}>{city.name}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.3rem' }}>
+                      <MapPin size={11} color="rgba(242,238,230,0.5)" />
+                      <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.42rem', letterSpacing: '0.15em', color: 'rgba(242,238,230,0.5)' }}>{city.country}</span>
                     </div>
                   </div>
-                  <CardContent className="pt-4 pb-4">
-                    <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-                      <div className="flex items-center gap-1"><Hotel className="h-4 w-4" /><span>{city._count?.hotels || 0} Hotels</span></div>
-                      {city.rating && <div className="flex items-center gap-1"><Star className="h-4 w-4 fill-yellow-400 text-yellow-400" /><span>{city.rating}</span></div>}
+                </div>
+
+                <div style={{ padding: '1rem 1.2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Hotel size={12} color="var(--vg-text-3)" />
+                    <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.78rem', color: 'var(--vg-text-3)' }}>
+                      {city._count?.hotels || 0} Hotels
+                    </span>
+                  </div>
+                  {city.rating && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <Star size={11} style={{ color: 'var(--vg-star)', fill: 'var(--vg-star)' }} />
+                      <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.68rem', color: 'var(--vg-gold)' }}>{city.rating}</span>
                     </div>
-                    {city.description && <p className="mt-2 text-sm text-gray-500 line-clamp-2">{city.description}</p>}
-                  </CardContent>
-                </Card>
+                  )}
+                  <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.44rem', letterSpacing: '0.15em', color: 'var(--vg-gold)' }}>Explore →</span>
+                </div>
               </Link>
             ))}
           </div>
