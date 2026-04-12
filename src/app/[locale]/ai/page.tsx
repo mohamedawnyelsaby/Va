@@ -1,6 +1,6 @@
 'use client';
 // src/app/[locale]/ai/page.tsx
-// 🌍 Logy AI — Global Multilingual Travel Assistant
+// FIX: replaced ALL hardcoded dark colors with CSS variables for light/dark mode support
 
 import { useState, useRef, useEffect } from 'react';
 
@@ -77,10 +77,11 @@ export default function AITravelPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(160deg, #050d1a 0%, #0a1628 40%, #050d1a 100%)',
+      // FIX: use VG background instead of hardcoded dark color
+      background: 'var(--vg-bg)',
       display: 'flex',
       flexDirection: 'column',
-      fontFamily: "'Segoe UI', system-ui, sans-serif",
+      fontFamily: 'var(--font-dm-sans)',
       position: 'relative',
       overflow: 'hidden',
     }}>
@@ -92,15 +93,15 @@ export default function AITravelPage() {
         width: 500,
         height: 500,
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(0,179,165,0.06) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(201,162,39,0.06) 0%, transparent 70%)',
         pointerEvents: 'none',
       }} />
 
       {/* Header */}
       <div style={{
         padding: '16px 20px',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
-        background: 'rgba(5,13,26,0.8)',
+        borderBottom: '1px solid var(--vg-border)',
+        background: 'var(--vg-bg-surface)',
         backdropFilter: 'blur(20px)',
         display: 'flex',
         alignItems: 'center',
@@ -113,42 +114,57 @@ export default function AITravelPage() {
           <div style={{
             width: 42,
             height: 42,
-            borderRadius: 12,
-            background: 'linear-gradient(135deg, #00b3a5 0%, #0097a7 100%)',
+            background: 'var(--vg-gold-dim)',
+            border: '1px solid var(--vg-gold-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 20,
-            boxShadow: '0 0 20px rgba(0,179,165,0.3)',
           }}>🤖</div>
           <div>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: 16, letterSpacing: '-0.3px' }}>
-              Logy AI
+            <div style={{
+              fontFamily: 'var(--font-cormorant)',
+              fontSize: '1.2rem', fontWeight: 300,
+              color: 'var(--vg-text)',
+            }}>
+              Logy <em style={{ color: 'var(--vg-gold)', fontStyle: 'italic' }}>AI</em>
             </div>
-            <div style={{ color: '#00b3a5', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00b3a5', display: 'inline-block' }} />
-              Online • 🌍 All Languages • π Pi Network
+            <div style={{
+              fontFamily: 'var(--font-space-mono)', fontSize: '0.48rem',
+              letterSpacing: '0.15em', color: 'var(--vg-gold)',
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: 'var(--vg-gold)', display: 'inline-block',
+              }} />
+              Online · All Languages · π Pi Network
             </div>
           </div>
         </div>
-        <a href="/ar" style={{
-          color: 'rgba(255,255,255,0.4)',
-          textDecoration: 'none',
-          fontSize: 13,
-          padding: '6px 12px',
-          borderRadius: 8,
-          border: '1px solid rgba(255,255,255,0.1)',
-        }}>← Back</a>
+        <a href={`/${typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : 'en'}`}
+          style={{
+            color: 'var(--vg-text-2)',
+            textDecoration: 'none',
+            fontFamily: 'var(--font-space-mono)',
+            fontSize: '0.48rem',
+            letterSpacing: '0.15em',
+            padding: '6px 12px',
+            border: '1px solid var(--vg-border)',
+            transition: 'border-color .2s, color .2s',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-gold-border)'; (e.currentTarget as HTMLElement).style.color = 'var(--vg-gold)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-border)'; (e.currentTarget as HTMLElement).style.color = 'var(--vg-text-2)'; }}
+        >← Back</a>
       </div>
 
       {/* Messages */}
       <div style={{
-        flex: 1,
-        overflowY: 'auto',
+        flex: 1, overflowY: 'auto',
         padding: '20px 16px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 14,
+        display: 'flex', flexDirection: 'column', gap: 14,
+        maxWidth: '800px', width: '100%', margin: '0 auto',
+        boxSizing: 'border-box',
       }}>
         {messages.map((msg, i) => (
           <div key={i} style={{
@@ -160,17 +176,17 @@ export default function AITravelPage() {
               maxWidth: '88%',
               padding: '13px 17px',
               borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '4px 18px 18px 18px',
+              // FIX: user messages use VG gold, assistant uses VG card
               background: msg.role === 'user'
-                ? 'linear-gradient(135deg, #00b3a5, #0097a7)'
-                : 'rgba(255,255,255,0.06)',
-              border: msg.role === 'assistant' ? '1px solid rgba(255,255,255,0.08)' : 'none',
-              color: '#fff',
-              fontSize: 14.5,
+                ? 'var(--vg-gold)'
+                : 'var(--vg-bg-card)',
+              border: msg.role === 'assistant' ? '1px solid var(--vg-border)' : 'none',
+              // FIX: user text color adapts to theme
+              color: msg.role === 'user' ? 'var(--vg-bg)' : 'var(--vg-text)',
+              fontSize: '0.9rem',
               lineHeight: 1.65,
               whiteSpace: 'pre-wrap',
-              boxShadow: msg.role === 'user'
-                ? '0 4px 15px rgba(0,179,165,0.3)'
-                : '0 2px 8px rgba(0,0,0,0.2)',
+              fontFamily: 'var(--font-dm-sans)',
             }}>
               {msg.content}
             </div>
@@ -178,52 +194,54 @@ export default function AITravelPage() {
             {/* Hotel Results */}
             {msg.hotels && msg.hotels.length > 0 && (
               <div style={{ width: '100%', marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, paddingLeft: 4 }}>
+                <div style={{
+                  fontFamily: 'var(--font-space-mono)', fontSize: '0.5rem',
+                  letterSpacing: '0.15em', color: 'var(--vg-text-3)',
+                }}>
                   🏨 {msg.hotels.length} hotels found from Booking.com
                 </div>
                 {msg.hotels.map((hotel: any) => (
                   <div key={hotel.id} style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.09)',
-                    borderRadius: 14,
+                    background: 'var(--vg-bg-card)',
+                    border: '1px solid var(--vg-border)',
                     overflow: 'hidden',
                     display: 'flex',
                     transition: 'border-color 0.2s',
-                  }}>
+                  }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-gold-border)'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-border)'}
+                  >
                     {hotel.thumbnail && (
                       <img
                         src={hotel.thumbnail}
                         alt={hotel.name}
-                        style={{ width: 90, height: 90, objectFit: 'cover', flexShrink: 0 }}
+                        style={{ width: 90, height: 90, objectFit: 'cover', flexShrink: 0, filter: 'brightness(0.9) saturate(0.8)' }}
                       />
                     )}
                     <div style={{ padding: '10px 14px', flex: 1, minWidth: 0 }}>
                       <div style={{
-                        color: '#fff',
-                        fontWeight: 600,
-                        fontSize: 13.5,
+                        color: 'var(--vg-text)',
+                        fontFamily: 'var(--font-cormorant)',
+                        fontWeight: 300, fontSize: '1.1rem',
                         marginBottom: 5,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       }}>
                         {hotel.name}
                       </div>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
                         {hotel.stars > 0 && (
-                          <span style={{ color: '#ffd700', fontSize: 11 }}>
+                          <span style={{ color: 'var(--vg-star)', fontSize: '0.7rem' }}>
                             {'★'.repeat(Math.min(hotel.stars, 5))}
                           </span>
                         )}
                         {hotel.rating && (
                           <span style={{
-                            background: 'rgba(0,179,165,0.2)',
-                            color: '#00b3a5',
+                            background: 'var(--vg-gold-dim)',
+                            color: 'var(--vg-gold)',
                             padding: '2px 7px',
-                            borderRadius: 6,
-                            fontSize: 11,
-                            fontWeight: 700,
-                            border: '1px solid rgba(0,179,165,0.3)',
+                            border: '1px solid var(--vg-gold-border)',
+                            fontFamily: 'var(--font-space-mono)',
+                            fontSize: '0.5rem', letterSpacing: '0.08em',
                           }}>
                             {hotel.rating} {hotel.reviewText}
                           </span>
@@ -241,27 +259,20 @@ export default function AITravelPage() {
                               source: 'booking.com',
                               thumbnail: hotel.thumbnail || '',
                             });
-                            window.location.href = `/ar/booking?${params.toString()}`;
+                            const locale = window.location.pathname.split('/')[1] || 'en';
+                            window.location.href = `/${locale}/booking?${params.toString()}`;
                           }}
-                          style={{
-                            background: 'linear-gradient(135deg, #00b3a5, #26c6da)',
-                            color: '#fff',
-                            border: 'none',
-                            padding: '7px 14px',
-                            borderRadius: 9,
-                            cursor: 'pointer',
-                            fontSize: 12,
-                            fontWeight: 600,
-                            boxShadow: '0 2px 8px rgba(0,179,165,0.3)',
-                          }}
+                          className="vg-btn-primary"
+                          style={{ padding: '6px 14px', fontSize: '0.46rem' }}
                         >
                           Book Now →
                         </button>
                         <div>
-                          <span style={{ color: '#00b3a5', fontWeight: 700, fontSize: 15 }}>
-                            ${hotel.price}
-                          </span>
-                          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>/night</span>
+                          <span className="vg-stat-num" style={{ fontSize: '1rem' }}>${hotel.price}</span>
+                          <span style={{
+                            fontFamily: 'var(--font-space-mono)', fontSize: '0.44rem',
+                            letterSpacing: '0.12em', color: 'var(--vg-text-3)',
+                          }}>/night</span>
                         </div>
                       </div>
                     </div>
@@ -277,19 +288,14 @@ export default function AITravelPage() {
           <div style={{ display: 'flex', alignItems: 'flex-start' }}>
             <div style={{
               padding: '13px 18px',
-              borderRadius: '4px 18px 18px 18px',
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              display: 'flex',
-              gap: 5,
-              alignItems: 'center',
+              background: 'var(--vg-bg-card)',
+              border: '1px solid var(--vg-border)',
+              display: 'flex', gap: 5, alignItems: 'center',
             }}>
               {[0, 1, 2].map(i => (
                 <div key={i} style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: '50%',
-                  background: '#00b3a5',
+                  width: 7, height: 7, borderRadius: '50%',
+                  background: 'var(--vg-gold)',
                   animation: `bounce 1.2s ease-in-out ${i * 0.15}s infinite`,
                 }} />
               ))}
@@ -300,10 +306,14 @@ export default function AITravelPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Quick Actions - show at start */}
+      {/* Quick Actions */}
       {messages.length <= 1 && (
-        <div style={{ padding: '0 16px 10px' }}>
-          <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, marginBottom: 8, textAlign: 'center' }}>
+        <div style={{ padding: '0 16px 10px', maxWidth: '800px', width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
+          <div style={{
+            fontFamily: 'var(--font-space-mono)', fontSize: '0.48rem',
+            letterSpacing: '0.15em', color: 'var(--vg-text-3)',
+            marginBottom: 8, textAlign: 'center', textTransform: 'uppercase',
+          }}>
             Try in any language:
           </div>
           <div style={{ display: 'flex', gap: 7, overflowX: 'auto', paddingBottom: 4 }}>
@@ -312,18 +322,25 @@ export default function AITravelPage() {
                 key={i}
                 onClick={() => sendMessage(action.text)}
                 style={{
-                  background: 'rgba(0,179,165,0.08)',
-                  border: '1px solid rgba(0,179,165,0.2)',
-                  color: 'rgba(255,255,255,0.7)',
+                  background: 'var(--vg-gold-dim)',
+                  border: '1px solid var(--vg-gold-border)',
+                  color: 'var(--vg-text-2)',
                   padding: '8px 13px',
-                  borderRadius: 20,
                   cursor: 'pointer',
-                  fontSize: 12,
+                  fontFamily: 'var(--font-dm-sans)',
+                  fontSize: '0.82rem',
                   whiteSpace: 'nowrap',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 5,
+                  display: 'flex', alignItems: 'center', gap: 5,
                   flexShrink: 0,
+                  transition: 'color .2s, background .2s',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.color = 'var(--vg-gold)';
+                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(201,162,39,0.2)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.color = 'var(--vg-text-2)';
+                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--vg-gold-dim)';
                 }}
               >
                 {action.emoji} {action.text}
@@ -336,12 +353,12 @@ export default function AITravelPage() {
       {/* Input Area */}
       <div style={{
         padding: '12px 16px',
-        borderTop: '1px solid rgba(255,255,255,0.07)',
-        background: 'rgba(5,13,26,0.9)',
+        borderTop: '1px solid var(--vg-border)',
+        background: 'var(--vg-bg-surface)',
         backdropFilter: 'blur(20px)',
-        display: 'flex',
-        gap: 10,
-        alignItems: 'center',
+        display: 'flex', gap: 10, alignItems: 'center',
+        maxWidth: '800px', width: '100%', margin: '0 auto',
+        boxSizing: 'border-box',
       }}>
         <input
           ref={inputRef}
@@ -356,38 +373,33 @@ export default function AITravelPage() {
           placeholder="Type in any language... 🌍"
           style={{
             flex: 1,
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            borderRadius: 14,
+            background: 'var(--vg-bg-card)',
+            border: '1px solid var(--vg-border)',
             padding: '12px 16px',
-            color: '#fff',
-            fontSize: 14.5,
+            color: 'var(--vg-text)',
+            fontFamily: 'var(--font-dm-sans)',
+            fontSize: '0.9rem',
             outline: 'none',
             transition: 'border-color 0.2s',
           }}
-          onFocus={e => e.target.style.borderColor = 'rgba(0,179,165,0.5)'}
-          onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
+          onFocus={e => e.target.style.borderColor = 'var(--vg-gold-border)'}
+          onBlur={e => e.target.style.borderColor = 'var(--vg-border)'}
         />
         <button
           onClick={() => sendMessage()}
           disabled={loading || !input.trim()}
+          className={loading || !input.trim() ? '' : 'vg-btn-primary'}
           style={{
-            width: 46,
-            height: 46,
-            borderRadius: 13,
-            background: loading || !input.trim()
-              ? 'rgba(255,255,255,0.06)'
-              : 'linear-gradient(135deg, #00b3a5, #26c6da)',
-            border: 'none',
+            width: 46, height: 46,
+            background: loading || !input.trim() ? 'var(--vg-bg-card)' : 'var(--vg-gold)',
+            border: loading || !input.trim() ? '1px solid var(--vg-border)' : 'none',
             cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 18,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 18, flexShrink: 0,
+            color: loading || !input.trim() ? 'var(--vg-text-3)' : 'var(--vg-bg)',
             transition: 'all 0.2s',
-            flexShrink: 0,
-            boxShadow: loading || !input.trim() ? 'none' : '0 4px 15px rgba(0,179,165,0.4)',
           }}
+          aria-label="Send message"
         >
           {loading ? '⌛' : '➤'}
         </button>
@@ -398,9 +410,9 @@ export default function AITravelPage() {
           0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
           30% { transform: translateY(-6px); opacity: 1; }
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-thumb { background: rgba(0,179,165,0.2); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: var(--vg-gold-border); border-radius: 2px; }
       `}</style>
     </div>
   );
