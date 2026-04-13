@@ -60,7 +60,7 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
     ? 'var(--vg-nav-bg)'
     : isDark
       ? 'linear-gradient(to bottom, rgba(3,2,10,0.7) 0%, transparent 100%)'
-      : 'rgba(248,246,239,0.85)';
+      : 'transparent';
 
   const navBorder = scrolled
     ? '0.5px solid var(--vg-gold-border)'
