@@ -168,7 +168,7 @@ const TABS = [
   { id: 'hotels',      label: 'Hotels',      Icon: Hotel,    href: '/hotels'       },
   { id: 'attractions', label: 'Attractions', Icon: MapPin,   href: '/attractions'  },
   { id: 'restaurants', label: 'Restaurants', Icon: Utensils, href: '/restaurants'  },
-  { id: 'ai',          label: 'AI',          Icon: Bot,      href: '/ai-assistant' },
+  { id: 'ai',          label: 'AI',          Icon: Bot,      href: '/ai' },
 ];
 const STATS = [
   { num: '180+', label: 'Countries'   },

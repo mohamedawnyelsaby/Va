@@ -335,7 +335,7 @@ export async function POST(request: NextRequest) {
   } finally {
     // Always release lock
     if (lockAcquired) {
-      releaseLock(body?.paymentId, requestId);
+      releaseLock(paymentId, requestId);
       console.log(`[${requestId}] 🔓 Lock released`);
     }
   }

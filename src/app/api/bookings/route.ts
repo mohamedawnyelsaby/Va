@@ -167,7 +167,7 @@ export async function PATCH(request: NextRequest) {
     const { bookingId } = await request.json();
 
     const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
-    if (!booking || booking.userId !== session.user.id) {
+    if (!booking || booking.userId !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
