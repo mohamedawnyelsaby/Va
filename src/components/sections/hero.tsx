@@ -196,7 +196,7 @@ export function HeroSection({ locale }: { locale: string }) {
     <section style={{
       position:   'relative',
       minHeight:  '100vh',
-      background: 'var(--vg-bg)',
+      background: '#03020A',
       display:    'flex',
       alignItems: 'center',
       overflow:   'hidden',
