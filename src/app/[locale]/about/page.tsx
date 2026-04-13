@@ -1,3 +1,4 @@
+import { VG } from '@/lib/tokens';
 // src/app/[locale]/about/page.tsx
 export default function AboutPage() {
   return (
@@ -22,7 +23,7 @@ export default function AboutPage() {
         ].map(item => (
           <div key={item.label} style={{ background: 'var(--vg-bg-card)', padding: '2rem', textAlign: 'center' }}>
             <div className="vg-stat-num" style={{ fontSize: '2.5rem', marginBottom: '0.4rem' }}>{item.num}</div>
-            <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.48rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--vg-text-3)', marginBottom: '0.7rem' }}>{item.label}</div>
+            <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: VG.tracking.normal, textTransform: 'uppercase', color: 'var(--vg-text-3)', marginBottom: '0.7rem' }}>{item.label}</div>
             <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.78rem', color: 'var(--vg-text-2)', lineHeight: 1.6, margin: 0 }}>{item.desc}</p>
           </div>
         ))}
