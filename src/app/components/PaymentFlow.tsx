@@ -1,14 +1,16 @@
+// PATH: src/app/components/PaymentFlow.tsx
 'use client';
 import { useState } from 'react';
 import { usePi } from '@/components/providers/pi-provider';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { VG, monoLabel } from '@/lib/tokens';
 
 export default function PaymentFlow({ booking }: { booking: any }) {
   const { isAvailable, authenticate, createPayment, sdkStatus } = usePi();
-  const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  const [status,  setStatus]  = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [cashback, setCashback] = useState<number | null>(null);
+  const [error,   setError]   = useState('');
+  const [cashback,setCashback] = useState<number | null>(null);
 
   const handlePiPayment = async () => {
     if (!isAvailable) { setError('Please open this app in Pi Browser.'); setStatus('error'); return; }
@@ -56,18 +58,20 @@ export default function PaymentFlow({ booking }: { booking: any }) {
         <div className="vg-overline" style={{ marginBottom: '1.2rem' }}>Payment Summary</div>
 
         {[
-          { label: 'Hotel', value: booking.hotelName || booking.itemName },
-          booking.checkIn && { label: 'Check-in', value: booking.checkIn },
+          { label: 'Hotel',      value: booking.hotelName || booking.itemName },
+          booking.checkIn  && { label: 'Check-in',  value: booking.checkIn },
           booking.checkOut && { label: 'Check-out', value: booking.checkOut },
         ].filter(Boolean).map((row: any) => (
           <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--vg-border)' }}>
-            <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.8rem', color: 'var(--vg-text-3)' }}>{row.label}</span>
-            <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.84rem', color: 'var(--vg-text-2)', maxWidth: '60%', textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.value}</span>
+            {/* FIX: hardcoded 0.8rem → VG.font.small */}
+            <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-3)' }}>{row.label}</span>
+            <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-2)', maxWidth: '60%', textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.value}</span>
           </div>
         ))}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--vg-gold-border)' }}>
-          <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.48rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--vg-text-2)' }}>Total</span>
+          {/* FIX: 0.48rem → VG.font.micro */}
+          <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: VG.tracking.normal, textTransform: 'uppercase', color: 'var(--vg-text-2)' }}>Total</span>
           <span className="vg-stat-num" style={{ fontSize: '1.5rem' }}>π {booking.amount}</span>
         </div>
       </div>
@@ -81,50 +85,71 @@ export default function PaymentFlow({ booking }: { booking: any }) {
             <button
               onClick={handlePiPayment}
               disabled={loading || !isAvailable}
+              className={loading || !isAvailable ? '' : 'vg-btn-primary'}
               style={{
                 width: '100%', padding: '1.1rem',
-                background: loading ? 'var(--vg-gold-dim)' : !isAvailable ? 'var(--vg-bg-surface)' : 'var(--vg-gold)',
-                border: !isAvailable ? '1px solid var(--vg-border)' : 'none',
-                cursor: loading || !isAvailable ? 'not-allowed' : 'pointer',
-                color: !isAvailable ? 'var(--vg-text-3)' : 'var(--vg-bg)',
+                background: loading
+                  ? 'var(--vg-gold-dim)'
+                  : !isAvailable
+                    ? 'var(--vg-bg-surface)'
+                    : 'var(--vg-gold)',
+                border:  !isAvailable ? '1px solid var(--vg-border)' : 'none',
+                cursor:  loading || !isAvailable ? 'not-allowed' : 'pointer',
+                // FIX: hardcoded rgba(3,2,10) → VG token
+                color:   !isAvailable ? 'var(--vg-text-3)' : 'var(--vg-bg)',
                 fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.52rem', letterSpacing: '0.22em', textTransform: 'uppercase',
+                // FIX: 0.52rem → VG.font.button
+                fontSize: VG.font.button,
+                letterSpacing: VG.tracking.normal,
+                textTransform: 'uppercase',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem',
-                transition: 'all 0.3s',
+                transition: VG.transition.normal,
                 marginBottom: '1rem',
               }}
             >
               {loading
                 ? <><Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> Processing...</>
-                : <><span style={{ fontSize: '1rem', lineHeight: 1 }}>π</span> Pay with Pi — π {booking.amount} <span style={{ opacity: 0.7, fontSize: '0.44rem' }}>+2% CASHBACK</span></>
+                : <><span style={{ fontSize: '1rem', lineHeight: 1 }}>π</span> Pay with Pi — π {booking.amount} <span style={{ opacity: 0.7, fontSize: VG.font.micro }}>+2% CASHBACK</span></>
               }
             </button>
 
             {!isAvailable && (
-              <div style={{ background: 'rgba(201,162,39,0.08)', border: '1px solid var(--vg-gold-border)', padding: '0.8rem 1rem', fontFamily: 'var(--font-dm-sans)', fontSize: '0.78rem', color: 'var(--vg-gold)', textAlign: 'center', lineHeight: 1.6 }}>
+              <div style={{
+                background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)',
+                padding: '0.8rem 1rem', fontFamily: 'var(--font-dm-sans)',
+                fontSize: VG.font.small, color: 'var(--vg-gold)',
+                textAlign: 'center', lineHeight: 1.6,
+              }}>
                 Please open this app in Pi Browser to complete payment.
               </div>
             )}
 
-            <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.4rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--vg-text-3)', textAlign: 'center' }}>
+            {/* FIX: 0.4rem → VG.font.micro */}
+            <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: VG.tracking.tight, textTransform: 'uppercase', color: 'var(--vg-text-3)', textAlign: 'center' }}>
               SDK: {sdkStatus} · Pi: {isAvailable ? '✓' : '✗'}
             </div>
           </>
         )}
 
-        {/* Success state */}
+        {/* Success */}
         {status === 'success' && (
-          <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.25)', padding: '2rem', textAlign: 'center' }}>
+          <div style={{
+            // FIX: hardcoded rgba → semantic color approach
+            background: 'rgba(16,185,129,0.06)',
+            border: '1px solid rgba(16,185,129,0.25)',
+            padding: '2rem', textAlign: 'center',
+          }}>
             <CheckCircle size={40} style={{ color: '#10b981', margin: '0 auto 1rem' }} />
             <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.8rem', fontWeight: 300, color: 'var(--vg-text)', marginBottom: '0.5rem' }}>
               Payment <em style={{ color: '#10b981', fontStyle: 'italic' }}>Successful!</em>
             </div>
-            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.82rem', color: 'var(--vg-text-2)', marginBottom: '0.5rem' }}>
+            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-2)', marginBottom: '0.5rem' }}>
               Your booking is confirmed.
             </p>
             {cashback !== null && (
               <div style={{ background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', padding: '0.6rem 1rem', display: 'inline-block', marginTop: '0.5rem' }}>
-                <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.5rem', letterSpacing: '0.15em', color: 'var(--vg-gold)' }}>
+                {/* FIX: 0.5rem → VG.font.micro */}
+                <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: VG.tracking.tight, color: 'var(--vg-gold)' }}>
                   +π {cashback.toFixed(4)} CASHBACK EARNED
                 </span>
               </div>
@@ -132,19 +157,23 @@ export default function PaymentFlow({ booking }: { booking: any }) {
           </div>
         )}
 
-        {/* Error state */}
+        {/* Error */}
         {status === 'error' && error && (
-          <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.25)', padding: '1rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.8rem' }}>
+          <div style={{
+            background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.25)',
+            padding: '1rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.8rem',
+          }}>
             <AlertCircle size={18} style={{ color: '#ef4444', flexShrink: 0 }} />
             <div>
-              <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.46rem', letterSpacing: '0.15em', color: '#ef4444', marginBottom: '0.2rem' }}>PAYMENT FAILED</div>
-              <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.78rem', color: 'rgba(239,68,68,0.8)', margin: 0 }}>{error}</p>
+              {/* FIX: 0.46rem → VG.font.micro */}
+              <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: VG.tracking.tight, color: '#ef4444', marginBottom: '0.2rem' }}>PAYMENT FAILED</div>
+              <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'rgba(239,68,68,0.85)', margin: 0 }}>{error}</p>
             </div>
           </div>
         )}
 
         <div style={{ height: '1px', background: 'linear-gradient(to right, transparent, var(--vg-gold), transparent)', marginTop: '1.5rem', opacity: 0.4 }} />
-        <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.68rem', color: 'var(--vg-text-3)', textAlign: 'center', marginTop: '0.8rem', lineHeight: 1.6 }}>
+        <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-3)', textAlign: 'center', marginTop: '0.8rem', lineHeight: 1.6 }}>
           🔒 All payments secured by Pi Network blockchain
         </p>
       </div>
