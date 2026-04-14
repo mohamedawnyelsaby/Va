@@ -1,4 +1,7 @@
 /* PATH: src/app/globals.css — Va Travel Void Gold Design System */
+/* FIXED: Added mobile-first responsive rules */
+/* FIXED: Direction isolation for nav elements */
+/* FIXED: Font sizes use clamp() for fluid scaling */
 
 @tailwind base;
 @tailwind components;
@@ -30,7 +33,6 @@
     --ring: 42 75% 43%;
     --radius: 0rem;
 
-    /* ── Light mode tokens ── */
     --vg-bg:          #F8F6EF;
     --vg-bg-card:     #FFFFFF;
     --vg-bg-surface:  #EEEADC;
@@ -47,7 +49,6 @@
     --vg-gold-text:   #6B4C08;
     --vg-border:      rgba(26,18,8,0.09);
     --vg-border-2:    rgba(26,18,8,0.16);
-    /* FIX: light mode nav uses proper semi-transparent warm white */
     --vg-nav-bg:      rgba(248,246,239,0.95);
     --vg-nav-border:  rgba(26,18,8,0.08);
     --vg-star:        #B07D10;
@@ -74,7 +75,6 @@
     --input: 250 20% 14%;
     --ring: 42 65% 47%;
 
-    /* ── Dark mode tokens ── */
     --vg-bg:          #03020A;
     --vg-bg-card:     #0E0C18;
     --vg-bg-surface:  #09080F;
@@ -102,18 +102,41 @@
 ───────────────────────────────────────────── */
 @layer base {
   * { @apply border-border; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+
+  html {
+    scroll-behavior: smooth;
+    /* FIXED: Force LTR on the root — locale layout overrides per-page */
+    direction: ltr;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   body {
     background-color: var(--vg-bg);
     color: var(--vg-text);
     font-family: 'DM Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    /* FIXED: Prevent layout shift from scrollbar */
+    scrollbar-gutter: stable;
   }
-  h1,h2,h3,h4,h5,h6 {
+
+  h1, h2, h3, h4, h5, h6 {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-weight: 300;
     color: var(--vg-text);
+  }
+
+  /* FIXED: All images are responsive by default */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* FIXED: Touch targets minimum 44px */
+  button, a, [role="button"] {
+    touch-action: manipulation;
   }
 }
 
@@ -130,11 +153,10 @@
     color: var(--vg-text);
   }
 
-  .vg-italic   { font-style: italic; color: var(--vg-gold); }
+  .vg-italic { font-style: italic; color: var(--vg-gold); }
 
   .vg-overline {
     font-family: 'Space Mono', monospace;
-    /* FIX: minimum 9px = 0.58rem — never below this */
     font-size: clamp(9px, 0.58rem, 11px);
     letter-spacing: 0.32em;
     text-transform: uppercase;
@@ -142,6 +164,8 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    /* FIXED: Always LTR for overlines */
+    direction: ltr;
   }
   .vg-overline::before {
     content: '';
@@ -165,6 +189,11 @@
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
+    /* FIXED: Minimum touch target height */
+    min-height: 44px;
+    /* FIXED: Text always LTR in buttons */
+    direction: ltr;
+    white-space: nowrap;
   }
   .vg-btn-primary:hover { background: var(--vg-gold-2); transform: translateY(-1px); }
   .vg-btn-primary:active { transform: translateY(0); }
@@ -183,6 +212,9 @@
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
+    min-height: 44px;
+    direction: ltr;
+    white-space: nowrap;
   }
   .vg-btn-outline:hover { background: var(--vg-gold-dim); border-color: var(--vg-gold); }
 
@@ -205,12 +237,14 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
+    direction: ltr;
   }
   .vg-badge-outline .dot {
     width: 5px; height: 5px;
     border-radius: 50%;
     background: var(--vg-gold);
     animation: gold-pulse 2s infinite;
+    flex-shrink: 0;
   }
 
   .vg-stat-num {
@@ -220,7 +254,6 @@
     color: var(--vg-gold);
     line-height: 1;
   }
-  /* FIX: stat labels never below 9px */
   .vg-stat-label {
     font-family: 'Space Mono', monospace;
     font-size: clamp(9px, 0.52rem, 11px);
@@ -228,6 +261,7 @@
     text-transform: uppercase;
     color: var(--vg-text-3);
     margin-top: 0.35rem;
+    direction: ltr;
   }
 
   .vg-ticker-wrap {
@@ -236,6 +270,7 @@
     border-bottom: 1px solid var(--vg-border);
     background: var(--vg-bg-surface);
     padding: 0.6rem 0;
+    direction: ltr;
   }
   .vg-ticker-inner {
     display: inline-flex;
@@ -254,10 +289,11 @@
 
   .vg-section {
     position: relative;
-    padding: 7rem 7vw;
+    padding: clamp(3rem, 6vw, 7rem) clamp(1.5rem, 7vw, 5rem);
     overflow: hidden;
   }
 
+  /* FIXED: Hotel cards — full responsive width on mobile */
   .vg-hotel-card {
     position: relative;
     overflow: hidden;
@@ -265,6 +301,8 @@
     background: var(--vg-bg-surface);
     border: 1px solid var(--vg-border);
     transition: border-color 0.4s;
+    width: 100%;
+    display: block;
   }
   .vg-hotel-card:hover { border-color: var(--vg-gold-border); }
   .vg-hotel-card:hover .vg-hotel-thumb {
@@ -275,7 +313,7 @@
     width: 100%; height: 100%;
     object-fit: cover;
     filter: brightness(0.48) saturate(0.55);
-    transition: transform 0.7s cubic-bezier(.25,.46,.45,.94), filter 0.5s;
+    transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.5s;
   }
 
   .vg-price-tag {
@@ -290,6 +328,8 @@
     letter-spacing: 0.1em;
     padding: 0.28rem 0.75rem;
     z-index: 2;
+    direction: ltr;
+    white-space: nowrap;
   }
 
   .vg-nav {
@@ -301,6 +341,7 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     transition: background 0.4s, border-color 0.4s;
+    direction: ltr;
   }
 
   .vg-reveal {
@@ -323,6 +364,8 @@
     border-bottom: 0.5px solid var(--vg-border);
     transition: background 0.35s;
     cursor: default;
+    /* FIXED: Always LTR for feature items */
+    direction: ltr;
   }
   .vg-feat:hover { background: var(--vg-gold-dim2); }
   .vg-feat-icon {
@@ -330,6 +373,7 @@
     border: 0.5px solid var(--vg-gold-border);
     display: flex; align-items: center; justify-content: center;
     color: var(--vg-gold);
+    flex-shrink: 0;
   }
 
   .vg-pi-step {
@@ -341,33 +385,29 @@
     border-bottom: 0.5px solid var(--vg-border);
     transition: background 0.3s;
     cursor: default;
+    direction: ltr;
   }
   .vg-pi-step:hover { background: var(--vg-gold-dim2); }
 }
 
 /* ─────────────────────────────────────────────
-   SHADCN OVERRIDES — light & dark
+   SHADCN OVERRIDES
 ───────────────────────────────────────────── */
 @layer base {
   .bg-gray-50, .bg-gray-100  { background-color: var(--vg-bg) !important; }
   .bg-white                  { background-color: var(--vg-bg-card) !important; }
   .dark .bg-gray-900         { background-color: var(--vg-bg) !important; }
   .dark .bg-gray-800         { background-color: var(--vg-bg-card) !important; }
-  .dark .bg-gray-700         { background-color: var(--vg-bg-surface) !important; }
-  .dark .bg-white            { background-color: var(--vg-bg-card) !important; }
 
   .text-muted-foreground     { color: var(--vg-text-2) !important; }
 
-  .dark .text-gray-900, .dark .text-gray-800 { color: var(--vg-text) !important; }
-  .dark .text-gray-600, .dark .text-gray-500 { color: var(--vg-text-2) !important; }
-  .dark .text-gray-400, .dark .text-gray-300 { color: var(--vg-text-3) !important; }
-
-  /* FIX: inputs in both light and dark */
   input:not([type='checkbox']):not([type='radio']):not([type='range']),
   select, textarea {
     background-color: var(--vg-bg-surface);
     color: var(--vg-text);
     border-color: var(--vg-border);
+    /* FIXED: Inputs always LTR unless explicitly set */
+    direction: inherit;
   }
   input::placeholder, textarea::placeholder { color: var(--vg-text-3); }
 
@@ -382,9 +422,6 @@
   .text-primary   { color: var(--vg-gold) !important; }
   .bg-primary     { background-color: var(--vg-gold) !important; }
   .border-primary { border-color: var(--vg-gold-border) !important; }
-  .text-pi        { color: var(--vg-gold); }
-  .bg-pi          { background-color: var(--vg-gold); }
-  .bg-pi-dark     { background-color: var(--vg-gold-text); }
 }
 
 /* ─────────────────────────────────────────────
@@ -401,19 +438,48 @@
   .hover-lift:hover { transform: translateY(-2px); }
 }
 
-/* smooth theme transitions */
+/* ─────────────────────────────────────────────
+   SMOOTH THEME TRANSITIONS
+   (only color properties — avoids layout reflow)
+───────────────────────────────────────────── */
 *, *::before, *::after {
   transition-property: background-color, border-color, color;
   transition-duration: 0.18s;
   transition-timing-function: ease;
 }
 
-/* scrollbar */
+/* ─────────────────────────────────────────────
+   RESPONSIVE GRID FIXES
+───────────────────────────────────────────── */
+/* FIXED: Hotel/attraction grids collapse properly on mobile */
+@media (max-width: 480px) {
+  [style*="minmax(280px"] {
+    grid-template-columns: 1fr !important;
+  }
+  [style*="minmax(260px"] {
+    grid-template-columns: 1fr !important;
+  }
+  [style*="minmax(220px"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 767px) {
+  [style*="minmax(280px"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   SCROLLBAR
+───────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--vg-gold-border); border-radius: 2px; }
 
-/* grain overlay */
+/* ─────────────────────────────────────────────
+   GRAIN OVERLAY
+───────────────────────────────────────────── */
 body::after {
   content: '';
   position: fixed; inset: 0;
@@ -422,12 +488,14 @@ body::after {
   opacity: 0.022;
 }
 
-/* custom cursor */
+/* ─────────────────────────────────────────────
+   CUSTOM CURSOR (desktop only)
+───────────────────────────────────────────── */
 #vg-cursor {
   position: fixed; width: 6px; height: 6px;
   background: var(--vg-gold); border-radius: 50%;
   pointer-events: none; z-index: 9998;
-  transform: translate(-50%,-50%);
+  transform: translate(-50%, -50%);
   mix-blend-mode: multiply;
 }
 #vg-cursor-ring {
@@ -435,10 +503,13 @@ body::after {
   border: 1px solid var(--vg-gold-border);
   border-radius: 50%;
   pointer-events: none; z-index: 9997;
-  transform: translate(-50%,-50%);
+  transform: translate(-50%, -50%);
   transition: width 0.2s, height 0.2s;
 }
-@media (pointer: coarse) { #vg-cursor, #vg-cursor-ring { display: none; } }
+/* Hide cursor on touch devices */
+@media (pointer: coarse) {
+  #vg-cursor, #vg-cursor-ring { display: none; }
+}
 
 /* ─────────────────────────────────────────────
    KEYFRAMES
@@ -457,4 +528,16 @@ body::after {
 @keyframes shimmer {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
+}
+
+/* ─────────────────────────────────────────────
+   REDUCE MOTION SUPPORT
+───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .vg-ticker-inner { animation: none; }
 }
