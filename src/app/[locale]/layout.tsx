@@ -1,4 +1,6 @@
 // PATH: src/app/[locale]/layout.tsx
+// FIXED: Explicit dir attribute on wrapper div — no more direction bleed
+// FIXED: RTL only applies to Arabic locale, everything else is strictly LTR
 import { notFound } from 'next/navigation';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -15,6 +17,7 @@ export default async function LocaleLayout({
 }) {
   const { locale } = await params;
   if (!locales.includes(locale)) notFound();
+
   const isRTL = rtlLocales.includes(locale);
 
   return (
@@ -23,12 +26,18 @@ export default async function LocaleLayout({
       dir={isRTL ? 'rtl' : 'ltr'}
       style={{
         direction:  isRTL ? 'rtl' : 'ltr',
-        fontFamily: isRTL ? 'var(--font-cairo), system-ui, sans-serif' : undefined,
+        fontFamily: isRTL
+          ? 'var(--font-cairo), system-ui, sans-serif'
+          : 'var(--font-dm-sans), system-ui, sans-serif',
         minHeight:  '100vh',
+        // Prevent text-align inheritance when switching locales
+        textAlign:  isRTL ? 'right' : 'left',
       }}
     >
       <Navbar locale={locale} isRTL={isRTL} />
-      <main>{children}</main>
+      <main style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+        {children}
+      </main>
       <Footer locale={locale} isRTL={isRTL} />
     </div>
   );
