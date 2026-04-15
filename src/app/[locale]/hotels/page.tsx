@@ -1,12 +1,13 @@
 'use client';
-// src/app/[locale]/hotels/page.tsx
-// FIX: added ?city= URL param support, minimum font sizes raised to 0.6rem
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Search, MapPin, Star, Heart, SlidersHorizontal, X } from 'lucide-react';
+// PATH: src/app/[locale]/hotels/page.tsx
+// FIX: Smart pagination with ellipsis, consistent font sizes min 0.6rem
+import { useEffect, useState, useCallback } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { Search, MapPin, Star, Heart, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
+import { VG } from '@/lib/tokens';
 
 function SkeletonCard() {
   return (
@@ -21,6 +22,67 @@ function SkeletonCard() {
           </div>
         ))}
       </div>
+      <style>{`@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
+    </div>
+  );
+}
+
+function PaginationBar({
+  currentPage,
+  totalPages,
+  onPage,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onPage: (p: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+
+  const pages: (number | 'ellipsis')[] = [];
+  const delta = 2;
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+      pages.push(i);
+    } else if (pages[pages.length - 1] !== 'ellipsis') {
+      pages.push('ellipsis');
+    }
+  }
+
+  const btnStyle = (active: boolean): React.CSSProperties => ({
+    width: '38px', height: '38px',
+    background: active ? 'var(--vg-gold)' : 'none',
+    border: `1px solid ${active ? 'var(--vg-gold)' : 'var(--vg-border)'}`,
+    color: active ? 'var(--vg-bg)' : 'var(--vg-text-2)',
+    fontFamily: 'var(--font-space-mono)',
+    fontSize: VG.font.tiny,
+    cursor: active ? 'default' : 'pointer',
+    transition: 'all 0.2s',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  });
+
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.4rem', marginTop: '3rem', flexWrap: 'wrap' }}>
+      <button
+        onClick={() => onPage(Math.max(1, currentPage - 1))}
+        disabled={currentPage === 1}
+        style={{ ...btnStyle(false), width: 'auto', padding: '0 0.9rem', opacity: currentPage === 1 ? 0.4 : 1 }}
+      >
+        <ChevronLeft size={14} />
+      </button>
+
+      {pages.map((p, i) =>
+        p === 'ellipsis'
+          ? <span key={`e${i}`} style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.tiny, color: 'var(--vg-text-3)', padding: '0 0.25rem' }}>…</span>
+          : <button key={p} onClick={() => onPage(p)} style={btnStyle(p === currentPage)}>{p}</button>
+      )}
+
+      <button
+        onClick={() => onPage(Math.min(totalPages, currentPage + 1))}
+        disabled={currentPage === totalPages}
+        style={{ ...btnStyle(false), width: 'auto', padding: '0 0.9rem', opacity: currentPage === totalPages ? 0.4 : 1 }}
+      >
+        <ChevronRight size={14} />
+      </button>
     </div>
   );
 }
@@ -31,10 +93,7 @@ export default function HotelsPage() {
 
   const [hotels, setHotels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  // FIX: read both 'q' and 'city' from URL params
-  const [searchTerm, setSearchTerm] = useState(
-    searchParams.get('q') || searchParams.get('city') || ''
-  );
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || searchParams.get('city') || '');
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -70,12 +129,11 @@ export default function HotelsPage() {
 
   const STARS = [5, 4, 3, 2, 1];
 
-  // FIX: consistent font sizes - minimum 0.6rem everywhere visible
-  const monoLabelStyle = {
+  const monoLabelStyle: React.CSSProperties = {
     fontFamily: 'var(--font-space-mono)',
-    fontSize: '0.6rem',
+    fontSize: VG.font.micro,
     letterSpacing: '0.2em',
-    textTransform: 'uppercase' as const,
+    textTransform: 'uppercase',
     color: 'var(--vg-text-3)',
     display: 'block',
     marginBottom: '0.5rem',
@@ -85,18 +143,13 @@ export default function HotelsPage() {
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', paddingTop: '60px' }}>
 
       {/* Hero Header */}
-      <div style={{
-        background: 'var(--vg-bg-surface)', borderBottom: '1px solid var(--vg-border)',
-        padding: 'clamp(3rem,6vw,5rem) clamp(1.5rem,7vw,5rem) 0',
-        position: 'relative', overflow: 'hidden',
-      }}>
+      <div style={{ background: 'var(--vg-bg-surface)', borderBottom: '1px solid var(--vg-border)', padding: 'clamp(3rem,6vw,5rem) clamp(1.5rem,7vw,5rem) 0', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: 0, right: 0, width: '40%', height: '100%', background: 'radial-gradient(ellipse at right top, rgba(201,162,39,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
         <div className="vg-overline" style={{ marginBottom: '1rem' }}>Explore</div>
         <h1 className="vg-display" style={{ fontSize: 'clamp(2rem,5vw,3.8rem)', marginBottom: '0.5rem' }}>
           Find Your Perfect <em className="vg-italic">Hotel</em>
         </h1>
-        <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.88rem', color: 'var(--vg-text-2)', marginBottom: '2rem' }}>
+        <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.body, color: 'var(--vg-text-2)', marginBottom: '2rem' }}>
           {totalCount > 0 ? `${totalCount.toLocaleString()} properties worldwide` : 'Browse thousands of hotels worldwide'}
         </p>
         {/* Search bar */}
@@ -108,35 +161,26 @@ export default function HotelsPage() {
               onChange={e => setSearchTerm(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') { setCurrentPage(1); fetchHotels(); } }}
               placeholder="Search hotels, cities..."
-              style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontFamily: 'var(--font-dm-sans)', fontSize: '0.88rem', color: 'var(--vg-text)' }}
+              style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.body, color: 'var(--vg-text)' }}
             />
             {searchTerm && (
-              <button onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
-                aria-label="Clear search"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--vg-text-3)', padding: 0 }}>
+              <button onClick={() => { setSearchTerm(''); setCurrentPage(1); }} aria-label="Clear search" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--vg-text-3)', padding: 0 }}>
                 <X size={13} />
               </button>
             )}
           </div>
-          <button onClick={() => { setCurrentPage(1); fetchHotels(); }} className="vg-btn-primary" style={{ padding: '0.9rem 1.5rem', flexShrink: 0 }}>
-            Search
-          </button>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            aria-label="Toggle filters"
-            style={{
-              background: showFilters ? 'var(--vg-gold-dim)' : 'none',
-              border: 'none', borderLeft: '1px solid var(--vg-border)',
-              cursor: 'pointer', padding: '0.9rem 1.1rem',
-              color: showFilters ? 'var(--vg-gold)' : 'var(--vg-text-3)',
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-              fontFamily: 'var(--font-space-mono)', fontSize: '0.6rem',
-              letterSpacing: '0.15em', textTransform: 'uppercase',
-              transition: 'background 0.2s, color 0.2s',
-            }}
-          >
-            <SlidersHorizontal size={13} />
-            Filters
+          <button onClick={() => { setCurrentPage(1); fetchHotels(); }} className="vg-btn-primary" style={{ padding: '0.9rem 1.5rem', flexShrink: 0 }}>Search</button>
+          <button onClick={() => setShowFilters(!showFilters)} aria-label="Toggle filters" style={{
+            background: showFilters ? 'var(--vg-gold-dim)' : 'none',
+            border: 'none', borderLeft: '1px solid var(--vg-border)',
+            cursor: 'pointer', padding: '0.9rem 1.1rem',
+            color: showFilters ? 'var(--vg-gold)' : 'var(--vg-text-3)',
+            display: 'flex', alignItems: 'center', gap: '0.4rem',
+            fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro,
+            letterSpacing: '0.15em', textTransform: 'uppercase',
+            transition: 'background 0.2s, color 0.2s',
+          }}>
+            <SlidersHorizontal size={13} /> Filters
           </button>
         </div>
       </div>
@@ -147,35 +191,30 @@ export default function HotelsPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1.2rem', maxWidth: '680px' }}>
             <div>
               <label style={monoLabelStyle}>Min Price</label>
-              <input type="number" placeholder="0" value={filters.minPrice}
-                onChange={e => setFilters({ ...filters, minPrice: e.target.value })}
-                style={{ width: '100%', boxSizing: 'border-box', background: 'var(--vg-bg-surface)', border: '1px solid var(--vg-border)', padding: '0.65rem 0.8rem', fontFamily: 'var(--font-dm-sans)', fontSize: '0.84rem', color: 'var(--vg-text)', outline: 'none' }}
+              <input type="number" placeholder="0" value={filters.minPrice} onChange={e => setFilters({ ...filters, minPrice: e.target.value })}
+                style={{ width: '100%', boxSizing: 'border-box', background: 'var(--vg-bg-surface)', border: '1px solid var(--vg-border)', padding: '0.65rem 0.8rem', fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.body, color: 'var(--vg-text)', outline: 'none' }}
                 onFocus={e => e.target.style.borderColor = 'var(--vg-gold-border)'}
                 onBlur={e => e.target.style.borderColor = 'var(--vg-border)'} />
             </div>
             <div>
               <label style={monoLabelStyle}>Max Price</label>
-              <input type="number" placeholder="999" value={filters.maxPrice}
-                onChange={e => setFilters({ ...filters, maxPrice: e.target.value })}
-                style={{ width: '100%', boxSizing: 'border-box', background: 'var(--vg-bg-surface)', border: '1px solid var(--vg-border)', padding: '0.65rem 0.8rem', fontFamily: 'var(--font-dm-sans)', fontSize: '0.84rem', color: 'var(--vg-text)', outline: 'none' }}
+              <input type="number" placeholder="999" value={filters.maxPrice} onChange={e => setFilters({ ...filters, maxPrice: e.target.value })}
+                style={{ width: '100%', boxSizing: 'border-box', background: 'var(--vg-bg-surface)', border: '1px solid var(--vg-border)', padding: '0.65rem 0.8rem', fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.body, color: 'var(--vg-text)', outline: 'none' }}
                 onFocus={e => e.target.style.borderColor = 'var(--vg-gold-border)'}
                 onBlur={e => e.target.style.borderColor = 'var(--vg-border)'} />
             </div>
             <div>
               <label style={monoLabelStyle}>Stars</label>
               <select value={filters.starRating} onChange={e => setFilters({ ...filters, starRating: e.target.value })}
-                style={{ width: '100%', background: 'var(--vg-bg-surface)', border: '1px solid var(--vg-border)', padding: '0.65rem 0.8rem', fontFamily: 'var(--font-dm-sans)', fontSize: '0.84rem', color: 'var(--vg-text)', outline: 'none', cursor: 'pointer' }}>
+                style={{ width: '100%', background: 'var(--vg-bg-surface)', border: '1px solid var(--vg-border)', padding: '0.65rem 0.8rem', fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.body, color: 'var(--vg-text)', outline: 'none', cursor: 'pointer' }}>
                 <option value="">All Stars</option>
                 {STARS.map(s => <option key={s} value={s}>{'★'.repeat(s)} {s}-Star</option>)}
               </select>
             </div>
             <div>
               <label style={monoLabelStyle}>Sort By</label>
-              <select value={`${filters.sortBy}-${filters.order}`} onChange={e => {
-                const [s, o] = e.target.value.split('-');
-                setFilters({ ...filters, sortBy: s, order: o });
-              }}
-                style={{ width: '100%', background: 'var(--vg-bg-surface)', border: '1px solid var(--vg-border)', padding: '0.65rem 0.8rem', fontFamily: 'var(--font-dm-sans)', fontSize: '0.84rem', color: 'var(--vg-text)', outline: 'none', cursor: 'pointer' }}>
+              <select value={`${filters.sortBy}-${filters.order}`} onChange={e => { const [s, o] = e.target.value.split('-'); setFilters({ ...filters, sortBy: s, order: o }); }}
+                style={{ width: '100%', background: 'var(--vg-bg-surface)', border: '1px solid var(--vg-border)', padding: '0.65rem 0.8rem', fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.body, color: 'var(--vg-text)', outline: 'none', cursor: 'pointer' }}>
                 <option value="rating-desc">Top Rated</option>
                 <option value="pricePerNight-asc">Price: Low → High</option>
                 <option value="pricePerNight-desc">Price: High → Low</option>
@@ -221,12 +260,7 @@ export default function HotelsPage() {
                   <button
                     onClick={e => toggleFav(e, hotel.id)}
                     aria-label={favorites.has(hotel.id) ? 'Remove from favorites' : 'Add to favorites'}
-                    style={{
-                      position: 'absolute', bottom: '1rem', right: '1rem', zIndex: 3,
-                      background: 'rgba(3,2,10,0.7)', border: '1px solid var(--vg-gold-border)',
-                      width: '32px', height: '32px', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}
+                    style={{ position: 'absolute', bottom: '1rem', right: '1rem', zIndex: 3, background: 'rgba(3,2,10,0.7)', border: '1px solid var(--vg-gold-border)', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   >
                     <Heart size={13} style={{ color: favorites.has(hotel.id) ? '#C9A227' : 'var(--vg-text-3)', fill: favorites.has(hotel.id) ? '#C9A227' : 'none' }} />
                   </button>
@@ -237,7 +271,7 @@ export default function HotelsPage() {
                   )}
                   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1.5rem 1rem 0.8rem', background: 'linear-gradient(to top, rgba(3,2,10,0.85) 0%, transparent 100%)', zIndex: 2, display: 'flex', gap: '2px' }}>
                     {Array.from({ length: hotel.starRating || 0 }).map((_, s) => (
-                      <span key={s} style={{ color: 'var(--vg-star)', fontSize: '0.65rem' }}>★</span>
+                      <span key={s} style={{ color: 'var(--vg-star)', fontSize: VG.font.micro }}>★</span>
                     ))}
                   </div>
                 </div>
@@ -249,28 +283,22 @@ export default function HotelsPage() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.8rem' }}>
                     <MapPin size={11} color="var(--vg-text-3)" />
-                    <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.78rem', color: 'var(--vg-text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {hotel.cityRelation?.name || hotel.city}, {hotel.cityRelation?.country || hotel.country}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <Star size={12} style={{ color: 'var(--vg-star)', fill: 'var(--vg-star)' }} />
-                      {/* FIX: raised font size to 0.74rem */}
-                      <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.74rem', color: 'var(--vg-gold)' }}>
+                      <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.small, color: 'var(--vg-gold)' }}>
                         {hotel.rating?.toFixed(1) || '—'}
                       </span>
-                      <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.74rem', color: 'var(--vg-text-3)' }}>
+                      <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-3)' }}>
                         ({hotel.reviewCount || 0})
                       </span>
                     </div>
                     {hotel.amenities?.slice(0, 2).map((a: string) => (
-                      <span key={a} style={{
-                        fontFamily: 'var(--font-space-mono)', fontSize: '0.6rem',
-                        letterSpacing: '0.12em', textTransform: 'uppercase',
-                        background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)',
-                        color: 'var(--vg-gold)', padding: '0.2rem 0.5rem',
-                      }}>{a}</span>
+                      <span key={a} style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.12em', textTransform: 'uppercase', background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', color: 'var(--vg-gold)', padding: '0.2rem 0.5rem' }}>{a}</span>
                     ))}
                   </div>
                 </div>
@@ -281,10 +309,10 @@ export default function HotelsPage() {
                     <span className="vg-stat-num" style={{ fontSize: '1.1rem' }}>
                       {formatCurrency(hotel.pricePerNight, hotel.currency)}
                     </span>
-                    {/* FIX: raised from 0.42rem to 0.6rem */}
-                    <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.6rem', letterSpacing: '0.15em', color: 'var(--vg-text-3)', marginLeft: '0.3rem' }}>/NIGHT</span>
+                    {/* FIX: was 0.42rem — now VG.font.micro (0.65rem) */}
+                    <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.15em', color: 'var(--vg-text-3)', marginLeft: '0.3rem' }}>/NIGHT</span>
                   </div>
-                  <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--vg-gold)' }}>
+                  <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--vg-gold)' }}>
                     Book Now →
                   </span>
                 </div>
@@ -293,28 +321,12 @@ export default function HotelsPage() {
           </div>
         )}
 
-        {/* Pagination */}
-        {totalPages > 1 && !loading && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '3rem' }}>
-            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="vg-btn-outline" style={{ padding: '0.6rem 1.2rem', opacity: currentPage === 1 ? 0.4 : 1 }}>← Prev</button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const p = i + 1;
-              return (
-                <button key={p} onClick={() => setCurrentPage(p)}
-                  style={{
-                    width: '38px', height: '38px',
-                    background: currentPage === p ? 'var(--vg-gold)' : 'none',
-                    border: `1px solid ${currentPage === p ? 'var(--vg-gold)' : 'var(--vg-border)'}`,
-                    color: currentPage === p ? 'var(--vg-bg)' : 'var(--vg-text-2)',
-                    fontFamily: 'var(--font-space-mono)', fontSize: '0.6rem',
-                    cursor: 'pointer', transition: 'all 0.2s',
-                  }}
-                >{p}</button>
-              );
-            })}
-            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="vg-btn-outline" style={{ padding: '0.6rem 1.2rem', opacity: currentPage === totalPages ? 0.4 : 1 }}>Next →</button>
-          </div>
-        )}
+        {/* Smart Pagination */}
+        <PaginationBar
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPage={p => { setCurrentPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+        />
       </div>
     </div>
   );
