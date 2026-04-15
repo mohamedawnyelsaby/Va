@@ -1,8 +1,8 @@
 'use client';
 // PATH: src/app/[locale]/ai/page.tsx
-// REDESIGNED: VG aesthetic, sharp corners, proper hero, better UX
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import { Bot, Send, Globe, Zap, ArrowLeft, Hotel, Star, MapPin } from 'lucide-react';
 import { VG, monoLabel } from '@/lib/tokens';
 import { formatCurrency } from '@/lib/utils';
@@ -42,13 +42,8 @@ function TypingIndicator() {
 
 function HotelCard({ hotel, locale }: { hotel: any; locale: string }) {
   return (
-    <div style={{
-      background: 'var(--vg-bg-card)',
-      border: '1px solid var(--vg-border)',
-      display: 'flex',
-      overflow: 'hidden',
-      transition: 'border-color 0.2s',
-    }}
+    <div
+      style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', display: 'flex', overflow: 'hidden', transition: 'border-color 0.2s' }}
       onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-gold-border)'}
       onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-border)'}
     >
@@ -62,7 +57,9 @@ function HotelCard({ hotel, locale }: { hotel: any; locale: string }) {
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
             {hotel.stars > 0 && (
-              <span style={{ color: 'var(--vg-star)', fontSize: '0.65rem', letterSpacing: '0.08em' }}>{'★'.repeat(Math.min(hotel.stars, 5))}</span>
+              <span style={{ color: 'var(--vg-star)', fontSize: VG.font.micro, letterSpacing: '0.08em' }}>
+                {'★'.repeat(Math.min(hotel.stars, 5))}
+              </span>
             )}
             {hotel.rating && (
               <span style={{ ...monoLabel, background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', color: 'var(--vg-gold)', padding: '0.12rem 0.5rem' }}>
@@ -74,13 +71,16 @@ function HotelCard({ hotel, locale }: { hotel: any; locale: string }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
           <button
             onClick={() => {
-              const params = new URLSearchParams({
-                hotelId: hotel.id, hotelName: hotel.name,
-                checkIn: hotel.checkIn || '', checkOut: hotel.checkOut || '',
-                price: hotel.price.toString(), source: 'booking.com',
+              const urlParams = new URLSearchParams({
+                hotelId: hotel.id,
+                hotelName: hotel.name,
+                checkIn: hotel.checkIn || '',
+                checkOut: hotel.checkOut || '',
+                price: hotel.price.toString(),
+                source: 'booking.com',
                 thumbnail: hotel.thumbnail || '',
               });
-              window.location.href = `/${locale}/booking?${params.toString()}`;
+              window.location.href = `/${locale}/booking?${urlParams.toString()}`;
             }}
             className="vg-btn-primary"
             style={{ padding: '0.45rem 0.9rem', fontSize: VG.font.micro }}
@@ -139,8 +139,9 @@ function MessageBubble({ msg, locale }: { msg: Message; locale: string }) {
         </div>
       )}
 
+      {/* FIX: timestamp font was 0.48rem — now VG.font.micro (0.65rem) */}
       {msg.timestamp && (
-        <div style={{ ...monoLabel, color: 'var(--vg-text-3)', fontSize: '0.48rem' }}>
+        <div style={{ ...monoLabel, color: 'var(--vg-text-3)', fontSize: VG.font.micro }}>
           {msg.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
         </div>
       )}
@@ -149,6 +150,10 @@ function MessageBubble({ msg, locale }: { msg: Message; locale: string }) {
 }
 
 export default function AITravelPage() {
+  // FIX: use useParams() instead of window.location.pathname (avoids hydration error)
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
+
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -162,7 +167,6 @@ export default function AITravelPage() {
   const [showQuick, setShowQuick] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const locale = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] || 'en' : 'en';
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -205,13 +209,7 @@ export default function AITravelPage() {
   }, [input, loading, history]);
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--vg-bg)',
-      display: 'flex',
-      flexDirection: 'column',
-      fontFamily: 'var(--font-dm-sans)',
-    }}>
+    <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', display: 'flex', flexDirection: 'column', fontFamily: 'var(--font-dm-sans)' }}>
 
       {/* ── Header ── */}
       <div style={{
@@ -249,7 +247,8 @@ export default function AITravelPage() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.15rem' }}>
                 <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite' }} />
-                <span style={{ ...monoLabel, color: '#10b981', fontSize: '0.48rem' }}>Online</span>
+                {/* FIX: was 0.48rem — now VG.font.micro */}
+                <span style={{ ...monoLabel, color: '#10b981', fontSize: VG.font.micro }}>Online</span>
               </div>
             </div>
           </div>
@@ -275,22 +274,13 @@ export default function AITravelPage() {
 
       {/* ── Messages ── */}
       <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        padding: '1.5rem 0',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1.2rem',
-        maxWidth: '860px',
-        width: '100%',
-        margin: '0 auto',
-        boxSizing: 'border-box',
+        flex: 1, overflowY: 'auto', padding: '1.5rem 0',
+        display: 'flex', flexDirection: 'column', gap: '1.2rem',
+        maxWidth: '860px', width: '100%', margin: '0 auto', boxSizing: 'border-box',
       }}>
-
         {messages.map((msg, i) => (
           <MessageBubble key={i} msg={msg} locale={locale} />
         ))}
-
         {loading && <TypingIndicator />}
         <div ref={messagesEndRef} />
       </div>
@@ -305,16 +295,11 @@ export default function AITravelPage() {
                 key={i}
                 onClick={() => sendMessage(action.text)}
                 style={{
-                  background: 'var(--vg-bg-card)',
-                  border: '1px solid var(--vg-border)',
-                  color: 'var(--vg-text-2)',
-                  padding: '0.55rem 0.9rem',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-dm-sans)',
-                  fontSize: VG.font.small,
+                  background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)',
+                  color: 'var(--vg-text-2)', padding: '0.55rem 0.9rem',
+                  cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small,
                   display: 'flex', alignItems: 'center', gap: '0.4rem',
-                  transition: 'border-color 0.2s, color 0.2s, background 0.2s',
-                  flexShrink: 0,
+                  transition: 'border-color 0.2s, color 0.2s, background 0.2s', flexShrink: 0,
                 }}
                 onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--vg-gold-border)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--vg-gold)'; (e.currentTarget as HTMLButtonElement).style.background = 'var(--vg-gold-dim)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--vg-border)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--vg-text-2)'; (e.currentTarget as HTMLButtonElement).style.background = 'var(--vg-bg-card)'; }}
@@ -328,16 +313,8 @@ export default function AITravelPage() {
       )}
 
       {/* ── Input Bar ── */}
-      <div style={{
-        borderTop: '1px solid var(--vg-border)',
-        background: 'var(--vg-bg-surface)',
-        padding: '0.85rem clamp(1rem,4vw,2rem)',
-        position: 'sticky', bottom: 0, zIndex: 50,
-      }}>
-        <div style={{
-          display: 'flex', gap: '0.75rem', alignItems: 'center',
-          maxWidth: '860px', margin: '0 auto',
-        }}>
+      <div style={{ borderTop: '1px solid var(--vg-border)', background: 'var(--vg-bg-surface)', padding: '0.85rem clamp(1rem,4vw,2rem)', position: 'sticky', bottom: 0, zIndex: 50 }}>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', maxWidth: '860px', margin: '0 auto' }}>
           <input
             ref={inputRef}
             value={input}
@@ -345,15 +322,10 @@ export default function AITravelPage() {
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
             placeholder="Ask anything in any language… 🌍"
             style={{
-              flex: 1,
-              background: 'var(--vg-bg-card)',
-              border: '1px solid var(--vg-border)',
-              padding: '0.85rem 1rem',
-              color: 'var(--vg-text)',
-              fontFamily: 'var(--font-dm-sans)',
-              fontSize: VG.font.body,
-              outline: 'none',
-              transition: 'border-color 0.2s',
+              flex: 1, background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)',
+              padding: '0.85rem 1rem', color: 'var(--vg-text)',
+              fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.body,
+              outline: 'none', transition: 'border-color 0.2s',
             }}
             onFocus={e => e.target.style.borderColor = 'var(--vg-gold-border)'}
             onBlur={e => e.target.style.borderColor = 'var(--vg-border)'}
@@ -372,24 +344,17 @@ export default function AITravelPage() {
             }}
             aria-label="Send"
           >
-            <Send size={16} style={{ transform: loading ? 'none' : 'rotate(0deg)' }} />
+            <Send size={16} />
           </button>
         </div>
-
         <div style={{ ...monoLabel, color: 'var(--vg-text-3)', textAlign: 'center', marginTop: '0.5rem', display: 'block' }}>
           π Powered by Pi Network · All Languages Supported
         </div>
       </div>
 
       <style>{`
-        @keyframes bounce {
-          0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
-          30%            { transform: translateY(-6px); opacity: 1; }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.4; }
-        }
+        @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-6px); opacity: 1; } }
+        @keyframes pulse  { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: var(--vg-gold-border); }
       `}</style>
