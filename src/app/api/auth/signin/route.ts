@@ -1,120 +1,86 @@
-// src/app/api/auth/signup/route.ts
+// PATH: src/app/api/auth/signin/route.ts
+// FIX: This file was incorrectly using signup schema.
+// This is the SIGN-IN (login) handler. It validates credentials and returns the user.
+// The actual sign-in flow is handled by NextAuth via /api/auth/[...nextauth]/route.ts
+// This endpoint can be used for custom sign-in validation or pre-auth checks.
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
-// Strong password requirements
-const passwordSchema = z
-  .string()
-  .min(8, 'Password must be at least 8 characters')
-  .max(128, 'Password must not exceed 128 characters')
-  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-  .regex(/[0-9]/, 'Password must contain at least one number');
-
-const signupSchema = z.object({
+const signinSchema = z.object({
   email: z
     .string()
     .email('Invalid email address')
     .toLowerCase(),
-  password: passwordSchema,
-  confirmPassword: z.string(),
-  name: z
+  password: z
     .string()
-    .min(2, 'Name must be at least 2 characters')
-    .max(100, 'Name must not exceed 100 characters'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
+    .min(1, 'Password is required')
+    .max(128, 'Password is too long'),
 });
 
 export async function POST(request: NextRequest) {
-  const ip = request.headers.get('x-forwarded-for') || 'unknown';
-  const userAgent = request.headers.get('user-agent') || 'unknown';
-
   try {
-    // Parse and validate input
     const body = await request.json();
-    const validatedData = signupSchema.parse(body);
+    const validatedData = signinSchema.parse(body);
 
-    // Check if email already exists
-    const existingUser = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email: validatedData.email },
-    });
-
-    if (existingUser) {
-      return NextResponse.json(
-        {
-          error: 'An account with this email already exists',
-          suggestion: 'Try logging in or use password recovery',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Hash password (Bcrypt with 12 rounds)
-    const hashedPassword = await bcrypt.hash(validatedData.password, 12);
-
-    // Create user in database
-    const user = await prisma.user.create({
-      data: {
-        email: validatedData.email,
-        password: hashedPassword,
-        name: validatedData.name,
-      },
       select: {
         id: true,
         email: true,
         name: true,
-        createdAt: true,
+        password: true,
+        piWalletId: true,
+        piUsername: true,
       },
     });
 
-    console.log('✅ New user created:', {
-      id: user.id,
-      email: user.email,
-      ip,
-    });
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Invalid email or password' },
+        { status: 401 }
+      );
+    }
 
-    // Return success response
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Account created successfully!',
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        },
+    if (!user.password) {
+      // Pi Network user — no password auth
+      return NextResponse.json(
+        { error: 'This account uses Pi Network authentication' },
+        { status: 401 }
+      );
+    }
+
+    const isValid = await bcrypt.compare(validatedData.password, user.password);
+
+    if (!isValid) {
+      return NextResponse.json(
+        { error: 'Invalid email or password' },
+        { status: 401 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
       },
-      { status: 201 }
-    );
+    });
   } catch (error) {
-    // Error handling
     if (error instanceof z.ZodError) {
       const firstError = error.errors[0];
       return NextResponse.json(
-        {
-          error: firstError.message,
-          field: firstError.path.join('.'),
-        },
+        { error: firstError.message, field: firstError.path.join('.') },
         { status: 400 }
       );
     }
 
-    console.error('Signup error:', error);
-
+    console.error('Sign-in error:', error);
     return NextResponse.json(
-      {
-        error: 'An error occurred during registration. Please try again.',
-        details:
-          process.env.NODE_ENV === 'development'
-            ? error instanceof Error
-              ? error.message
-              : 'Unknown error'
-            : undefined,
-      },
+      { error: 'An error occurred. Please try again.' },
       { status: 500 }
     );
   }
