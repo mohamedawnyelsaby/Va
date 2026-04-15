@@ -1,7 +1,7 @@
-// PATH: src/app/[locale]/bookings/page.tsx
 'use client';
+// PATH: src/app/[locale]/bookings/page.tsx
 import { useEffect, useState } from 'react';
-import { Calendar, CheckCircle, Clock, AlertCircle, ArrowRight } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, AlertCircle, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatCurrency } from '@/lib/utils';
@@ -21,6 +21,67 @@ function SkeletonRow() {
         ))}
       </div>
       <style>{`@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
+    </div>
+  );
+}
+
+function PaginationBar({
+  currentPage,
+  totalPages,
+  onPage,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onPage: (p: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+
+  const pages: (number | 'ellipsis')[] = [];
+  const delta = 2;
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+      pages.push(i);
+    } else if (pages[pages.length - 1] !== 'ellipsis') {
+      pages.push('ellipsis');
+    }
+  }
+
+  const btnStyle = (active: boolean): React.CSSProperties => ({
+    width: '38px', height: '38px',
+    background: active ? 'var(--vg-gold)' : 'none',
+    border: `1px solid ${active ? 'var(--vg-gold)' : 'var(--vg-border)'}`,
+    color: active ? 'var(--vg-bg)' : 'var(--vg-text-2)',
+    fontFamily: 'var(--font-space-mono)',
+    // FIX: was 0.5rem — now VG.font.tiny
+    fontSize: VG.font.tiny,
+    cursor: active ? 'default' : 'pointer',
+    transition: 'all 0.2s',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  });
+
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+      <button
+        onClick={() => onPage(Math.max(1, currentPage - 1))}
+        disabled={currentPage === 1}
+        style={{ ...btnStyle(false), width: 'auto', padding: '0 0.9rem', opacity: currentPage === 1 ? 0.4 : 1 }}
+      >
+        <ChevronLeft size={14} />
+      </button>
+
+      {pages.map((p, i) =>
+        p === 'ellipsis'
+          ? <span key={`e${i}`} style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.tiny, color: 'var(--vg-text-3)', padding: '0 0.25rem', display: 'flex', alignItems: 'center' }}>…</span>
+          : <button key={p} onClick={() => onPage(p)} style={btnStyle(p === currentPage)}>{p}</button>
+      )}
+
+      <button
+        onClick={() => onPage(Math.min(totalPages, currentPage + 1))}
+        disabled={currentPage === totalPages}
+        style={{ ...btnStyle(false), width: 'auto', padding: '0 0.9rem', opacity: currentPage === totalPages ? 0.4 : 1 }}
+      >
+        <ChevronRight size={14} />
+      </button>
     </div>
   );
 }
@@ -111,9 +172,11 @@ export default function BookingsPage() {
                       <Icon size={17} style={{ color: cfg.color }} />
                     </div>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.2rem', fontWeight: 300, color: 'var(--vg-text)', marginBottom: '0.3rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.itemName}</div>
+                      <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.2rem', fontWeight: 300, color: 'var(--vg-text)', marginBottom: '0.3rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {b.itemName}
+                      </div>
                       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                        {/* FIX: 0.44rem → VG.font.micro */}
+                        {/* FIX: was 0.44rem — now VG.font.micro */}
                         <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: VG.tracking.tight, textTransform: 'uppercase', color: 'var(--vg-text-3)' }}>
                           {new Date(b.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </span>
@@ -125,8 +188,10 @@ export default function BookingsPage() {
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <div className="vg-stat-num" style={{ fontSize: '1.1rem' }}>{formatCurrency(b.totalPrice, b.currency)}</div>
                       {b.itemType && (
-                        // FIX: 0.42rem → VG.font.micro
-                        <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: VG.tracking.tight, textTransform: 'uppercase', color: 'var(--vg-text-3)', marginTop: '0.2rem' }}>{b.itemType}</div>
+                        // FIX: was 0.42rem — now VG.font.micro
+                        <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: VG.tracking.tight, textTransform: 'uppercase', color: 'var(--vg-text-3)', marginTop: '0.2rem' }}>
+                          {b.itemType}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -134,23 +199,12 @@ export default function BookingsPage() {
               })}
             </div>
 
-            {totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="vg-btn-outline" style={{ padding: '0.6rem 1.2rem', opacity: page === 1 ? 0.4 : 1 }}>← Prev</button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
-                  <button key={i + 1} onClick={() => setPage(i + 1)} style={{
-                    width: '38px', height: '38px',
-                    background: page === i + 1 ? 'var(--vg-gold)' : 'none',
-                    border: `1px solid ${page === i + 1 ? 'var(--vg-gold)' : 'var(--vg-border)'}`,
-                    color: page === i + 1 ? 'var(--vg-bg)' : 'var(--vg-text-2)',
-                    // FIX: 0.5rem → VG.font.tiny
-                    fontFamily: 'var(--font-space-mono)', fontSize: VG.font.tiny,
-                    cursor: 'pointer', transition: VG.transition.normal,
-                  }}>{i + 1}</button>
-                ))}
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="vg-btn-outline" style={{ padding: '0.6rem 1.2rem', opacity: page === totalPages ? 0.4 : 1 }}>Next →</button>
-              </div>
-            )}
+            {/* FIX: Full smart pagination instead of max-5-pages */}
+            <PaginationBar
+              currentPage={page}
+              totalPages={totalPages}
+              onPage={p => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            />
           </>
         )}
       </div>
