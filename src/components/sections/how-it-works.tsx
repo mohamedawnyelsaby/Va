@@ -3,15 +3,12 @@
 import { useEffect, useRef } from 'react';
 import { UserCircle, Search, CreditCard, Plane } from 'lucide-react';
 import AnimatedCounter from '@/components/ui/AnimatedCounter';
+import { t } from '@/lib/i18n/translations';
 
-const STEPS = [
-  { icon: UserCircle, num: '01', title: 'Create Account',  desc: 'Sign up with your Pi Wallet in seconds. No credit card required.' },
-  { icon: Search,     num: '02', title: 'Discover',        desc: 'Browse AI-curated hotels, restaurants, and attractions worldwide.' },
-  { icon: CreditCard, num: '03', title: 'Book with Pi',    desc: "Pay seamlessly using Pi Network — the world's most accessible crypto." },
-  { icon: Plane,      num: '04', title: 'Travel & Earn',   desc: 'Enjoy your trip and earn Pi rewards for every booking and review.' },
-];
+const STEP_ICONS = [UserCircle, Search, CreditCard, Plane];
 
-export function HowItWorks() {
+export function HowItWorks({ locale }: { locale: string }) {
+  const tr = t(locale);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -29,23 +26,17 @@ export function HowItWorks() {
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
         <div className="vg-overline vg-reveal" style={{ justifyContent: 'center', marginBottom: '1rem' }}>
-          How It Works
+          {tr.howItWorks.sectionTag}
         </div>
         <h2 className="vg-display vg-reveal d1" style={{ fontSize: 'clamp(2rem,5vw,3.8rem)' }}>
-          Four Steps to <em className="vg-italic">Adventure</em>
+          {tr.howItWorks.sectionTitle1} <em className="vg-italic">{tr.howItWorks.sectionTitle2}</em>
         </h2>
       </div>
 
       {/* Steps */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '1px',
-        background: 'var(--vg-border)',
-        marginBottom: '4rem',
-      }}>
-        {STEPS.map((step, i) => {
-          const Icon = step.icon;
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1px', background: 'var(--vg-border)', marginBottom: '4rem' }}>
+        {tr.howItWorks.steps.map((step, i) => {
+          const Icon = STEP_ICONS[i] || UserCircle;
           return (
             <div
               key={step.num}
@@ -69,35 +60,20 @@ export function HowItWorks() {
         })}
       </div>
 
-      {/* Bottom stats — أرقام متحركة */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-        gap: '1.5rem',
-        borderTop: '1px solid var(--vg-border)',
-        paddingTop: '3rem',
-        textAlign: 'center',
-      }}>
-
+      {/* Bottom stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1.5rem', borderTop: '1px solid var(--vg-border)', paddingTop: '3rem', textAlign: 'center' }}>
         <div className="vg-reveal">
-          <div className="vg-stat-num">
-            {'< '}<AnimatedCounter to={60} suffix="s" duration={1000} />
-          </div>
-          <div className="vg-stat-label">Average booking time</div>
+          <div className="vg-stat-num">{tr.howItWorks.stats.bookingTime}</div>
+          <div className="vg-stat-label">{tr.howItWorks.stats.bookingTimeLabel}</div>
         </div>
-
         <div className="vg-reveal d1">
-          <div className="vg-stat-num">
-            <AnimatedCounter to={0} suffix="%" duration={800} />
-          </div>
-          <div className="vg-stat-label">Hidden fees</div>
+          <div className="vg-stat-num">{tr.howItWorks.stats.hiddenFees}</div>
+          <div className="vg-stat-label">{tr.howItWorks.stats.hiddenFeesLabel}</div>
         </div>
-
         <div className="vg-reveal d2">
-          <div className="vg-stat-num">24/7</div>
-          <div className="vg-stat-label">Support available</div>
+          <div className="vg-stat-num">{tr.howItWorks.stats.support}</div>
+          <div className="vg-stat-label">{tr.howItWorks.stats.supportLabel}</div>
         </div>
-
       </div>
     </section>
   );
