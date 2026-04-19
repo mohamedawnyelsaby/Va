@@ -1,13 +1,4 @@
 /* PATH: src/app/globals.css */
-/* FIX SUMMARY:
-   1. Hero section always dark — vg-hero-force-dark added
-   2. Light mode borders stronger (0.14 not 0.09)
-   3. Image filters via CSS variables per mode
-   4. Skeleton shimmer visible in light mode
-   5. Hover states more visible in light mode
-   6. Dropdowns have solid backgrounds in light mode
-*/
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -23,7 +14,7 @@
     --card-foreground: 30 60% 8%;
     --popover: 0 0% 100%;
     --popover-foreground: 30 60% 8%;
-    --primary: 42 75% 43%;
+    --primary: 42 75% 40%;
     --primary-foreground: 0 0% 100%;
     --secondary: 40 20% 92%;
     --secondary-foreground: 30 60% 8%;
@@ -33,39 +24,52 @@
     --accent-foreground: 30 60% 8%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 40 15% 85%;
-    --input: 40 15% 85%;
-    --ring: 42 75% 43%;
+    --border: 40 15% 82%;
+    --input: 40 15% 82%;
+    --ring: 42 75% 40%;
     --radius: 0rem;
 
     /* ── Light Mode Tokens ── */
-    --vg-bg:          #F8F6EF;
+    --vg-bg:          #F6F3EC;
     --vg-bg-card:     #FFFFFF;
-    --vg-bg-surface:  #EEEADC;
-    --vg-bg-deep:     #E3DED0;
+    --vg-bg-surface:  #EDE9DC;
+    --vg-bg-deep:     #E0DCCF;
     --vg-text:        #1A1208;
-    --vg-text-2:      rgba(26,18,8,0.65);
-    --vg-text-3:      rgba(26,18,8,0.40);
-    --vg-gold:        #8A6412;
-    --vg-gold-2:      #A07820;
-    --vg-gold-3:      #C9A227;
-    --vg-gold-dim:    rgba(138,100,18,0.12);
-    --vg-gold-dim2:   rgba(138,100,18,0.09);
-    --vg-gold-border: rgba(138,100,18,0.32);
+    --vg-text-2:      rgba(26,18,8,0.68);
+    --vg-text-3:      rgba(26,18,8,0.42);
+
+    /* Gold — darker in light mode for contrast on light backgrounds */
+    --vg-gold:        #7A560F;
+    --vg-gold-2:      #8A6412;
+    --vg-gold-3:      #A07820;
+    --vg-gold-dim:    rgba(122,86,15,0.10);
+    --vg-gold-dim2:   rgba(122,86,15,0.06);
+    --vg-gold-border: rgba(122,86,15,0.30);
     --vg-gold-text:   #5C3A06;
-    /* FIX: stronger borders in light mode */
-    --vg-border:      rgba(26,18,8,0.14);
-    --vg-border-2:    rgba(26,18,8,0.24);
-    --vg-nav-bg:      rgba(248,246,239,0.98);
+
+    /* Borders — stronger in light mode */
+    --vg-border:      rgba(26,18,8,0.13);
+    --vg-border-2:    rgba(26,18,8,0.22);
+
+    /* Nav */
+    --vg-nav-bg:      rgba(246,243,236,0.97);
     --vg-nav-border:  rgba(26,18,8,0.12);
+
+    /* Star */
     --vg-star:        #8A5E08;
-    /* FIX: skeleton more visible in light mode */
-    --vg-skel-bg:     #D6D1C4;
-    --vg-skel-shine:  rgba(138,100,18,0.14);
-    /* FIX: image filters lighter in light mode */
-    --vg-thumb-filter: brightness(0.72) saturate(0.78);
-    --vg-thumb-hover:  brightness(0.60) saturate(0.70);
-    --vg-hero-filter:  brightness(0.58) saturate(0.70);
+
+    /* Skeleton — more visible in light mode */
+    --vg-skel-bg:     #D0CBBD;
+    --vg-skel-shine:  rgba(122,86,15,0.12);
+
+    /* Image filters — lighter in light mode */
+    --vg-thumb-filter: brightness(0.75) saturate(0.80);
+    --vg-thumb-hover:  brightness(0.62) saturate(0.72);
+    --vg-hero-filter:  brightness(0.60) saturate(0.72);
+
+    /* Transition helper */
+    --vg-transition-color: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    --vg-gold-dim-card: rgba(122,86,15,0.07);
   }
 
   .dark {
@@ -112,8 +116,9 @@
     --vg-skel-bg:     rgba(255,255,255,0.05);
     --vg-skel-shine:  rgba(201,162,39,0.08);
     --vg-thumb-filter: brightness(0.48) saturate(0.55);
-    --vg-thumb-hover:  brightness(0.42) saturate(0.50);
+    --vg-thumb-hover:  brightness(0.40) saturate(0.48);
     --vg-hero-filter:  brightness(0.50) saturate(0.65);
+    --vg-gold-dim-card: rgba(201,162,39,0.08);
   }
 }
 
@@ -184,7 +189,7 @@
     flex-shrink: 0;
   }
 
-  /* FIX: light mode overline slightly darker for contrast */
+  /* Light mode overline — darker gold */
   :root:not(.dark) .vg-overline {
     color: var(--vg-gold-text);
   }
@@ -192,6 +197,7 @@
     background: var(--vg-gold-text);
   }
 
+  /* ── Primary Button ── */
   .vg-btn-primary {
     background: var(--vg-gold);
     color: #FFFFFF;
@@ -213,15 +219,16 @@
   .vg-btn-primary:hover { background: var(--vg-gold-2); transform: translateY(-1px); }
   .vg-btn-primary:active { transform: translateY(0); }
 
-  /* FIX: light mode button — darker gold for better contrast */
+  /* Light mode — slightly darker gold button */
   :root:not(.dark) .vg-btn-primary {
-    background: #7A560F;
+    background: #6E4C0C;
     color: #FFFFFF;
   }
   :root:not(.dark) .vg-btn-primary:hover {
-    background: #8A6412;
+    background: #7A560F;
   }
 
+  /* ── Outline Button ── */
   .vg-btn-outline {
     background: none;
     border: 1px solid var(--vg-gold-border);
@@ -232,7 +239,7 @@
     letter-spacing: 0.22em;
     text-transform: uppercase;
     padding: 0.9rem 2rem;
-    transition: background 0.3s, border-color 0.3s;
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
@@ -242,15 +249,15 @@
   }
   .vg-btn-outline:hover { background: var(--vg-gold-dim); border-color: var(--vg-gold); }
 
-  /* FIX: light mode outline button text */
+  /* Light mode outline button */
   :root:not(.dark) .vg-btn-outline {
     color: var(--vg-gold-text);
-    border-color: rgba(138,100,18,0.40);
+    border-color: rgba(122,86,15,0.35);
   }
   :root:not(.dark) .vg-btn-outline:hover {
     border-color: var(--vg-gold);
     color: var(--vg-gold);
-    background: rgba(138,100,18,0.10);
+    background: rgba(122,86,15,0.08);
   }
 
   .vg-card {
@@ -260,6 +267,7 @@
   }
   .vg-card:hover { border-color: var(--vg-gold-border); }
 
+  /* ── Badge ── */
   .vg-badge-outline {
     font-family: 'Space Mono', monospace;
     font-size: clamp(9px, 0.5rem, 11px);
@@ -275,11 +283,10 @@
     direction: ltr;
   }
 
-  /* FIX: badge in light mode */
   :root:not(.dark) .vg-badge-outline {
     color: var(--vg-gold-text);
-    background: rgba(138,100,18,0.12);
-    border-color: rgba(138,100,18,0.35);
+    background: rgba(122,86,15,0.09);
+    border-color: rgba(122,86,15,0.30);
   }
 
   .vg-badge-outline .dot {
@@ -290,6 +297,11 @@
     flex-shrink: 0;
   }
 
+  :root:not(.dark) .vg-badge-outline .dot {
+    background: var(--vg-gold-text);
+  }
+
+  /* ── Stat Number ── */
   .vg-stat-num {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-weight: 300;
@@ -298,7 +310,6 @@
     line-height: 1;
   }
 
-  /* FIX: stat numbers in light mode */
   :root:not(.dark) .vg-stat-num {
     color: var(--vg-gold-text);
   }
@@ -313,6 +324,7 @@
     direction: ltr;
   }
 
+  /* ── Ticker ── */
   .vg-ticker-wrap {
     overflow: hidden;
     border-top: 1px solid var(--vg-border);
@@ -336,26 +348,21 @@
   }
   .vg-ticker-item .tag { color: var(--vg-gold); margin-right: 0.4rem; }
 
-  .vg-section {
-    position: relative;
-    padding: clamp(3rem, 6vw, 7rem) clamp(1.5rem, 7vw, 5rem);
-    overflow: hidden;
-  }
-
-  /* ─── Hero always dark regardless of theme ─── */
-  .vg-hero-section {
+  /* ── Hero Section — ALWAYS DARK ── */
+  /* This section must NEVER show light-mode background */
+  .vg-hero-force-dark {
     background: #03020A !important;
     color: #F2EEE6 !important;
     isolation: isolate;
     contain: layout style;
   }
 
-  /* ─── Hotel Card ─── */
+  /* ── Hotel Card ── */
   .vg-hotel-card {
     position: relative;
     overflow: hidden;
     cursor: pointer;
-    background: var(--vg-bg-surface);
+    background: var(--vg-bg-card);
     border: 1px solid var(--vg-border);
     transition: border-color 0.4s;
     width: 100%;
@@ -367,7 +374,7 @@
     filter: var(--vg-thumb-hover);
   }
 
-  /* FIX: Image filter via CSS variable — different per light/dark mode */
+  /* Image filter via CSS variable — adapts light/dark */
   .vg-hotel-thumb {
     width: 100%; height: 100%;
     object-fit: cover;
@@ -380,10 +387,10 @@
     top: 1.1rem; right: 1.1rem;
     background: rgba(3,2,10,0.80);
     backdrop-filter: blur(8px);
-    border: 1px solid var(--vg-gold-border);
+    border: 1px solid rgba(201,162,39,0.40);
     font-family: 'Space Mono', monospace;
     font-size: clamp(9px, 0.58rem, 11px);
-    color: var(--vg-gold);
+    color: #F0D070;
     letter-spacing: 0.1em;
     padding: 0.28rem 0.75rem;
     z-index: 2;
@@ -391,13 +398,7 @@
     white-space: nowrap;
   }
 
-  /* FIX: price tag readable in light mode */
-  :root:not(.dark) .vg-price-tag {
-    color: #F0D070;
-    border-color: rgba(201,162,39,0.45);
-  }
-
-  /* Navbar */
+  /* ── Navbar ── */
   .vg-nav {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -410,19 +411,7 @@
     direction: ltr;
   }
 
-  .vg-nav--hero {
-    background: transparent !important;
-    border-bottom-color: transparent !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-
-  /* FIX: light mode navbar transparent only over hero */
-  :root:not(.dark) .vg-nav:not(.vg-nav--scrolled) {
-    background: transparent !important;
-    border-bottom-color: transparent !important;
-  }
-
+  /* ── Reveal Animation ── */
   .vg-reveal {
     opacity: 0;
     transform: translateY(32px);
@@ -434,6 +423,7 @@
   .vg-reveal.d3 { transition-delay: 0.25s; }
   .vg-reveal.d4 { transition-delay: 0.35s; }
 
+  /* ── Feature Item ── */
   .vg-feat {
     display: flex;
     gap: 1.1rem;
@@ -441,19 +431,18 @@
     padding: 1.3rem 1.4rem;
     background: var(--vg-bg-card);
     border-bottom: 0.5px solid var(--vg-border);
-    transition: background 0.35s;
+    transition: background 0.25s, border-color 0.25s;
     cursor: default;
     direction: ltr;
   }
-
   .vg-feat:hover { background: var(--vg-gold-dim2); }
 
-  /* FIX: hover more visible in light mode */
   :root:not(.dark) .vg-feat:hover {
-    background: rgba(138,100,18,0.09);
-    border-color: rgba(138,100,18,0.20);
+    background: rgba(122,86,15,0.07);
+    border-color: rgba(122,86,15,0.18);
   }
 
+  /* ── Feature Icon ── */
   .vg-feat-icon {
     width: 34px; height: 34px; min-width: 34px;
     border: 0.5px solid var(--vg-gold-border);
@@ -462,12 +451,12 @@
     flex-shrink: 0;
   }
 
-  /* FIX: feat icon in light mode */
   :root:not(.dark) .vg-feat-icon {
-    border-color: rgba(138,100,18,0.40);
+    border-color: rgba(122,86,15,0.35);
     color: var(--vg-gold-text);
   }
 
+  /* ── Pi Step ── */
   .vg-pi-step {
     display: flex;
     align-items: center;
@@ -475,15 +464,20 @@
     padding: 1rem 1.1rem;
     background: var(--vg-bg-card);
     border-bottom: 0.5px solid var(--vg-border);
-    transition: background 0.3s;
+    transition: background 0.25s;
     cursor: default;
     direction: ltr;
   }
   .vg-pi-step:hover { background: var(--vg-gold-dim2); }
 
-  /* FIX: pi-step hover in light mode */
   :root:not(.dark) .vg-pi-step:hover {
-    background: rgba(138,100,18,0.09);
+    background: rgba(122,86,15,0.07);
+  }
+
+  /* ── Hover Card States (Light Mode) ── */
+  :root:not(.dark) .vg-hotel-card:hover {
+    border-color: rgba(122,86,15,0.35);
+    background: #FDFCF8;
   }
 }
 
@@ -512,7 +506,6 @@
     color: var(--vg-text) !important;
     border-color: var(--vg-border-2) !important;
   }
-  .dark input::placeholder, .dark textarea::placeholder { color: var(--vg-text-3) !important; }
 
   .text-primary   { color: var(--vg-gold) !important; }
   .bg-primary     { background-color: var(--vg-gold) !important; }
@@ -553,7 +546,7 @@ body::after {
   opacity: 0.022;
 }
 
-/* FIX: reduce grain in light mode so it doesn't overpower */
+/* Less grain in light mode */
 :root:not(.dark) body::after {
   opacity: 0.010;
 }
@@ -576,7 +569,7 @@ body::after {
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--vg-gold-border); border-radius: 2px; }
-:root:not(.dark)::-webkit-scrollbar-thumb { background: rgba(138,100,18,0.35); }
+:root:not(.dark)::-webkit-scrollbar-thumb { background: rgba(122,86,15,0.30); }
 
 /* ─────────────────────────────────────────────
    CURSOR
@@ -624,4 +617,39 @@ body::after {
     transition-duration: 0.01ms !important;
   }
   .vg-ticker-inner { animation: none; }
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — SECTION SEPARATOR LINES
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-section-border-top {
+  border-top: 1px solid rgba(26,18,8,0.12);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — FORM INPUTS BETTER CONTRAST
+───────────────────────────────────────────── */
+:root:not(.dark) input:not([type='checkbox']):not([type='radio']):not([type='range']),
+:root:not(.dark) select,
+:root:not(.dark) textarea {
+  background-color: #FDFCF8;
+  border-color: rgba(26,18,8,0.18);
+  color: #1A1208;
+}
+
+:root:not(.dark) input:focus:not([type='checkbox']):not([type='radio']):not([type='range']),
+:root:not(.dark) select:focus,
+:root:not(.dark) textarea:focus {
+  border-color: rgba(122,86,15,0.50);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(122,86,15,0.10);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — DROPDOWN / SELECT SOLID BG
+───────────────────────────────────────────── */
+:root:not(.dark) [style*="background: 'var(--vg-bg-card)'"],
+:root:not(.dark) [data-dropdown] {
+  background-color: #FFFFFF;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
 }
