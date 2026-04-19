@@ -1,5 +1,7 @@
 'use client';
 // PATH: src/app/[locale]/attractions/page.tsx
+// FIX: Skeleton shimmer uses CSS variable — visible in light mode
+// FIX: Image filter via vg-hotel-thumb CSS class (handled in globals.css)
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Search, MapPin, Star, Clock, Ticket, Heart, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -8,16 +10,30 @@ import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 import { VG } from '@/lib/tokens';
 
+// FIX: skeleton shimmer now uses CSS variable defined in globals.css
 function SkeletonCard() {
   return (
     <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', overflow: 'hidden' }}>
-      <div style={{ height: '200px', background: 'var(--vg-bg-surface)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,transparent 0%,rgba(201,162,39,0.06) 50%,transparent 100%)', animation: 'shimmer 1.8s infinite' }} />
+      <div style={{ height: '200px', background: 'var(--vg-skel-bg, var(--vg-bg-surface))', position: 'relative', overflow: 'hidden' }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(90deg, transparent 0%, var(--vg-skel-shine, rgba(201,162,39,0.08)) 50%, transparent 100%)',
+          animation: 'shimmer 1.8s infinite',
+        }} />
       </div>
       <div style={{ padding: '1.2rem' }}>
         {[75, 55, 40].map((w, i) => (
-          <div key={i} style={{ height: '9px', background: 'var(--vg-bg-surface)', marginBottom: '0.6rem', width: `${w}%`, position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,transparent 0%,rgba(201,162,39,0.06) 50%,transparent 100%)', animation: `shimmer 1.8s infinite ${i * 0.2}s` }} />
+          <div key={i} style={{
+            height: '9px',
+            background: 'var(--vg-skel-bg, var(--vg-bg-surface))',
+            marginBottom: '0.6rem', width: `${w}%`,
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(90deg, transparent 0%, var(--vg-skel-shine, rgba(201,162,39,0.08)) 50%, transparent 100%)',
+              animation: `shimmer 1.8s infinite ${i * 0.2}s`,
+            }} />
           </div>
         ))}
       </div>
@@ -26,7 +42,6 @@ function SkeletonCard() {
   );
 }
 
-// Smart pagination: shows first, last, current ±2 with ellipsis
 function PaginationBar({
   currentPage,
   totalPages,
@@ -48,16 +63,13 @@ function PaginationBar({
       (i >= currentPage - delta && i <= currentPage + delta)
     ) {
       pages.push(i);
-    } else if (
-      pages[pages.length - 1] !== 'ellipsis'
-    ) {
+    } else if (pages[pages.length - 1] !== 'ellipsis') {
       pages.push('ellipsis');
     }
   }
 
   const btnStyle = (active: boolean): React.CSSProperties => ({
-    width: '38px',
-    height: '38px',
+    width: '38px', height: '38px',
     background: active ? 'var(--vg-gold)' : 'none',
     border: `1px solid ${active ? 'var(--vg-gold)' : 'var(--vg-border)'}`,
     color: active ? 'var(--vg-bg)' : 'var(--vg-text-2)',
@@ -65,9 +77,7 @@ function PaginationBar({
     fontSize: VG.font.tiny,
     cursor: active ? 'default' : 'pointer',
     transition: 'all 0.2s',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
   });
 
   return (
@@ -146,25 +156,16 @@ export default function AttractionsPage() {
   };
 
   const inputStyle: React.CSSProperties = {
-    width: '100%',
-    boxSizing: 'border-box',
-    background: 'var(--vg-bg-surface)',
-    border: '1px solid var(--vg-border)',
-    padding: '0.65rem 0.8rem',
-    fontFamily: 'var(--font-dm-sans)',
-    fontSize: VG.font.body,
-    color: 'var(--vg-text)',
-    outline: 'none',
+    width: '100%', boxSizing: 'border-box',
+    background: 'var(--vg-bg-surface)', border: '1px solid var(--vg-border)',
+    padding: '0.65rem 0.8rem', fontFamily: 'var(--font-dm-sans)',
+    fontSize: VG.font.body, color: 'var(--vg-text)', outline: 'none',
   };
 
   const labelStyle: React.CSSProperties = {
-    fontFamily: 'var(--font-space-mono)',
-    fontSize: VG.font.micro,
-    letterSpacing: '0.2em',
-    textTransform: 'uppercase',
-    color: 'var(--vg-text-3)',
-    display: 'block',
-    marginBottom: '0.5rem',
+    fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro,
+    letterSpacing: '0.2em', textTransform: 'uppercase',
+    color: 'var(--vg-text-3)', display: 'block', marginBottom: '0.5rem',
   };
 
   return (
@@ -175,8 +176,7 @@ export default function AttractionsPage() {
         background: 'var(--vg-bg-surface)',
         borderBottom: '1px solid var(--vg-border)',
         padding: 'clamp(3rem,6vw,5rem) clamp(1.5rem,7vw,5rem) 0',
-        position: 'relative',
-        overflow: 'hidden',
+        position: 'relative', overflow: 'hidden',
       }}>
         <div style={{ position: 'absolute', top: 0, right: 0, width: '40%', height: '100%', background: 'radial-gradient(ellipse at right top, rgba(201,162,39,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div className="vg-overline" style={{ marginBottom: '1rem' }}>Discover</div>
@@ -209,19 +209,12 @@ export default function AttractionsPage() {
             onClick={() => setShowFilters(!showFilters)}
             style={{
               background: showFilters ? 'var(--vg-gold-dim)' : 'var(--vg-bg-card)',
-              border: '1px solid var(--vg-border)',
-              borderLeft: 'none',
-              cursor: 'pointer',
-              padding: '0.9rem 1.1rem',
+              border: '1px solid var(--vg-border)', borderLeft: 'none',
+              cursor: 'pointer', padding: '0.9rem 1.1rem',
               color: showFilters ? 'var(--vg-gold)' : 'var(--vg-text-3)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: VG.font.micro,
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
-              transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro,
+              letterSpacing: '0.15em', textTransform: 'uppercase', transition: 'all 0.2s',
             }}
           >
             <SlidersHorizontal size={13} /> Filters
@@ -235,11 +228,7 @@ export default function AttractionsPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1.2rem', maxWidth: '680px' }}>
             <div>
               <label style={labelStyle}>Category</label>
-              <select
-                value={filters.category}
-                onChange={e => setFilters({ ...filters, category: e.target.value })}
-                style={{ ...inputStyle, cursor: 'pointer' }}
-              >
+              <select value={filters.category} onChange={e => setFilters({ ...filters, category: e.target.value })} style={{ ...inputStyle, cursor: 'pointer' }}>
                 <option value="">All Categories</option>
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -365,7 +354,6 @@ export default function AttractionsPage() {
                           {formatCurrency(attraction.ticketPrice, attraction.currency)}
                         </span>
                       </div>
-                      {/* FIX: was 0.38rem — now VG.font.micro (0.65rem) */}
                       <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.12em', color: 'var(--vg-text-3)' }}>
                         PER PERSON
                       </div>
