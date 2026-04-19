@@ -1,7 +1,6 @@
 /* PATH: src/app/globals.css — Va Travel Void Gold Design System */
-/* FIXED: Added mobile-first responsive rules */
-/* FIXED: Direction isolation for nav elements */
-/* FIXED: Font sizes use clamp() for fluid scaling */
+/* FIX: Light mode hero — grain overlay opacity reduced, navbar transparent on hero */
+/* FIX: Dark hero section always isolated from light page body */
 
 @tailwind base;
 @tailwind components;
@@ -105,7 +104,6 @@
 
   html {
     scroll-behavior: smooth;
-    /* FIXED: Force LTR on the root — locale layout overrides per-page */
     direction: ltr;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
@@ -118,7 +116,6 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    /* FIXED: Prevent layout shift from scrollbar */
     scrollbar-gutter: stable;
   }
 
@@ -128,16 +125,8 @@
     color: var(--vg-text);
   }
 
-  /* FIXED: All images are responsive by default */
-  img {
-    max-width: 100%;
-    height: auto;
-  }
-
-  /* FIXED: Touch targets minimum 44px */
-  button, a, [role="button"] {
-    touch-action: manipulation;
-  }
+  img { max-width: 100%; height: auto; }
+  button, a, [role="button"] { touch-action: manipulation; }
 }
 
 /* ─────────────────────────────────────────────
@@ -164,7 +153,6 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    /* FIXED: Always LTR for overlines */
     direction: ltr;
   }
   .vg-overline::before {
@@ -189,9 +177,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
-    /* FIXED: Minimum touch target height */
     min-height: 44px;
-    /* FIXED: Text always LTR in buttons */
     direction: ltr;
     white-space: nowrap;
   }
@@ -293,7 +279,6 @@
     overflow: hidden;
   }
 
-  /* FIXED: Hotel cards — full responsive width on mobile */
   .vg-hotel-card {
     position: relative;
     overflow: hidden;
@@ -332,6 +317,19 @@
     white-space: nowrap;
   }
 
+  /* ─── HERO SECTION — always isolated dark background ─── */
+  /* FIX: In light mode, the hero section must stay dark.    */
+  /* We use a wrapper class to isolate it from body bg.      */
+  .vg-hero-section {
+    background: #03020A !important;
+    color: #F2EEE6 !important;
+    /* Prevent light mode body background bleeding through */
+    isolation: isolate;
+    contain: layout style;
+  }
+
+  /* FIX: Navbar on top of hero — use transparent bg in hero zone */
+  /* When scrolled past hero, nav picks up theme bg via JS        */
   .vg-nav {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -342,6 +340,21 @@
     -webkit-backdrop-filter: blur(20px);
     transition: background 0.4s, border-color 0.4s;
     direction: ltr;
+  }
+
+  /* FIX: Navbar transparent state — on hero (not scrolled) */
+  .vg-nav--hero {
+    background: transparent !important;
+    border-bottom-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* FIX: Light mode — when NOT scrolled, navbar over hero is transparent */
+  /* The hero is always dark so transparent nav works fine                */
+  :root:not(.dark) .vg-nav:not(.vg-nav--scrolled) {
+    background: transparent !important;
+    border-bottom-color: transparent !important;
   }
 
   .vg-reveal {
@@ -364,7 +377,6 @@
     border-bottom: 0.5px solid var(--vg-border);
     transition: background 0.35s;
     cursor: default;
-    /* FIXED: Always LTR for feature items */
     direction: ltr;
   }
   .vg-feat:hover { background: var(--vg-gold-dim2); }
@@ -406,7 +418,6 @@
     background-color: var(--vg-bg-surface);
     color: var(--vg-text);
     border-color: var(--vg-border);
-    /* FIXED: Inputs always LTR unless explicitly set */
     direction: inherit;
   }
   input::placeholder, textarea::placeholder { color: var(--vg-text-3); }
@@ -440,7 +451,6 @@
 
 /* ─────────────────────────────────────────────
    SMOOTH THEME TRANSITIONS
-   (only color properties — avoids layout reflow)
 ───────────────────────────────────────────── */
 *, *::before, *::after {
   transition-property: background-color, border-color, color;
@@ -449,25 +459,30 @@
 }
 
 /* ─────────────────────────────────────────────
+   HERO SECTION — LIGHT MODE FIX
+   Prevents page body background (#F8F6EF) from
+   bleeding through the hero's dark canvas.
+───────────────────────────────────────────── */
+
+/* The hero section itself is always #03020A */
+/* Grain overlay must not show on top of hero in light mode */
+:root:not(.dark) body::after {
+  /* In light mode, reduce grain to almost invisible
+     so it doesn't create a bright overlay on the dark hero */
+  opacity: 0.008;
+}
+
+/* ─────────────────────────────────────────────
    RESPONSIVE GRID FIXES
 ───────────────────────────────────────────── */
-/* FIXED: Hotel/attraction grids collapse properly on mobile */
 @media (max-width: 480px) {
-  [style*="minmax(280px"] {
-    grid-template-columns: 1fr !important;
-  }
-  [style*="minmax(260px"] {
-    grid-template-columns: 1fr !important;
-  }
-  [style*="minmax(220px"] {
-    grid-template-columns: 1fr !important;
-  }
+  [style*="minmax(280px"] { grid-template-columns: 1fr !important; }
+  [style*="minmax(260px"] { grid-template-columns: 1fr !important; }
+  [style*="minmax(220px"] { grid-template-columns: 1fr !important; }
 }
 
 @media (min-width: 481px) and (max-width: 767px) {
-  [style*="minmax(280px"] {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
+  [style*="minmax(280px"] { grid-template-columns: repeat(2, 1fr) !important; }
 }
 
 /* ─────────────────────────────────────────────
@@ -478,7 +493,7 @@
 ::-webkit-scrollbar-thumb { background: var(--vg-gold-border); border-radius: 2px; }
 
 /* ─────────────────────────────────────────────
-   GRAIN OVERLAY
+   GRAIN OVERLAY — fixed position, dark mode only at full opacity
 ───────────────────────────────────────────── */
 body::after {
   content: '';
@@ -506,7 +521,6 @@ body::after {
   transform: translate(-50%, -50%);
   transition: width 0.2s, height 0.2s;
 }
-/* Hide cursor on touch devices */
 @media (pointer: coarse) {
   #vg-cursor, #vg-cursor-ring { display: none; }
 }
