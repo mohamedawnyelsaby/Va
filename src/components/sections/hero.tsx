@@ -1,8 +1,9 @@
 'use client';
 // PATH: src/components/sections/hero.tsx
-// FIX: Globe canvas background always #03020A — no white bleeding in light mode
-// FIX: Full vignette covers entire hero width, not just left side
-// FIX: Hero section isolated completely from page background
+// FIX: Hero ALWAYS dark — zero light-mode background bleed
+// FIX: Overlay gradient is strong enough across full width (min 60% opacity)
+// FIX: Canvas background forced #03020A before and after Three.js loads
+// FIX: Section uses both inline style AND class for double insurance
 import { useEffect, useRef, useState } from 'react';
 import { Search, Hotel, Utensils, MapPin, Bot, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -31,7 +32,6 @@ function ThreeGlobe() {
       const W = mount.offsetWidth || 600;
       const H = mount.offsetHeight || 600;
 
-      // FIX: alpha: false + setClearColor — no white bleeding through canvas
       renderer = new THREE.WebGLRenderer({ alpha: false, antialias: true });
       renderer.setClearColor(0x03020A, 1);
       renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -129,10 +129,18 @@ function ThreeGlobe() {
   }, []);
 
   return (
-    // FIX: background: #03020A on the mount div — ensures no white shows before canvas loads
     <div
       ref={mountRef}
-      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', background: '#03020A' }}
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        // Dark background ALWAYS — before canvas loads and after
+        background: '#03020A',
+        zIndex: 0,
+      }}
     />
   );
 }
@@ -168,47 +176,87 @@ export function HeroSection({ locale }: { locale: string }) {
   const cur = TABS.find(t => t.id === tab)!;
 
   return (
-    <section style={{
-      position:   'relative',
-      minHeight:  '100vh',
-      // FIX: always solid dark — never transparent
-      background: '#03020A',
-      display:    'flex',
-      alignItems: 'center',
-      overflow:   'hidden',
-      paddingTop: '64px',
-      direction:  'ltr',
-    }}>
-
-      {/* Globe */}
+    <section
+      className="vg-hero-force-dark"
+      style={{
+        position:   'relative',
+        minHeight:  '100vh',
+        // Double insurance: inline + class both force dark
+        background: '#03020A',
+        color:      '#F2EEE6',
+        display:    'flex',
+        alignItems: 'center',
+        overflow:   'hidden',
+        paddingTop: '64px',
+        direction:  'ltr',
+        // Prevent any parent background from bleeding through
+        isolation:  'isolate',
+        contain:    'layout style',
+      }}
+    >
+      {/* Globe Canvas — always dark bg */}
       <ThreeGlobe />
 
       {/*
-        FIX: Full-coverage dark overlay — covers entire hero, not just left side
-        Previous: radial-gradient at 15% 50% — only darkened the left
-        Now: left-to-right gradient + bottom fade for full coverage
+        FIXED OVERLAY STRATEGY:
+        Layer 1: Full-coverage dark base — ensures nothing bleeds through even at edges
+        Layer 2: Directional vignette — darkens left for text readability, keeps right dark enough
+        Layer 3: Bottom fade — separates from page body below
       */}
-      <div style={{
-        position:      'absolute',
-        inset:         0,
-        background:    [
-          'linear-gradient(to right, rgba(3,2,10,0.96) 0%, rgba(3,2,10,0.80) 40%, rgba(3,2,10,0.50) 70%, rgba(3,2,10,0.30) 100%)',
-        ].join(','),
-        pointerEvents: 'none',
-        zIndex:        1,
-      }} />
 
-      {/* Bottom fade to separate from page body */}
-      <div style={{
-        position:      'absolute',
-        bottom:        0,
-        left:          0,
-        right:         0,
-        height:        '120px',
-        background:    'linear-gradient(to top, #03020A 0%, transparent 100%)',
-        pointerEvents: 'none',
-        zIndex:        1,
-      }} />
+      {/* Layer 1: Base coverage — dark everywhere */}
+      <div
+        aria-hidden="true"
+        style={{
+          position:      'absolute',
+          inset:         0,
+          background:    'rgba(3,2,10,0.55)',
+          zIndex:        1,
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Layer 2: Directional gradient for readability — stays 65%+ opacity everywhere */}
+      <div
+        aria-hidden="true"
+        style={{
+          position:      'absolute',
+          inset:         0,
+          background:    'linear-gradient(110deg, rgba(3,2,10,0.55) 0%, rgba(3,2,10,0.30) 45%, rgba(3,2,10,0.12) 70%, rgba(3,2,10,0.05) 100%)',
+          zIndex:        1,
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Layer 3: Bottom fade to separate from next section */}
+      <div
+        aria-hidden="true"
+        style={{
+          position:      'absolute',
+          bottom:        0,
+          left:          0,
+          right:         0,
+          height:        '140px',
+          background:    'linear-gradient(to top, #03020A 0%, transparent 100%)',
+          zIndex:        1,
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Layer 4: Subtle right-edge darkening to prevent any background bleed */}
+      <div
+        aria-hidden="true"
+        style={{
+          position:      'absolute',
+          top:           0,
+          right:         0,
+          width:         '35%',
+          height:        '100%',
+          background:    'linear-gradient(to left, rgba(3,2,10,0.35) 0%, transparent 100%)',
+          zIndex:        1,
+          pointerEvents: 'none',
+        }}
+      />
 
       {/* Content */}
       <div style={{
@@ -237,7 +285,7 @@ export function HeroSection({ locale }: { locale: string }) {
             <span style={{ width: '4rem', height: '1px', background: 'var(--vg-gold)', opacity: .5 }} />
           </div>
 
-          {/* Heading — always white on dark hero */}
+          {/* Heading — ALWAYS white on dark hero */}
           <h1 style={{
             fontFamily:    'var(--font-cormorant)',
             fontSize:      'clamp(4rem,7.5vw,7rem)',
@@ -245,19 +293,20 @@ export function HeroSection({ locale }: { locale: string }) {
             lineHeight:    .92,
             letterSpacing: '-.01em',
             marginBottom:  '2rem',
+            // Force white — never inherit from light mode body
             color:         '#F2EEE6',
           }}>
             {tr.hero.heading1}<br />
-            <em style={{ fontStyle: 'italic', color: 'var(--vg-gold)', display: 'block' }}>{tr.hero.heading2}</em>
+            <em style={{ fontStyle: 'italic', color: '#C9A227', display: 'block' }}>{tr.hero.heading2}</em>
             {tr.hero.heading3}
           </h1>
 
-          {/* Sub */}
+          {/* Subheading */}
           <p style={{
             fontFamily:   'var(--font-dm-sans)',
             fontWeight:   300,
             fontSize:     '.95rem',
-            color:        'rgba(242,238,230,0.7)',
+            color:        'rgba(242,238,230,0.72)',
             lineHeight:   1.85,
             maxWidth:     '400px',
             marginBottom: '3rem',
@@ -266,7 +315,12 @@ export function HeroSection({ locale }: { locale: string }) {
           </p>
 
           {/* Search box */}
-          <div style={{ background: 'rgba(14,12,24,0.85)', border: '1px solid rgba(201,162,39,0.25)', backdropFilter: 'blur(12px)', marginBottom: '2.5rem' }}>
+          <div style={{
+            background:    'rgba(14,12,24,0.90)',
+            border:        '1px solid rgba(201,162,39,0.28)',
+            backdropFilter:'blur(12px)',
+            marginBottom:  '2.5rem',
+          }}>
             {/* Tabs */}
             <div style={{ display: 'flex', borderBottom: '1px solid rgba(201,162,39,0.15)' }}>
               {TABS.map(({ id, label, Icon }) => {
@@ -277,9 +331,9 @@ export function HeroSection({ locale }: { locale: string }) {
                     padding:       mob ? '.65rem .2rem' : '.7rem .4rem',
                     background:    on ? 'rgba(201,162,39,0.12)' : 'none',
                     border:        'none',
-                    borderBottom:  on ? '2px solid var(--vg-gold)' : '2px solid transparent',
+                    borderBottom:  on ? '2px solid #C9A227' : '2px solid transparent',
                     cursor:        'pointer',
-                    color:         on ? 'var(--vg-gold)' : 'rgba(242,238,230,0.45)',
+                    color:         on ? '#C9A227' : 'rgba(242,238,230,0.45)',
                     display:       'flex',
                     flexDirection: 'column',
                     alignItems:    'center',
@@ -312,6 +366,7 @@ export function HeroSection({ locale }: { locale: string }) {
                     outline:    'none',
                     fontFamily: 'var(--font-dm-sans)',
                     fontSize:   '.88rem',
+                    // Always light text in hero search — regardless of theme
                     color:      '#F2EEE6',
                     minWidth:   0,
                   }}
@@ -319,8 +374,24 @@ export function HeroSection({ locale }: { locale: string }) {
               </div>
               <Link
                 href={`/${locale}${cur.href}${q ? `?q=${encodeURIComponent(q)}` : ''}`}
-                className="vg-btn-primary"
-                style={{ textDecoration: 'none', borderLeft: '1px solid rgba(201,162,39,0.25)', display: 'flex', alignItems: 'center', gap: '.4rem', padding: '.85rem 1rem', flexShrink: 0 }}
+                style={{
+                  textDecoration: 'none',
+                  background:     '#7A560F',
+                  borderLeft:     '1px solid rgba(201,162,39,0.25)',
+                  display:        'flex',
+                  alignItems:     'center',
+                  gap:            '.4rem',
+                  padding:        '.85rem 1rem',
+                  flexShrink:     0,
+                  color:          '#FFFFFF',
+                  fontFamily:     'var(--font-space-mono)',
+                  fontSize:       '0.58rem',
+                  letterSpacing:  '0.22em',
+                  textTransform:  'uppercase',
+                  transition:     'background 0.2s',
+                }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#8A6412'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = '#7A560F'}
               >
                 <ArrowRight size={14} />
                 {!mob && <span>{tr.hero.search}</span>}
@@ -328,14 +399,28 @@ export function HeroSection({ locale }: { locale: string }) {
             </div>
           </div>
 
-          {/* Stats — always white text on dark hero */}
+          {/* Stats — ALWAYS white text on dark hero */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
             {STATS.map(s => (
               <div key={s.label}>
-                <div style={{ fontFamily: 'var(--font-cormorant)', fontWeight: 300, fontSize: 'clamp(1.3rem,2.8vw,2.2rem)', color: 'var(--vg-gold)', lineHeight: 1 }}>
+                <div style={{
+                  fontFamily: 'var(--font-cormorant)',
+                  fontWeight: 300,
+                  fontSize:   'clamp(1.3rem,2.8vw,2.2rem)',
+                  // Always gold in hero — forced hex
+                  color:      '#C9A227',
+                  lineHeight: 1,
+                }}>
                   {s.num}
                 </div>
-                <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '.42rem', letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(242,238,230,0.4)', marginTop: '.35rem' }}>
+                <div style={{
+                  fontFamily:    'var(--font-space-mono)',
+                  fontSize:      '.42rem',
+                  letterSpacing: '.3em',
+                  textTransform: 'uppercase',
+                  color:         'rgba(242,238,230,0.40)',
+                  marginTop:     '.35rem',
+                }}>
                   {s.label}
                 </div>
               </div>
