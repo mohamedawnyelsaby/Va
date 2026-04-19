@@ -1,5 +1,7 @@
 'use client';
 // PATH: src/components/sections/popular-destinations.tsx
+// FIX: Image filter now uses CSS class vg-hotel-thumb — adapts to light/dark via globals.css
+// FIX: inline image style removed so the CSS variable --vg-thumb-filter takes effect
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
@@ -57,16 +59,24 @@ export function PopularDestinations({ locale }: { locale: string }) {
               className="vg-hotel-card"
               style={{ height: '280px', display: 'block', textDecoration: 'none', position: 'relative', overflow: 'hidden' }}
             >
+              {/*
+                FIX: removed inline style={{ filter: '...' }} so the CSS class
+                vg-hotel-thumb can apply its own filter via --vg-thumb-filter variable
+                which is brightness(0.72) in light mode vs brightness(0.48) in dark mode
+              */}
               <img src={dest.img} alt={dest.city} className="vg-hotel-thumb" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+
               <div className="vg-price-tag">{dest.price}</div>
+
               <div style={{ position: 'absolute', top: '1.1rem', left: '1.1rem', background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', padding: '0.2rem 0.6rem', fontFamily: 'var(--font-space-mono)', fontSize: '0.44rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--vg-gold)', zIndex: 2 }}>
                 {dest.tag}
               </div>
+
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(3,2,10,0.9) 0%, transparent 100%)', padding: '2rem 1.2rem 1.1rem', zIndex: 2 }}>
-                <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.6rem', fontWeight: 300, color: 'var(--vg-text)', lineHeight: 1 }}>
+                <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.6rem', fontWeight: 300, color: '#F2EEE6', lineHeight: 1 }}>
                   {dest.city}
                 </div>
-                <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.46rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--vg-text-3)', marginTop: '0.3rem' }}>
+                <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.46rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(242,238,230,0.55)', marginTop: '0.3rem' }}>
                   {dest.country}
                 </div>
               </div>
