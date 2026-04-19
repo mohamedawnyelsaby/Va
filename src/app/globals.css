@@ -1,6 +1,5 @@
 /* PATH: src/app/globals.css — Va Travel Void Gold Design System */
-/* FIX: Light mode hero — grain overlay opacity reduced, navbar transparent on hero */
-/* FIX: Dark hero section always isolated from light page body */
+/* FIX: Light mode — image filters, border visibility, skeleton shimmer, hover states */
 
 @tailwind base;
 @tailwind components;
@@ -38,19 +37,27 @@
     --vg-bg-deep:     #E3DED0;
     --vg-text:        #1A1208;
     --vg-text-2:      rgba(26,18,8,0.62);
-    --vg-text-3:      rgba(26,18,8,0.35);
+    --vg-text-3:      rgba(26,18,8,0.38);
     --vg-gold:        #8A6412;
     --vg-gold-2:      #A07820;
     --vg-gold-3:      #C9A227;
-    --vg-gold-dim:    rgba(138,100,18,0.10);
-    --vg-gold-dim2:   rgba(138,100,18,0.05);
-    --vg-gold-border: rgba(138,100,18,0.25);
-    --vg-gold-text:   #6B4C08;
-    --vg-border:      rgba(26,18,8,0.09);
-    --vg-border-2:    rgba(26,18,8,0.16);
+    --vg-gold-dim:    rgba(138,100,18,0.12);
+    --vg-gold-dim2:   rgba(138,100,18,0.09);
+    --vg-gold-border: rgba(138,100,18,0.30);
+    --vg-gold-text:   #5C3A06;
+    /* FIX: stronger borders in light mode so 1px grid gaps are visible */
+    --vg-border:      rgba(26,18,8,0.14);
+    --vg-border-2:    rgba(26,18,8,0.24);
     --vg-nav-bg:      rgba(248,246,239,0.95);
-    --vg-nav-border:  rgba(26,18,8,0.08);
-    --vg-star:        #B07D10;
+    --vg-nav-border:  rgba(26,18,8,0.10);
+    --vg-star:        #8A5E08;
+    /* FIX: skeleton shimmer more visible in light mode */
+    --vg-skel-bg:     #D6D1C4;
+    --vg-skel-shine:  rgba(138,100,18,0.14);
+    /* FIX: image filter lighter in light mode */
+    --vg-thumb-filter: brightness(0.72) saturate(0.78);
+    --vg-thumb-hover:  brightness(0.60) saturate(0.70);
+    --vg-hero-filter:  brightness(0.58) saturate(0.70);
   }
 
   .dark {
@@ -93,6 +100,13 @@
     --vg-nav-bg:      rgba(3,2,10,0.94);
     --vg-nav-border:  rgba(242,238,230,0.06);
     --vg-star:        #E8C255;
+    /* dark mode skeleton */
+    --vg-skel-bg:     rgba(255,255,255,0.05);
+    --vg-skel-shine:  rgba(201,162,39,0.08);
+    /* dark mode image filters */
+    --vg-thumb-filter: brightness(0.48) saturate(0.55);
+    --vg-thumb-hover:  brightness(0.42) saturate(0.50);
+    --vg-hero-filter:  brightness(0.50) saturate(0.65);
   }
 }
 
@@ -184,6 +198,11 @@
   .vg-btn-primary:hover { background: var(--vg-gold-2); transform: translateY(-1px); }
   .vg-btn-primary:active { transform: translateY(0); }
 
+  /* FIX: light mode button text contrast */
+  :root:not(.dark) .vg-btn-primary {
+    color: #FFFFFF;
+  }
+
   .vg-btn-outline {
     background: none;
     border: 1px solid var(--vg-gold-border);
@@ -203,6 +222,16 @@
     white-space: nowrap;
   }
   .vg-btn-outline:hover { background: var(--vg-gold-dim); border-color: var(--vg-gold); }
+
+  /* FIX: light mode outline button stronger color */
+  :root:not(.dark) .vg-btn-outline {
+    color: var(--vg-gold-text);
+    border-color: rgba(138,100,18,0.40);
+  }
+  :root:not(.dark) .vg-btn-outline:hover {
+    border-color: var(--vg-gold);
+    color: var(--vg-gold);
+  }
 
   .vg-card {
     background: var(--vg-bg-card);
@@ -225,6 +254,14 @@
     gap: 0.4rem;
     direction: ltr;
   }
+
+  /* FIX: badge text in light mode */
+  :root:not(.dark) .vg-badge-outline {
+    color: var(--vg-gold-text);
+    background: rgba(138,100,18,0.14);
+    border-color: rgba(138,100,18,0.38);
+  }
+
   .vg-badge-outline .dot {
     width: 5px; height: 5px;
     border-radius: 50%;
@@ -240,6 +277,12 @@
     color: var(--vg-gold);
     line-height: 1;
   }
+
+  /* FIX: stat numbers slightly darker in light mode for contrast */
+  :root:not(.dark) .vg-stat-num {
+    color: var(--vg-gold-text);
+  }
+
   .vg-stat-label {
     font-family: 'Space Mono', monospace;
     font-size: clamp(9px, 0.52rem, 11px);
@@ -279,6 +322,7 @@
     overflow: hidden;
   }
 
+  /* ─── Hotel Card ─── */
   .vg-hotel-card {
     position: relative;
     overflow: hidden;
@@ -292,12 +336,14 @@
   .vg-hotel-card:hover { border-color: var(--vg-gold-border); }
   .vg-hotel-card:hover .vg-hotel-thumb {
     transform: scale(1.06);
-    filter: brightness(0.42) saturate(0.5);
+    filter: var(--vg-thumb-hover);
   }
+
+  /* FIX: Image filter via CSS variable — different per mode */
   .vg-hotel-thumb {
     width: 100%; height: 100%;
     object-fit: cover;
-    filter: brightness(0.48) saturate(0.55);
+    filter: var(--vg-thumb-filter);
     transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.5s;
   }
 
@@ -317,19 +363,20 @@
     white-space: nowrap;
   }
 
-  /* ─── HERO SECTION — always isolated dark background ─── */
-  /* FIX: In light mode, the hero section must stay dark.    */
-  /* We use a wrapper class to isolate it from body bg.      */
+  /* FIX: price tag in light mode — more readable gold */
+  :root:not(.dark) .vg-price-tag {
+    color: #F0D070;
+    border-color: rgba(201,162,39,0.40);
+  }
+
+  /* ─── Hero Section — always isolated dark background ─── */
   .vg-hero-section {
     background: #03020A !important;
     color: #F2EEE6 !important;
-    /* Prevent light mode body background bleeding through */
     isolation: isolate;
     contain: layout style;
   }
 
-  /* FIX: Navbar on top of hero — use transparent bg in hero zone */
-  /* When scrolled past hero, nav picks up theme bg via JS        */
   .vg-nav {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -342,7 +389,6 @@
     direction: ltr;
   }
 
-  /* FIX: Navbar transparent state — on hero (not scrolled) */
   .vg-nav--hero {
     background: transparent !important;
     border-bottom-color: transparent !important;
@@ -350,8 +396,6 @@
     -webkit-backdrop-filter: none !important;
   }
 
-  /* FIX: Light mode — when NOT scrolled, navbar over hero is transparent */
-  /* The hero is always dark so transparent nav works fine                */
   :root:not(.dark) .vg-nav:not(.vg-nav--scrolled) {
     background: transparent !important;
     border-bottom-color: transparent !important;
@@ -379,13 +423,26 @@
     cursor: default;
     direction: ltr;
   }
+
+  /* FIX: hover more visible in light mode */
   .vg-feat:hover { background: var(--vg-gold-dim2); }
+  :root:not(.dark) .vg-feat:hover {
+    background: rgba(138,100,18,0.09);
+    border-color: rgba(138,100,18,0.22);
+  }
+
   .vg-feat-icon {
     width: 34px; height: 34px; min-width: 34px;
     border: 0.5px solid var(--vg-gold-border);
     display: flex; align-items: center; justify-content: center;
     color: var(--vg-gold);
     flex-shrink: 0;
+  }
+
+  /* FIX: icon border more visible in light mode */
+  :root:not(.dark) .vg-feat-icon {
+    border-color: rgba(138,100,18,0.38);
+    color: var(--vg-gold-text);
   }
 
   .vg-pi-step {
@@ -399,7 +456,14 @@
     cursor: default;
     direction: ltr;
   }
+
+  /* FIX: hover more visible in light mode */
   .vg-pi-step:hover { background: var(--vg-gold-dim2); }
+  :root:not(.dark) .vg-pi-step:hover {
+    background: rgba(138,100,18,0.09);
+    border-left: 2px solid rgba(138,100,18,0.35);
+    padding-left: calc(1.1rem - 2px);
+  }
 }
 
 /* ─────────────────────────────────────────────
@@ -459,16 +523,45 @@
 }
 
 /* ─────────────────────────────────────────────
-   HERO SECTION — LIGHT MODE FIX
-   Prevents page body background (#F8F6EF) from
-   bleeding through the hero's dark canvas.
+   SKELETON — FIX light mode shimmer
 ───────────────────────────────────────────── */
+.vg-skel {
+  background: var(--vg-skel-bg);
+  position: relative;
+  overflow: hidden;
+}
+.vg-skel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--vg-skel-shine) 50%,
+    transparent 100%);
+  animation: shimmer 1.8s ease-in-out infinite;
+}
 
-/* The hero section itself is always #03020A */
-/* Grain overlay must not show on top of hero in light mode */
+/* FIX: override hardcoded rgba(201,162,39,0.06) shimmer in light mode */
+:root:not(.dark) [style*="rgba(201,162,39,0.06)"] {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(138,100,18,0.14) 50%,
+    transparent 100%) !important;
+}
+:root:not(.dark) [style*="rgba(201,162,39,0.06)"] ~ div,
+:root:not(.dark) div:has(> [style*="rgba(201,162,39,0.06)"]) {
+  background: var(--vg-skel-bg) !important;
+}
+
+/* FIX: skeleton base backgrounds in light mode */
+:root:not(.dark) [style*="var(--vg-bg-surface)"][style*="position: relative"][style*="overflow: hidden"] {
+  background: var(--vg-skel-bg) !important;
+}
+
+/* ─────────────────────────────────────────────
+   HERO SECTION — LIGHT MODE FIX
+───────────────────────────────────────────── */
 :root:not(.dark) body::after {
-  /* In light mode, reduce grain to almost invisible
-     so it doesn't create a bright overlay on the dark hero */
   opacity: 0.008;
 }
 
@@ -492,8 +585,13 @@
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--vg-gold-border); border-radius: 2px; }
 
+/* FIX: scrollbar thumb more visible in light mode */
+:root:not(.dark)::-webkit-scrollbar-thumb {
+  background: rgba(138,100,18,0.35);
+}
+
 /* ─────────────────────────────────────────────
-   GRAIN OVERLAY — fixed position, dark mode only at full opacity
+   GRAIN OVERLAY
 ───────────────────────────────────────────── */
 body::after {
   content: '';
