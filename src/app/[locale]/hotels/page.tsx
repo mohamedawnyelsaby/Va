@@ -1,6 +1,8 @@
 'use client';
 // PATH: src/app/[locale]/hotels/page.tsx
 // FIX: Smart pagination with ellipsis, consistent font sizes min 0.6rem
+// FIX: Skeleton uses CSS variable for shimmer — visible in light mode
+// FIX: Image filters via CSS variables (set in globals.css)
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Search, MapPin, Star, Heart, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -9,16 +11,30 @@ import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 import { VG } from '@/lib/tokens';
 
+// FIX: skeleton shimmer now uses CSS variable defined in globals.css
 function SkeletonCard() {
   return (
     <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', overflow: 'hidden' }}>
-      <div style={{ height: '220px', background: 'var(--vg-bg-surface)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(201,162,39,0.06) 50%, transparent 100%)', animation: 'shimmer 1.8s infinite' }} />
+      <div style={{ height: '220px', background: 'var(--vg-skel-bg, var(--vg-bg-surface))', position: 'relative', overflow: 'hidden' }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(90deg, transparent 0%, var(--vg-skel-shine, rgba(201,162,39,0.08)) 50%, transparent 100%)',
+          animation: 'shimmer 1.8s infinite',
+        }} />
       </div>
       <div style={{ padding: '1.2rem' }}>
         {[80, 60, 40].map((w, i) => (
-          <div key={i} style={{ height: '10px', background: 'var(--vg-bg-surface)', marginBottom: '0.6rem', width: `${w}%`, position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(201,162,39,0.06) 50%, transparent 100%)', animation: `shimmer 1.8s infinite ${i * 0.2}s` }} />
+          <div key={i} style={{
+            height: '10px',
+            background: 'var(--vg-skel-bg, var(--vg-bg-surface))',
+            marginBottom: '0.6rem', width: `${w}%`,
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(90deg, transparent 0%, var(--vg-skel-shine, rgba(201,162,39,0.08)) 50%, transparent 100%)',
+              animation: `shimmer 1.8s infinite ${i * 0.2}s`,
+            }} />
           </div>
         ))}
       </div>
@@ -247,7 +263,7 @@ export default function HotelsPage() {
               <Link key={hotel.id} href={`/${locale}/hotels/${hotel.id}`}
                 style={{ textDecoration: 'none', display: 'block', background: 'var(--vg-bg-card)' }}
                 className="vg-hotel-card">
-                {/* Image */}
+                {/* Image — filter handled via CSS class vg-hotel-thumb (light/dark via globals.css) */}
                 <div style={{ position: 'relative', height: '220px', overflow: 'hidden' }}>
                   <Image
                     src={hotel.thumbnail || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600'}
@@ -309,7 +325,6 @@ export default function HotelsPage() {
                     <span className="vg-stat-num" style={{ fontSize: '1.1rem' }}>
                       {formatCurrency(hotel.pricePerNight, hotel.currency)}
                     </span>
-                    {/* FIX: was 0.42rem — now VG.font.micro (0.65rem) */}
                     <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.15em', color: 'var(--vg-text-3)', marginLeft: '0.3rem' }}>/NIGHT</span>
                   </div>
                   <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--vg-gold)' }}>
