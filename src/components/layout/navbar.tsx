@@ -1,5 +1,7 @@
 'use client';
 // PATH: src/components/layout/navbar.tsx
+// FIX: Transparent navbar over hero in BOTH light and dark mode
+// Hero is always dark (#03020A), so transparent nav always readable
 // FIX: Full i18n — all nav labels translated per locale
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -50,7 +52,7 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
   useEffect(() => { setMenuOpen(false); }, [locale]);
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 30);
+    const fn = () => setScrolled(window.scrollY > 40);
     fn();
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
@@ -81,46 +83,78 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
   ];
 
   const USER_MENU = [
-    { href: '/dashboard',  label: tr.nav.dashboard,     icon: LayoutDashboard },
+    { href: '/dashboard',  label: tr.nav.dashboard,        icon: LayoutDashboard },
     { href: '/bookings',   label: tr.pages.bookings.title, icon: Calendar },
-    { href: '/favorites',  label: 'Favorites',           icon: Heart },
-    { href: '/profile',    label: 'Profile',             icon: User },
-    { href: '/settings',   label: 'Settings',            icon: Settings },
+    { href: '/favorites',  label: 'Favorites',             icon: Heart },
+    { href: '/profile',    label: 'Profile',               icon: User },
+    { href: '/settings',   label: 'Settings',              icon: Settings },
   ];
 
+  // ─── KEY FIX: Nav background logic ──────────────────────────
+  // Hero section background is ALWAYS #03020A (dark) regardless of theme.
+  // So when NOT scrolled → navbar should be transparent (hero dark bg shows)
+  // When scrolled → use theme-appropriate bg
   const navBg = scrolled
-    ? 'var(--vg-nav-bg)'
-    : isDark ? 'linear-gradient(to bottom, rgba(3,2,10,0.7) 0%, transparent 100%)' : 'transparent';
+    ? (isDark ? 'rgba(3,2,10,0.94)' : 'rgba(248,246,239,0.96)')
+    : 'transparent';
 
   const navBorder = scrolled
-    ? '0.5px solid var(--vg-gold-border)'
-    : isDark ? '0.5px solid transparent' : '0.5px solid var(--vg-border)';
+    ? (isDark ? '0.5px solid rgba(242,238,230,0.06)' : '0.5px solid rgba(138,100,18,0.20)')
+    : 'none';
+
+  const navBlur = scrolled ? 'blur(20px)' : 'none';
+
+  // Text on hero (transparent nav) = always light (hero is dark)
+  // Text when scrolled = theme color
+  const onHero = !scrolled;
+  const navTextColor = onHero ? 'rgba(242,238,230,0.75)' : 'var(--vg-text-2)';
+  const navLogoColor = onHero ? '#F2EEE6' : 'var(--vg-text)';
+  const iconBorderColor = onHero ? 'rgba(242,238,230,0.25)' : 'var(--vg-border)';
+  const iconBg = onHero ? 'rgba(242,238,230,0.08)' : 'none';
+  const iconColor = onHero ? 'rgba(242,238,230,0.75)' : 'var(--vg-text-2)';
 
   const iconBtnStyle: React.CSSProperties = {
-    background: 'none', border: '0.5px solid var(--vg-border)', cursor: 'pointer',
-    color: 'var(--vg-text-2)', display: 'flex', alignItems: 'center', padding: '0.4rem',
-    transition: 'border-color 0.2s', flexShrink: 0,
+    background: iconBg,
+    border: `0.5px solid ${iconBorderColor}`,
+    cursor: 'pointer',
+    color: iconColor,
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0.4rem',
+    transition: 'all 0.2s',
+    flexShrink: 0,
   };
 
   return (
     <>
-      <nav dir="ltr" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 500, background: navBg, borderBottom: navBorder, backdropFilter: scrolled ? 'blur(20px)' : 'blur(8px)', WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'blur(8px)', transition: 'background 0.4s, border-color 0.4s' }}>
+      <nav
+        dir="ltr"
+        style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 500,
+          background: navBg,
+          borderBottom: navBorder,
+          backdropFilter: navBlur,
+          WebkitBackdropFilter: navBlur,
+          transition: 'background 0.35s ease, border-color 0.35s ease, backdrop-filter 0.35s ease',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', height: '60px', padding: '0 clamp(1rem, 4vw, 3rem)', maxWidth: '1400px', margin: '0 auto', gap: '1rem' }}>
 
           {/* Logo */}
           <Link href={`/${locale}`} style={{ textDecoration: 'none', flexShrink: 0 }}>
-            <span style={{ fontFamily: 'var(--font-cormorant)', fontSize: 'clamp(1.2rem, 3vw, 1.45rem)', fontWeight: 300, color: 'var(--vg-text)', letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>
+            <span style={{ fontFamily: 'var(--font-cormorant)', fontSize: 'clamp(1.2rem, 3vw, 1.45rem)', fontWeight: 300, color: navLogoColor, letterSpacing: '-0.01em', whiteSpace: 'nowrap', transition: 'color 0.35s' }}>
               Va<em style={{ color: 'var(--vg-gold)', fontStyle: 'italic' }}> Travel</em>
             </span>
           </Link>
 
-          {/* Desktop Nav — translated */}
+          {/* Desktop Nav */}
           {!isMobile && (
             <div style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: 'clamp(1rem, 3vw, 2.5rem)' }}>
               {NAV.map(l => (
-                <Link key={l.href} href={`/${locale}${l.href}`} style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.nav, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--vg-text-2)', textDecoration: 'none', transition: 'color 0.2s', whiteSpace: 'nowrap' }}
+                <Link key={l.href} href={`/${locale}${l.href}`}
+                  style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.nav, letterSpacing: '0.22em', textTransform: 'uppercase', color: navTextColor, textDecoration: 'none', transition: 'color 0.2s', whiteSpace: 'nowrap' }}
                   onMouseEnter={e => (e.currentTarget.style.color = 'var(--vg-gold)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'var(--vg-text-2)')}>
+                  onMouseLeave={e => (e.currentTarget.style.color = navTextColor)}>
                   {l.label}
                 </Link>
               ))}
@@ -132,27 +166,25 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
 
             {/* Theme toggle */}
             {mounted && (
-              <button onClick={() => setTheme(isDark ? 'light' : 'dark')} aria-label={isDark ? 'Light mode' : 'Dark mode'} style={iconBtnStyle}
-                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--vg-gold-border)'}
-                onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--vg-border)'}>
+              <button onClick={() => setTheme(isDark ? 'light' : 'dark')} aria-label={isDark ? 'Light mode' : 'Dark mode'} style={iconBtnStyle}>
                 {isDark ? <Sun size={15} /> : <Moon size={15} />}
               </button>
             )}
 
             {/* Language selector */}
             <div ref={langRef} style={{ position: 'relative' }}>
-              <button onClick={() => setLangOpen(v => !v)} style={{ ...iconBtnStyle, gap: '0.3rem', padding: '0.3rem 0.6rem', fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.15em' }}
-                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--vg-gold-border)'}
-                onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--vg-border)'}>
+              <button onClick={() => setLangOpen(v => !v)}
+                style={{ ...iconBtnStyle, gap: '0.3rem', padding: '0.3rem 0.6rem', fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.15em' }}>
                 <Globe size={12} />
                 {!isMobile && <span>{locale.toUpperCase()}</span>}
                 <ChevronDown size={10} />
               </button>
 
               {langOpen && (
-                <div style={{ position: 'absolute', top: 'calc(100% + 0.5rem)', right: 0, background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', minWidth: '140px', zIndex: 999, boxShadow: '0 4px 20px rgba(0,0,0,0.12)' }}>
+                <div style={{ position: 'absolute', top: 'calc(100% + 0.5rem)', right: 0, background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', minWidth: '140px', zIndex: 999, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
                   {LANGS.map(l => (
-                    <Link key={l.code} href={`/${l.code}`} onClick={() => setLangOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.6rem 1rem', fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.12em', color: l.code === locale ? 'var(--vg-gold)' : 'var(--vg-text-2)', textDecoration: 'none', background: l.code === locale ? 'var(--vg-gold-dim)' : 'none', borderBottom: '0.5px solid var(--vg-border)', transition: 'background 0.2s', direction: 'ltr' }}
+                    <Link key={l.code} href={`/${l.code}`} onClick={() => setLangOpen(false)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.6rem 1rem', fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.12em', color: l.code === locale ? 'var(--vg-gold)' : 'var(--vg-text-2)', textDecoration: 'none', background: l.code === locale ? 'var(--vg-gold-dim)' : 'none', borderBottom: '0.5px solid var(--vg-border)', transition: 'background 0.2s', direction: 'ltr' }}
                       onMouseEnter={e => { if (l.code !== locale) (e.currentTarget as HTMLElement).style.background = 'var(--vg-bg-surface)'; }}
                       onMouseLeave={e => { if (l.code !== locale) (e.currentTarget as HTMLElement).style.background = 'none'; }}>
                       <span style={{ opacity: 0.5, width: '18px', fontSize: VG.font.micro }}>{l.label}</span>
@@ -167,14 +199,15 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
             {!isMobile && (
               session ? (
                 <div ref={userRef} style={{ position: 'relative' }}>
-                  <button onClick={() => setUserOpen(v => !v)} style={{ width: '32px', height: '32px', background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', cursor: 'pointer', color: 'var(--vg-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-cormorant)', fontSize: '1rem', fontWeight: 300, transition: 'background 0.2s', flexShrink: 0 }}
+                  <button onClick={() => setUserOpen(v => !v)}
+                    style={{ width: '32px', height: '32px', background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', cursor: 'pointer', color: 'var(--vg-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-cormorant)', fontSize: '1rem', fontWeight: 300, transition: 'background 0.2s', flexShrink: 0 }}
                     onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(201,162,39,0.25)'}
                     onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--vg-gold-dim)'}>
                     {initial}
                   </button>
 
                   {userOpen && (
-                    <div style={{ position: 'absolute', top: 'calc(100% + 0.5rem)', right: 0, background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', minWidth: '200px', zIndex: 999, boxShadow: '0 4px 20px rgba(0,0,0,0.12)' }}>
+                    <div style={{ position: 'absolute', top: 'calc(100% + 0.5rem)', right: 0, background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', minWidth: '200px', zIndex: 999, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
                       <div style={{ padding: '0.85rem 1rem', borderBottom: '1px solid var(--vg-border)', background: 'var(--vg-gold-dim)' }}>
                         <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1rem', color: 'var(--vg-text)', marginBottom: '0.15rem' }}>{session.user?.name}</div>
                         <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.1em', color: 'var(--vg-text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', direction: 'ltr' }}>{session.user?.email}</div>
@@ -182,14 +215,16 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                       {USER_MENU.map(item => {
                         const Icon = item.icon;
                         return (
-                          <Link key={item.href} href={`/${locale}${item.href}`} onClick={() => setUserOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.65rem 1rem', fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.1em', color: 'var(--vg-text-2)', textDecoration: 'none', borderBottom: '0.5px solid var(--vg-border)', transition: 'color 0.2s, background 0.2s', direction: 'ltr' }}
+                          <Link key={item.href} href={`/${locale}${item.href}`} onClick={() => setUserOpen(false)}
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.65rem 1rem', fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.1em', color: 'var(--vg-text-2)', textDecoration: 'none', borderBottom: '0.5px solid var(--vg-border)', transition: 'color 0.2s, background 0.2s', direction: 'ltr' }}
                             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--vg-gold)'; (e.currentTarget as HTMLElement).style.background = 'var(--vg-gold-dim2)'; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--vg-text-2)'; (e.currentTarget as HTMLElement).style.background = 'none'; }}>
                             <Icon size={12} /> {item.label}
                           </Link>
                         );
                       })}
-                      <button onClick={() => signOut({ callbackUrl: `/${locale}` })} style={{ display: 'flex', width: '100%', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1rem', fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.1em', color: 'var(--vg-text-2)', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s, background 0.2s', direction: 'ltr' }}
+                      <button onClick={() => signOut({ callbackUrl: `/${locale}` })}
+                        style={{ display: 'flex', width: '100%', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1rem', fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.1em', color: 'var(--vg-text-2)', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s, background 0.2s', direction: 'ltr' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#ef4444'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.05)'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--vg-text-2)'; (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}>
                         <LogOut size={12} /> {tr.nav.signOut}
@@ -199,9 +234,10 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                 </div>
               ) : (
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <Link href={`/${locale}/auth/signin`} style={{ textDecoration: 'none', fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--vg-text-2)', padding: '0.45rem 0.8rem', border: '1px solid var(--vg-border)', transition: 'color 0.2s, border-color 0.2s', whiteSpace: 'nowrap' }}
+                  <Link href={`/${locale}/auth/signin`}
+                    style={{ textDecoration: 'none', fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.18em', textTransform: 'uppercase', color: navTextColor, padding: '0.45rem 0.8rem', border: `1px solid ${iconBorderColor}`, transition: 'all 0.2s', whiteSpace: 'nowrap' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--vg-gold)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-gold-border)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--vg-text-2)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-border)'; }}>
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = navTextColor; (e.currentTarget as HTMLElement).style.borderColor = iconBorderColor; }}>
                     {tr.nav.signIn}
                   </Link>
                   <Link href={`/${locale}/auth/signup`} className="vg-btn-primary" style={{ textDecoration: 'none', padding: '0.5rem 1rem', fontSize: VG.font.micro, whiteSpace: 'nowrap' }}>
@@ -213,7 +249,8 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
 
             {/* Hamburger */}
             {isMobile && (
-              <button onClick={() => setMenuOpen(v => !v)} aria-label={menuOpen ? 'Close menu' : 'Open menu'} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--vg-text-2)', padding: '0.4rem', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+              <button onClick={() => setMenuOpen(v => !v)} aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: onHero ? 'rgba(242,238,230,0.85)' : 'var(--vg-text-2)', padding: '0.4rem', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                 {menuOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
             )}
@@ -226,14 +263,14 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
         <div dir="ltr" style={{ position: 'fixed', inset: 0, zIndex: 499, background: 'var(--vg-bg)', display: 'flex', flexDirection: 'column', paddingTop: '60px' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '2rem clamp(1.5rem, 6vw, 3rem)', overflowY: 'auto' }}>
             {NAV.map((l, i) => (
-              <Link key={l.href} href={`/${locale}${l.href}`} onClick={() => setMenuOpen(false)} style={{ fontFamily: 'var(--font-cormorant)', fontSize: 'clamp(2rem, 8vw, 3rem)', fontWeight: 300, color: 'var(--vg-text)', textDecoration: 'none', borderBottom: '0.5px solid var(--vg-border)', padding: '1.2rem 0', lineHeight: 1, opacity: 0, animation: `fadeUp 0.4s ease ${i * 0.07}s forwards`, direction: 'ltr' }}>
+              <Link key={l.href} href={`/${locale}${l.href}`} onClick={() => setMenuOpen(false)}
+                style={{ fontFamily: 'var(--font-cormorant)', fontSize: 'clamp(2rem, 8vw, 3rem)', fontWeight: 300, color: 'var(--vg-text)', textDecoration: 'none', borderBottom: '0.5px solid var(--vg-border)', padding: '1.2rem 0', lineHeight: 1, opacity: 0, animation: `fadeUp 0.4s ease ${i * 0.07}s forwards`, direction: 'ltr' }}>
                 <em style={{ color: 'var(--vg-gold)', fontStyle: 'italic', marginRight: '0.5rem', fontSize: '0.5em', fontFamily: 'var(--font-space-mono)', letterSpacing: '0.2em' }}>
                   0{i + 1}
                 </em>
                 {l.label}
               </Link>
             ))}
-
             <div style={{ marginTop: 'auto', paddingTop: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               {session ? (
                 <>
