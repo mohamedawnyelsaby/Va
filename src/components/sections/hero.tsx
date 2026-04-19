@@ -1,7 +1,8 @@
 'use client';
 // PATH: src/components/sections/hero.tsx
-// FIX: Light mode — hero always dark (dark overlay preserved regardless of theme)
-// FIX: Full i18n support for all languages
+// FIX: Globe canvas background always #03020A — no white bleeding in light mode
+// FIX: Full vignette covers entire hero width, not just left side
+// FIX: Hero section isolated completely from page background
 import { useEffect, useRef, useState } from 'react';
 import { Search, Hotel, Utensils, MapPin, Bot, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -30,7 +31,9 @@ function ThreeGlobe() {
       const W = mount.offsetWidth || 600;
       const H = mount.offsetHeight || 600;
 
-      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      // FIX: alpha: false + setClearColor — no white bleeding through canvas
+      renderer = new THREE.WebGLRenderer({ alpha: false, antialias: true });
+      renderer.setClearColor(0x03020A, 1);
       renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
       renderer.setSize(W, H);
       renderer.domElement.style.position = 'absolute';
@@ -40,6 +43,8 @@ function ThreeGlobe() {
       mount.appendChild(renderer.domElement);
 
       const scene  = new THREE.Scene();
+      scene.background = new THREE.Color(0x03020A);
+
       const camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 1000);
       camera.position.set(0, 0, 3.2);
 
@@ -123,7 +128,13 @@ function ThreeGlobe() {
     };
   }, []);
 
-  return <div ref={mountRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />;
+  return (
+    // FIX: background: #03020A on the mount div — ensures no white shows before canvas loads
+    <div
+      ref={mountRef}
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', background: '#03020A' }}
+    />
+  );
 }
 
 /* ── Hero ── */
@@ -157,11 +168,10 @@ export function HeroSection({ locale }: { locale: string }) {
   const cur = TABS.find(t => t.id === tab)!;
 
   return (
-    // FIX: Always use dark background (#03020A) for hero regardless of theme
-    // This ensures the globe and text are always visible in both light and dark modes
     <section style={{
       position:   'relative',
       minHeight:  '100vh',
+      // FIX: always solid dark — never transparent
       background: '#03020A',
       display:    'flex',
       alignItems: 'center',
@@ -170,55 +180,118 @@ export function HeroSection({ locale }: { locale: string }) {
       direction:  'ltr',
     }}>
 
+      {/* Globe */}
       <ThreeGlobe />
 
-      {/* Vignette */}
+      {/*
+        FIX: Full-coverage dark overlay — covers entire hero, not just left side
+        Previous: radial-gradient at 15% 50% — only darkened the left
+        Now: left-to-right gradient + bottom fade for full coverage
+      */}
       <div style={{
         position:      'absolute',
         inset:         0,
-        background:    'radial-gradient(ellipse 70% 90% at 15% 50%, rgba(3,2,10,0.92) 0%, rgba(3,2,10,0.55) 45%, transparent 75%)',
+        background:    [
+          'linear-gradient(to right, rgba(3,2,10,0.96) 0%, rgba(3,2,10,0.80) 40%, rgba(3,2,10,0.50) 70%, rgba(3,2,10,0.30) 100%)',
+        ].join(','),
+        pointerEvents: 'none',
+        zIndex:        1,
+      }} />
+
+      {/* Bottom fade to separate from page body */}
+      <div style={{
+        position:      'absolute',
+        bottom:        0,
+        left:          0,
+        right:         0,
+        height:        '120px',
+        background:    'linear-gradient(to top, #03020A 0%, transparent 100%)',
         pointerEvents: 'none',
         zIndex:        1,
       }} />
 
       {/* Content */}
-      <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '1280px', margin: '0 auto', padding: 'clamp(2rem,6vw,4rem) clamp(1.25rem,5vw,4rem)' }}>
+      <div style={{
+        position:  'relative',
+        zIndex:    2,
+        width:     '100%',
+        maxWidth:  '1280px',
+        margin:    '0 auto',
+        padding:   'clamp(2rem,6vw,4rem) clamp(1.25rem,5vw,4rem)',
+      }}>
         <div style={{ maxWidth: '580px' }}>
 
           {/* Tag */}
-          <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '.55rem', letterSpacing: '.4em', textTransform: 'uppercase', color: 'var(--vg-gold)', display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
+          <div style={{
+            fontFamily:    'var(--font-space-mono)',
+            fontSize:      '.55rem',
+            letterSpacing: '.4em',
+            textTransform: 'uppercase',
+            color:         'var(--vg-gold)',
+            display:       'flex',
+            alignItems:    'center',
+            gap:           '1rem',
+            marginBottom:  '2.5rem',
+          }}>
             {tr.hero.tag}
             <span style={{ width: '4rem', height: '1px', background: 'var(--vg-gold)', opacity: .5 }} />
           </div>
 
-          {/* Heading — always white on dark background */}
-          <h1 style={{ fontFamily: 'var(--font-cormorant)', fontSize: 'clamp(4rem,7.5vw,7rem)', fontWeight: 300, lineHeight: .92, letterSpacing: '-.01em', marginBottom: '2rem', color: '#F2EEE6' }}>
+          {/* Heading — always white on dark hero */}
+          <h1 style={{
+            fontFamily:    'var(--font-cormorant)',
+            fontSize:      'clamp(4rem,7.5vw,7rem)',
+            fontWeight:    300,
+            lineHeight:    .92,
+            letterSpacing: '-.01em',
+            marginBottom:  '2rem',
+            color:         '#F2EEE6',
+          }}>
             {tr.hero.heading1}<br />
             <em style={{ fontStyle: 'italic', color: 'var(--vg-gold)', display: 'block' }}>{tr.hero.heading2}</em>
             {tr.hero.heading3}
           </h1>
 
           {/* Sub */}
-          <p style={{ fontFamily: 'var(--font-dm-sans)', fontWeight: 300, fontSize: '.95rem', color: 'rgba(242,238,230,0.7)', lineHeight: 1.85, maxWidth: '400px', marginBottom: '3rem' }}>
+          <p style={{
+            fontFamily:   'var(--font-dm-sans)',
+            fontWeight:   300,
+            fontSize:     '.95rem',
+            color:        'rgba(242,238,230,0.7)',
+            lineHeight:   1.85,
+            maxWidth:     '400px',
+            marginBottom: '3rem',
+          }}>
             {tr.hero.subheading}
           </p>
 
           {/* Search box */}
-          <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', marginBottom: '2.5rem' }}>
+          <div style={{ background: 'rgba(14,12,24,0.85)', border: '1px solid rgba(201,162,39,0.25)', backdropFilter: 'blur(12px)', marginBottom: '2.5rem' }}>
             {/* Tabs */}
-            <div style={{ display: 'flex', borderBottom: '1px solid var(--vg-border)' }}>
+            <div style={{ display: 'flex', borderBottom: '1px solid rgba(201,162,39,0.15)' }}>
               {TABS.map(({ id, label, Icon }) => {
                 const on = tab === id;
                 return (
                   <button key={id} onClick={() => setTab(id)} style={{
-                    flex: 1, padding: mob ? '.65rem .2rem' : '.7rem .4rem',
-                    background: on ? 'var(--vg-gold-dim)' : 'none', border: 'none',
-                    borderBottom: on ? '2px solid var(--vg-gold)' : '2px solid transparent',
-                    cursor: 'pointer', color: on ? 'var(--vg-gold)' : 'var(--vg-text-3)',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '.28rem', transition: 'all .2s',
+                    flex:          1,
+                    padding:       mob ? '.65rem .2rem' : '.7rem .4rem',
+                    background:    on ? 'rgba(201,162,39,0.12)' : 'none',
+                    border:        'none',
+                    borderBottom:  on ? '2px solid var(--vg-gold)' : '2px solid transparent',
+                    cursor:        'pointer',
+                    color:         on ? 'var(--vg-gold)' : 'rgba(242,238,230,0.45)',
+                    display:       'flex',
+                    flexDirection: 'column',
+                    alignItems:    'center',
+                    gap:           '.28rem',
+                    transition:    'all .2s',
                   }}>
                     <Icon size={mob ? 14 : 13} />
-                    {!mob && <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '.4rem', letterSpacing: '.14em', textTransform: 'uppercase' }}>{label}</span>}
+                    {!mob && (
+                      <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '.4rem', letterSpacing: '.14em', textTransform: 'uppercase' }}>
+                        {label}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -227,18 +300,27 @@ export function HeroSection({ locale }: { locale: string }) {
             {/* Input row */}
             <div style={{ display: 'flex', direction: 'ltr' }}>
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '.65rem', padding: '.85rem 1rem' }}>
-                <Search size={14} color="var(--vg-text-3)" style={{ flexShrink: 0 }} />
+                <Search size={14} color="rgba(242,238,230,0.4)" style={{ flexShrink: 0 }} />
                 <input
                   value={q}
                   onChange={e => setQ(e.target.value)}
                   placeholder={cur.placeholder}
-                  style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontFamily: 'var(--font-dm-sans)', fontSize: '.88rem', color: 'var(--vg-text)', minWidth: 0 }}
+                  style={{
+                    flex:       1,
+                    background: 'none',
+                    border:     'none',
+                    outline:    'none',
+                    fontFamily: 'var(--font-dm-sans)',
+                    fontSize:   '.88rem',
+                    color:      '#F2EEE6',
+                    minWidth:   0,
+                  }}
                 />
               </div>
               <Link
                 href={`/${locale}${cur.href}${q ? `?q=${encodeURIComponent(q)}` : ''}`}
                 className="vg-btn-primary"
-                style={{ textDecoration: 'none', borderLeft: '1px solid var(--vg-gold-border)', display: 'flex', alignItems: 'center', gap: '.4rem', padding: '.85rem 1rem', flexShrink: 0 }}
+                style={{ textDecoration: 'none', borderLeft: '1px solid rgba(201,162,39,0.25)', display: 'flex', alignItems: 'center', gap: '.4rem', padding: '.85rem 1rem', flexShrink: 0 }}
               >
                 <ArrowRight size={14} />
                 {!mob && <span>{tr.hero.search}</span>}
@@ -250,8 +332,12 @@ export function HeroSection({ locale }: { locale: string }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
             {STATS.map(s => (
               <div key={s.label}>
-                <div style={{ fontFamily: 'var(--font-cormorant)', fontWeight: 300, fontSize: 'clamp(1.3rem,2.8vw,2.2rem)', color: 'var(--vg-gold)', lineHeight: 1 }}>{s.num}</div>
-                <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '.42rem', letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(242,238,230,0.4)', marginTop: '.35rem' }}>{s.label}</div>
+                <div style={{ fontFamily: 'var(--font-cormorant)', fontWeight: 300, fontSize: 'clamp(1.3rem,2.8vw,2.2rem)', color: 'var(--vg-gold)', lineHeight: 1 }}>
+                  {s.num}
+                </div>
+                <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '.42rem', letterSpacing: '.3em', textTransform: 'uppercase', color: 'rgba(242,238,230,0.4)', marginTop: '.35rem' }}>
+                  {s.label}
+                </div>
               </div>
             ))}
           </div>
