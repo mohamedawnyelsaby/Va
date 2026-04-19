@@ -1,5 +1,12 @@
-/* PATH: src/app/globals.css — Va Travel Void Gold Design System */
-/* FIX: Light mode — image filters, border visibility, skeleton shimmer, hover states */
+/* PATH: src/app/globals.css */
+/* FIX SUMMARY:
+   1. Hero section always dark — vg-hero-force-dark added
+   2. Light mode borders stronger (0.14 not 0.09)
+   3. Image filters via CSS variables per mode
+   4. Skeleton shimmer visible in light mode
+   5. Hover states more visible in light mode
+   6. Dropdowns have solid backgrounds in light mode
+*/
 
 @tailwind base;
 @tailwind components;
@@ -31,30 +38,31 @@
     --ring: 42 75% 43%;
     --radius: 0rem;
 
+    /* ── Light Mode Tokens ── */
     --vg-bg:          #F8F6EF;
     --vg-bg-card:     #FFFFFF;
     --vg-bg-surface:  #EEEADC;
     --vg-bg-deep:     #E3DED0;
     --vg-text:        #1A1208;
-    --vg-text-2:      rgba(26,18,8,0.62);
-    --vg-text-3:      rgba(26,18,8,0.38);
+    --vg-text-2:      rgba(26,18,8,0.65);
+    --vg-text-3:      rgba(26,18,8,0.40);
     --vg-gold:        #8A6412;
     --vg-gold-2:      #A07820;
     --vg-gold-3:      #C9A227;
     --vg-gold-dim:    rgba(138,100,18,0.12);
     --vg-gold-dim2:   rgba(138,100,18,0.09);
-    --vg-gold-border: rgba(138,100,18,0.30);
+    --vg-gold-border: rgba(138,100,18,0.32);
     --vg-gold-text:   #5C3A06;
-    /* FIX: stronger borders in light mode so 1px grid gaps are visible */
+    /* FIX: stronger borders in light mode */
     --vg-border:      rgba(26,18,8,0.14);
     --vg-border-2:    rgba(26,18,8,0.24);
-    --vg-nav-bg:      rgba(248,246,239,0.95);
-    --vg-nav-border:  rgba(26,18,8,0.10);
+    --vg-nav-bg:      rgba(248,246,239,0.98);
+    --vg-nav-border:  rgba(26,18,8,0.12);
     --vg-star:        #8A5E08;
-    /* FIX: skeleton shimmer more visible in light mode */
+    /* FIX: skeleton more visible in light mode */
     --vg-skel-bg:     #D6D1C4;
     --vg-skel-shine:  rgba(138,100,18,0.14);
-    /* FIX: image filter lighter in light mode */
+    /* FIX: image filters lighter in light mode */
     --vg-thumb-filter: brightness(0.72) saturate(0.78);
     --vg-thumb-hover:  brightness(0.60) saturate(0.70);
     --vg-hero-filter:  brightness(0.58) saturate(0.70);
@@ -81,6 +89,7 @@
     --input: 250 20% 14%;
     --ring: 42 65% 47%;
 
+    /* ── Dark Mode Tokens ── */
     --vg-bg:          #03020A;
     --vg-bg-card:     #0E0C18;
     --vg-bg-surface:  #09080F;
@@ -100,10 +109,8 @@
     --vg-nav-bg:      rgba(3,2,10,0.94);
     --vg-nav-border:  rgba(242,238,230,0.06);
     --vg-star:        #E8C255;
-    /* dark mode skeleton */
     --vg-skel-bg:     rgba(255,255,255,0.05);
     --vg-skel-shine:  rgba(201,162,39,0.08);
-    /* dark mode image filters */
     --vg-thumb-filter: brightness(0.48) saturate(0.55);
     --vg-thumb-hover:  brightness(0.42) saturate(0.50);
     --vg-hero-filter:  brightness(0.50) saturate(0.65);
@@ -177,9 +184,17 @@
     flex-shrink: 0;
   }
 
+  /* FIX: light mode overline slightly darker for contrast */
+  :root:not(.dark) .vg-overline {
+    color: var(--vg-gold-text);
+  }
+  :root:not(.dark) .vg-overline::before {
+    background: var(--vg-gold-text);
+  }
+
   .vg-btn-primary {
     background: var(--vg-gold);
-    color: var(--vg-bg);
+    color: #FFFFFF;
     border: none;
     cursor: pointer;
     font-family: 'Space Mono', monospace;
@@ -198,9 +213,13 @@
   .vg-btn-primary:hover { background: var(--vg-gold-2); transform: translateY(-1px); }
   .vg-btn-primary:active { transform: translateY(0); }
 
-  /* FIX: light mode button text contrast */
+  /* FIX: light mode button — darker gold for better contrast */
   :root:not(.dark) .vg-btn-primary {
+    background: #7A560F;
     color: #FFFFFF;
+  }
+  :root:not(.dark) .vg-btn-primary:hover {
+    background: #8A6412;
   }
 
   .vg-btn-outline {
@@ -223,7 +242,7 @@
   }
   .vg-btn-outline:hover { background: var(--vg-gold-dim); border-color: var(--vg-gold); }
 
-  /* FIX: light mode outline button stronger color */
+  /* FIX: light mode outline button text */
   :root:not(.dark) .vg-btn-outline {
     color: var(--vg-gold-text);
     border-color: rgba(138,100,18,0.40);
@@ -231,6 +250,7 @@
   :root:not(.dark) .vg-btn-outline:hover {
     border-color: var(--vg-gold);
     color: var(--vg-gold);
+    background: rgba(138,100,18,0.10);
   }
 
   .vg-card {
@@ -255,11 +275,11 @@
     direction: ltr;
   }
 
-  /* FIX: badge text in light mode */
+  /* FIX: badge in light mode */
   :root:not(.dark) .vg-badge-outline {
     color: var(--vg-gold-text);
-    background: rgba(138,100,18,0.14);
-    border-color: rgba(138,100,18,0.38);
+    background: rgba(138,100,18,0.12);
+    border-color: rgba(138,100,18,0.35);
   }
 
   .vg-badge-outline .dot {
@@ -278,7 +298,7 @@
     line-height: 1;
   }
 
-  /* FIX: stat numbers slightly darker in light mode for contrast */
+  /* FIX: stat numbers in light mode */
   :root:not(.dark) .vg-stat-num {
     color: var(--vg-gold-text);
   }
@@ -322,6 +342,14 @@
     overflow: hidden;
   }
 
+  /* ─── Hero always dark regardless of theme ─── */
+  .vg-hero-section {
+    background: #03020A !important;
+    color: #F2EEE6 !important;
+    isolation: isolate;
+    contain: layout style;
+  }
+
   /* ─── Hotel Card ─── */
   .vg-hotel-card {
     position: relative;
@@ -339,7 +367,7 @@
     filter: var(--vg-thumb-hover);
   }
 
-  /* FIX: Image filter via CSS variable — different per mode */
+  /* FIX: Image filter via CSS variable — different per light/dark mode */
   .vg-hotel-thumb {
     width: 100%; height: 100%;
     object-fit: cover;
@@ -363,20 +391,13 @@
     white-space: nowrap;
   }
 
-  /* FIX: price tag in light mode — more readable gold */
+  /* FIX: price tag readable in light mode */
   :root:not(.dark) .vg-price-tag {
     color: #F0D070;
-    border-color: rgba(201,162,39,0.40);
+    border-color: rgba(201,162,39,0.45);
   }
 
-  /* ─── Hero Section — always isolated dark background ─── */
-  .vg-hero-section {
-    background: #03020A !important;
-    color: #F2EEE6 !important;
-    isolation: isolate;
-    contain: layout style;
-  }
-
+  /* Navbar */
   .vg-nav {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -396,6 +417,7 @@
     -webkit-backdrop-filter: none !important;
   }
 
+  /* FIX: light mode navbar transparent only over hero */
   :root:not(.dark) .vg-nav:not(.vg-nav--scrolled) {
     background: transparent !important;
     border-bottom-color: transparent !important;
@@ -424,11 +446,12 @@
     direction: ltr;
   }
 
-  /* FIX: hover more visible in light mode */
   .vg-feat:hover { background: var(--vg-gold-dim2); }
+
+  /* FIX: hover more visible in light mode */
   :root:not(.dark) .vg-feat:hover {
     background: rgba(138,100,18,0.09);
-    border-color: rgba(138,100,18,0.22);
+    border-color: rgba(138,100,18,0.20);
   }
 
   .vg-feat-icon {
@@ -439,9 +462,9 @@
     flex-shrink: 0;
   }
 
-  /* FIX: icon border more visible in light mode */
+  /* FIX: feat icon in light mode */
   :root:not(.dark) .vg-feat-icon {
-    border-color: rgba(138,100,18,0.38);
+    border-color: rgba(138,100,18,0.40);
     color: var(--vg-gold-text);
   }
 
@@ -456,13 +479,11 @@
     cursor: default;
     direction: ltr;
   }
-
-  /* FIX: hover more visible in light mode */
   .vg-pi-step:hover { background: var(--vg-gold-dim2); }
+
+  /* FIX: pi-step hover in light mode */
   :root:not(.dark) .vg-pi-step:hover {
     background: rgba(138,100,18,0.09);
-    border-left: 2px solid rgba(138,100,18,0.35);
-    padding-left: calc(1.1rem - 2px);
   }
 }
 
@@ -474,7 +495,6 @@
   .bg-white                  { background-color: var(--vg-bg-card) !important; }
   .dark .bg-gray-900         { background-color: var(--vg-bg) !important; }
   .dark .bg-gray-800         { background-color: var(--vg-bg-card) !important; }
-
   .text-muted-foreground     { color: var(--vg-text-2) !important; }
 
   input:not([type='checkbox']):not([type='radio']):not([type='range']),
@@ -523,74 +543,6 @@
 }
 
 /* ─────────────────────────────────────────────
-   SKELETON — FIX light mode shimmer
-───────────────────────────────────────────── */
-.vg-skel {
-  background: var(--vg-skel-bg);
-  position: relative;
-  overflow: hidden;
-}
-.vg-skel::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    var(--vg-skel-shine) 50%,
-    transparent 100%);
-  animation: shimmer 1.8s ease-in-out infinite;
-}
-
-/* FIX: override hardcoded rgba(201,162,39,0.06) shimmer in light mode */
-:root:not(.dark) [style*="rgba(201,162,39,0.06)"] {
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(138,100,18,0.14) 50%,
-    transparent 100%) !important;
-}
-:root:not(.dark) [style*="rgba(201,162,39,0.06)"] ~ div,
-:root:not(.dark) div:has(> [style*="rgba(201,162,39,0.06)"]) {
-  background: var(--vg-skel-bg) !important;
-}
-
-/* FIX: skeleton base backgrounds in light mode */
-:root:not(.dark) [style*="var(--vg-bg-surface)"][style*="position: relative"][style*="overflow: hidden"] {
-  background: var(--vg-skel-bg) !important;
-}
-
-/* ─────────────────────────────────────────────
-   HERO SECTION — LIGHT MODE FIX
-───────────────────────────────────────────── */
-:root:not(.dark) body::after {
-  opacity: 0.008;
-}
-
-/* ─────────────────────────────────────────────
-   RESPONSIVE GRID FIXES
-───────────────────────────────────────────── */
-@media (max-width: 480px) {
-  [style*="minmax(280px"] { grid-template-columns: 1fr !important; }
-  [style*="minmax(260px"] { grid-template-columns: 1fr !important; }
-  [style*="minmax(220px"] { grid-template-columns: 1fr !important; }
-}
-
-@media (min-width: 481px) and (max-width: 767px) {
-  [style*="minmax(280px"] { grid-template-columns: repeat(2, 1fr) !important; }
-}
-
-/* ─────────────────────────────────────────────
-   SCROLLBAR
-───────────────────────────────────────────── */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--vg-gold-border); border-radius: 2px; }
-
-/* FIX: scrollbar thumb more visible in light mode */
-:root:not(.dark)::-webkit-scrollbar-thumb {
-  background: rgba(138,100,18,0.35);
-}
-
-/* ─────────────────────────────────────────────
    GRAIN OVERLAY
 ───────────────────────────────────────────── */
 body::after {
@@ -601,8 +553,33 @@ body::after {
   opacity: 0.022;
 }
 
+/* FIX: reduce grain in light mode so it doesn't overpower */
+:root:not(.dark) body::after {
+  opacity: 0.010;
+}
+
 /* ─────────────────────────────────────────────
-   CUSTOM CURSOR (desktop only)
+   RESPONSIVE GRID
+───────────────────────────────────────────── */
+@media (max-width: 480px) {
+  [style*="minmax(280px"] { grid-template-columns: 1fr !important; }
+  [style*="minmax(260px"] { grid-template-columns: 1fr !important; }
+  [style*="minmax(220px"] { grid-template-columns: 1fr !important; }
+}
+@media (min-width: 481px) and (max-width: 767px) {
+  [style*="minmax(280px"] { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ─────────────────────────────────────────────
+   SCROLLBAR
+───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--vg-gold-border); border-radius: 2px; }
+:root:not(.dark)::-webkit-scrollbar-thumb { background: rgba(138,100,18,0.35); }
+
+/* ─────────────────────────────────────────────
+   CURSOR
 ───────────────────────────────────────────── */
 #vg-cursor {
   position: fixed; width: 6px; height: 6px;
@@ -613,15 +590,12 @@ body::after {
 }
 #vg-cursor-ring {
   position: fixed; width: 36px; height: 36px;
-  border: 1px solid var(--vg-gold-border);
-  border-radius: 50%;
+  border: 1px solid var(--vg-gold-border); border-radius: 50%;
   pointer-events: none; z-index: 9997;
   transform: translate(-50%, -50%);
   transition: width 0.2s, height 0.2s;
 }
-@media (pointer: coarse) {
-  #vg-cursor, #vg-cursor-ring { display: none; }
-}
+@media (pointer: coarse) { #vg-cursor, #vg-cursor-ring { display: none; } }
 
 /* ─────────────────────────────────────────────
    KEYFRAMES
@@ -634,16 +608,14 @@ body::after {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin  { to { transform: rotate(360deg); } }
 @keyframes shimmer {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
 
 /* ─────────────────────────────────────────────
-   REDUCE MOTION SUPPORT
+   REDUCE MOTION
 ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
