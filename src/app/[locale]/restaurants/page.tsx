@@ -1,5 +1,7 @@
 'use client';
 // PATH: src/app/[locale]/restaurants/page.tsx
+// FIX: Skeleton shimmer uses CSS variable — visible in light mode
+// FIX: Image filter via vg-hotel-thumb CSS class (handled in globals.css)
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Search, MapPin, Star, Heart, SlidersHorizontal, Utensils, X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -7,16 +9,30 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { VG } from '@/lib/tokens';
 
+// FIX: skeleton shimmer now uses CSS variable defined in globals.css
 function SkeletonCard() {
   return (
     <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', overflow: 'hidden' }}>
-      <div style={{ height: '200px', background: 'var(--vg-bg-surface)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,transparent 0%,rgba(201,162,39,0.06) 50%,transparent 100%)', animation: 'shimmer 1.8s infinite' }} />
+      <div style={{ height: '200px', background: 'var(--vg-skel-bg, var(--vg-bg-surface))', position: 'relative', overflow: 'hidden' }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(90deg, transparent 0%, var(--vg-skel-shine, rgba(201,162,39,0.08)) 50%, transparent 100%)',
+          animation: 'shimmer 1.8s infinite',
+        }} />
       </div>
       <div style={{ padding: '1.2rem' }}>
         {[75, 55, 40].map((w, i) => (
-          <div key={i} style={{ height: '9px', background: 'var(--vg-bg-surface)', marginBottom: '0.6rem', width: `${w}%`, position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,transparent 0%,rgba(201,162,39,0.06) 50%,transparent 100%)', animation: `shimmer 1.8s infinite ${i * 0.2}s` }} />
+          <div key={i} style={{
+            height: '9px',
+            background: 'var(--vg-skel-bg, var(--vg-bg-surface))',
+            marginBottom: '0.6rem', width: `${w}%`,
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(90deg, transparent 0%, var(--vg-skel-shine, rgba(201,162,39,0.08)) 50%, transparent 100%)',
+              animation: `shimmer 1.8s infinite ${i * 0.2}s`,
+            }} />
           </div>
         ))}
       </div>
@@ -110,8 +126,7 @@ export default function RestaurantsPage() {
     try {
       setLoading(true);
       const q = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '12',
+        page: currentPage.toString(), limit: '12',
         ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)),
       });
       if (searchTerm) q.append('search', searchTerm);
@@ -257,7 +272,6 @@ export default function RestaurantsPage() {
                     <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1rem 0.8rem 0.6rem', background: 'linear-gradient(to top,rgba(3,2,10,0.85) 0%,transparent 100%)', zIndex: 2 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                         <Utensils size={10} color="var(--vg-gold)" />
-                        {/* FIX: was 0.42rem — now VG.font.micro */}
                         <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--vg-gold)' }}>
                           {cuisineLabel}
                         </span>
@@ -302,7 +316,6 @@ export default function RestaurantsPage() {
                         {PRICE_LABELS[restaurant.priceRange] || 'Moderate'}
                       </span>
                     </div>
-                    {/* FIX: was 0.44rem — now VG.font.micro */}
                     <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.15em', color: 'var(--vg-gold)' }}>
                       View →
                     </span>
