@@ -1,5 +1,7 @@
 // PATH: src/app/[locale]/hotels/[id]/page.tsx
-// UPDATED: + ImageLightbox, + ReviewModal, + Breadcrumb, + RecentlyViewed tracking, + addToRecentlyViewed
+// FIX: Hero image filter now uses CSS variable --vg-hero-filter
+//      → brightness(0.58) in light mode, brightness(0.50) in dark mode (via globals.css)
+// FIX: Thumbnail strip image filter also uses CSS variable
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -44,7 +46,6 @@ export default function HotelDetailPage() {
   const [reviewOpen,   setReviewOpen]   = useState(false);
   const [bookingData,  setBookingData]  = useState({ checkIn: '', checkOut: '', guests: 1, rooms: 1 });
 
-  // Lightbox hook
   const lightbox = useImageLightbox([]);
 
   const fetchHotel = useCallback(async () => {
@@ -54,16 +55,9 @@ export default function HotelDetailPage() {
       const data = await res.json();
       setHotel(data);
       if (data.roomTypes?.length > 0) setSelectedRoom(data.roomTypes[0]);
-
-      // Track recently viewed
       addToRecentlyViewed({
-        id: data.id,
-        type: 'hotel',
-        name: data.name,
-        thumbnail: data.thumbnail,
-        price: data.pricePerNight,
-        currency: data.currency,
-        rating: data.rating,
+        id: data.id, type: 'hotel', name: data.name, thumbnail: data.thumbnail,
+        price: data.pricePerNight, currency: data.currency, rating: data.rating,
         city: data.cityRelation?.name || data.city,
       });
     } catch {
@@ -73,7 +67,6 @@ export default function HotelDetailPage() {
 
   useEffect(() => { fetchHotel(); }, [fetchHotel]);
 
-  // Check favorites from localStorage
   useEffect(() => {
     if (!hotel) return;
     try {
@@ -139,35 +132,19 @@ export default function HotelDetailPage() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', paddingTop: '60px' }}>
 
-      {/* Lightbox */}
       {lightbox.open && (
-        <ImageLightbox
-          images={images}
-          initialIndex={lightbox.index}
-          alt={hotel.name}
-          onClose={lightbox.close}
-        />
+        <ImageLightbox images={images} initialIndex={lightbox.index} alt={hotel.name} onClose={lightbox.close} />
       )}
 
-      {/* Review Modal */}
-      <ReviewModal
-        isOpen={reviewOpen}
-        onClose={() => setReviewOpen(false)}
-        itemId={hotel.id}
-        itemName={hotel.name}
-        itemType="hotel"
-      />
+      <ReviewModal isOpen={reviewOpen} onClose={() => setReviewOpen(false)} itemId={hotel.id} itemName={hotel.name} itemType="hotel" />
 
       {/* Back nav + Breadcrumb */}
       <div style={{ padding: `1rem ${VG.section.x}`, borderBottom: '1px solid var(--vg-border)', background: 'var(--vg-bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-        <Breadcrumb
-          locale={locale}
-          items={[
-            { label: 'Hotels',  href: `/${locale}/hotels` },
-            { label: hotel.cityRelation?.name || hotel.city || 'City', href: `/${locale}/hotels?city=${hotel.cityRelation?.name || hotel.city}` },
-            { label: hotel.name },
-          ]}
-        />
+        <Breadcrumb locale={locale} items={[
+          { label: 'Hotels',  href: `/${locale}/hotels` },
+          { label: hotel.cityRelation?.name || hotel.city || 'City', href: `/${locale}/hotels?city=${hotel.cityRelation?.name || hotel.city}` },
+          { label: hotel.name },
+        ]} />
         <button onClick={handleShare} style={{ background: 'none', border: '1px solid var(--vg-border)', padding: '0.35rem 0.7rem', cursor: 'pointer', color: 'var(--vg-text-3)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.15em', textTransform: 'uppercase', transition: 'color 0.2s, border-color 0.2s' }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--vg-gold)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-gold-border)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--vg-text-3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-border)'; }}
@@ -176,11 +153,13 @@ export default function HotelDetailPage() {
         </button>
       </div>
 
-      {/* Gallery — CLICKABLE to open lightbox */}
+      {/* Gallery — FIX: uses CSS variable --vg-hero-filter for light/dark mode */}
       <div style={{ position: 'relative', height: 'clamp(280px,50vw,520px)', overflow: 'hidden', cursor: 'pointer' }}
-        onClick={() => lightbox.openAt(0)}
-        title="Click to view gallery">
-        <Image src={images[0] || hotel.thumbnail} alt={hotel.name} fill style={{ objectFit: 'cover', filter: 'brightness(0.55) saturate(0.7)' }} priority />
+        onClick={() => lightbox.openAt(0)} title="Click to view gallery">
+
+        {/* FIX: objectFit cover, filter via CSS class for light mode adaptation */}
+        <Image src={images[0] || hotel.thumbnail} alt={hotel.name} fill
+          style={{ objectFit: 'cover', filter: 'var(--vg-hero-filter, brightness(0.55) saturate(0.65))' }} priority />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,2,10,0.9) 0%, transparent 50%)' }} />
 
         {/* Thumbnail strip */}
@@ -194,7 +173,9 @@ export default function HotelDetailPage() {
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-gold)'}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(242,238,230,0.3)'}
               >
-                <Image src={img} alt={`Image ${i + 2}`} fill style={{ objectFit: 'cover', filter: 'brightness(0.7)' }} sizes="52px" />
+                {/* FIX: thumbnail strip uses slightly lighter filter in light mode */}
+                <Image src={img} alt={`Image ${i + 2}`} fill
+                  style={{ objectFit: 'cover', filter: 'var(--vg-thumb-filter, brightness(0.60) saturate(0.65))' }} sizes="52px" />
                 {i === 2 && images.length > 4 && (
                   <div style={{ position: 'absolute', inset: 0, background: 'rgba(3,2,10,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: 'var(--font-space-mono)', fontSize: '0.5rem' }}>
                     +{images.length - 4}
@@ -289,7 +270,6 @@ export default function HotelDetailPage() {
                   <div key={room.type} onClick={() => setSelectedRoom(room)}
                     style={{
                       background: selectedRoom?.type === room.type ? 'var(--vg-gold-dim)' : 'var(--vg-bg-card)',
-                      border: selectedRoom?.type === room.type ? '0' : '0',
                       borderLeft: `3px solid ${selectedRoom?.type === room.type ? 'var(--vg-gold)' : 'transparent'}`,
                       padding: '1.2rem 1.4rem', cursor: 'pointer',
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
