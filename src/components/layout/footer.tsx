@@ -85,7 +85,7 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
             {/* Social Icons */}
             <div style={{ display: 'flex', gap: '0.8rem' }}>
               {[['𝕏','#','X'],['in','#','LinkedIn'],['π','#','Pi']].map(([icon, href, label]) => (
-                
+                <a
                   key={String(icon)}
                   href={String(href)}
                   aria-label={String(label)}
