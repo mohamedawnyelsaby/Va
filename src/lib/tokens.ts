@@ -1,141 +1,124 @@
 // PATH: src/lib/tokens.ts
-// ═══════════════════════════════════════════════════════
-// Va Travel — Design Token System
-// مصدر واحد لكل القيم التصميمية في المشروع
-// استخدم هذه المتغيرات بدلاً من القيم المضمّنة مباشرة
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// Va Travel — Cinematic Noir Luxury Design Token System
+// ═══════════════════════════════════════════════════════════════
 
 export const VG = {
 
-  // ── Typography ──────────────────────────────────────
-  // Space Mono (monospace) — للـ labels والـ badges والـ overlines
-  // لا تستخدم أي قيمة أقل من font.micro في أي مكان
+  // ── Typography ──────────────────────────────────────────────
   font: {
-    micro:   '0.65rem',   // 10.4px — أصغر خط مسموح — labels فقط
-    tiny:    '0.72rem',   // 11.5px — sub-labels, badges
-    small:   '0.78rem',   // 12.5px — secondary text
-    body:    '0.88rem',   // 14px   — النص الرئيسي DM Sans
-    bodyLg:  '0.95rem',   // 15.2px — نص أكبر قليلاً
-    button:  '0.68rem',   // 10.9px — أزرار Space Mono
-    nav:     '0.70rem',   // 11.2px — nav links
+    micro:   '0.62rem',   // 9.9px — absolute minimum (labels/badges)
+    tiny:    '0.70rem',   // 11.2px — sub-labels, timestamps
+    small:   '0.80rem',   // 12.8px — secondary text
+    body:    '0.875rem',  // 14px   — main body DM Sans
+    bodyLg:  '0.95rem',   // 15.2px — emphasized body
+    button:  '0.62rem',   // 9.9px  — Space Mono buttons
+    nav:     '0.62rem',   // 9.9px  — nav links
   },
 
-  // ── Letter Spacing (للـ Space Mono فقط) ─────────────
+  // ── Letter Spacing ──────────────────────────────────────────
   tracking: {
-    wide:   '0.28em',   // overlines, titles
-    normal: '0.18em',   // nav, buttons
-    tight:  '0.12em',   // badges, labels inline
+    wide:   '0.32em',   // overlines, section labels
+    normal: '0.22em',   // buttons, nav
+    tight:  '0.12em',   // inline badges, small labels
   },
 
-  // ── Spacing ──────────────────────────────────────────
+  // ── Spacing ─────────────────────────────────────────────────
   space: {
-    '1':  '0.25rem',   // 4px
-    '2':  '0.5rem',    // 8px
-    '3':  '0.75rem',   // 12px
-    '4':  '1rem',      // 16px
-    '5':  '1.25rem',   // 20px
-    '6':  '1.5rem',    // 24px
-    '8':  '2rem',      // 32px
-    '10': '2.5rem',    // 40px
-    '12': '3rem',      // 48px
-    '16': '4rem',      // 64px
-    '20': '5rem',      // 80px
+    '1': '0.25rem', '2': '0.5rem',  '3': '0.75rem',
+    '4': '1rem',    '5': '1.25rem', '6': '1.5rem',
+    '8': '2rem',    '10': '2.5rem', '12': '3rem',
+    '16': '4rem',   '20': '5rem',
   },
 
-  // ── Section Padding (responsive) ────────────────────
+  // ── Responsive Section Padding ─────────────────────────────
   section: {
-    x: 'clamp(1.5rem, 7vw, 5rem)',
-    y: 'clamp(3rem, 6vw, 5rem)',
-    yLg: 'clamp(4rem, 8vw, 7rem)',
+    x:   'clamp(1.5rem, 7vw, 5rem)',
+    y:   'clamp(3rem, 6vw, 5rem)',
+    yLg: 'clamp(5rem, 9vw, 8rem)',
   },
 
-  // ── Border Radius ────────────────────────────────────
-  // Va Travel يستخدم sharp corners (radius=0) كـ design language
-  // استخدام radius فقط للـ badges والـ pills الاختيارية
-  radius: {
-    none:  '0px',
-    sm:    '2px',    // badges صغيرة
-    md:    '4px',    // pills
-  },
-
-  // ── Transition ───────────────────────────────────────
+  // ── Transition ──────────────────────────────────────────────
   transition: {
     fast:   'all 0.15s ease',
-    normal: 'all 0.25s ease',
-    slow:   'all 0.4s ease',
+    normal: 'all 0.25s cubic-bezier(0.22, 1, 0.36, 1)',
+    slow:   'all 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
     color:  'color 0.2s ease, border-color 0.2s ease, background 0.2s ease',
   },
 
-  // ── Z-index ──────────────────────────────────────────
+  // ── Z-index ─────────────────────────────────────────────────
   z: {
-    base:    1,
-    card:    2,
-    overlay: 3,
-    nav:     500,
-    modal:   600,
-    cursor:  9997,
-    grain:   9999,
+    base: 1, card: 2, overlay: 3,
+    nav: 500, modal: 600,
+    cursor: 9997, grain: 9999,
   },
 
 } as const;
 
-// ── Style Helpers ──────────────────────────────────────
-// جاهزة للاستخدام كـ inline style objects
+// ── Reusable inline style objects ────────────────────────────
 
-export const monoLabel = {
-  fontFamily: 'var(--font-space-mono)',
-  fontSize:   VG.font.micro,
+export const monoLabel: React.CSSProperties = {
+  fontFamily:    'var(--font-space-mono)',
+  fontSize:      VG.font.micro,
   letterSpacing: VG.tracking.tight,
-  textTransform: 'uppercase' as const,
-  color:      'var(--vg-text-3)',
+  textTransform: 'uppercase',
+  color:         'var(--vg-text-3)',
 };
 
-export const monoLabelGold = {
+export const monoLabelGold: React.CSSProperties = {
   ...monoLabel,
-  color: 'var(--vg-gold)',
+  color:         'var(--vg-gold)',
   letterSpacing: VG.tracking.wide,
 };
 
-export const overlineStyle = {
+export const overlineStyle: React.CSSProperties = {
   fontFamily:    'var(--font-space-mono)',
   fontSize:      VG.font.micro,
   letterSpacing: VG.tracking.wide,
-  textTransform: 'uppercase' as const,
+  textTransform: 'uppercase',
   color:         'var(--vg-gold)',
   display:       'flex',
   alignItems:    'center',
-  gap:           '0.75rem',
+  gap:           '0.85rem',
 };
 
-export const cardBase = {
-  background:  'var(--vg-bg-card)',
-  border:      '1px solid var(--vg-border)',
-  transition:  VG.transition.color,
+export const cardBase: React.CSSProperties = {
+  background:   'var(--vg-bg-card)',
+  border:       '1px solid var(--vg-border)',
+  boxShadow:    'var(--vg-shadow-card)',
+  transition:   'border-color 0.3s ease, box-shadow 0.3s ease',
 };
 
-export const statNum = {
-  fontFamily: 'var(--font-cormorant)',
-  fontWeight: 300,
-  fontSize:   'clamp(2rem, 4vw, 3.5rem)',
-  color:      'var(--vg-gold)',
-  lineHeight: 1,
+export const statNum: React.CSSProperties = {
+  fontFamily:    'var(--font-cormorant)',
+  fontWeight:    300,
+  fontSize:      'clamp(2rem, 4vw, 3.5rem)',
+  color:         'var(--vg-gold)',
+  lineHeight:    0.92,
+  letterSpacing: '-0.02em',
 };
 
-// ── Input Base Style ───────────────────────────────────
-export const inputBase = {
+export const inputBase: React.CSSProperties = {
   width:       '100%',
-  boxSizing:   'border-box' as const,
+  boxSizing:   'border-box',
   background:  'var(--vg-bg-surface)',
   border:      '1px solid var(--vg-border)',
-  padding:     '0.75rem 0.9rem',
+  padding:     '0.8rem 1rem',
   fontFamily:  'var(--font-dm-sans)',
   fontSize:    VG.font.body,
   color:       'var(--vg-text)',
   outline:     'none',
-  transition:  VG.transition.color,
+  transition:  'border-color 0.2s ease, box-shadow 0.2s ease',
 };
 
-export const inputFocus = { borderColor: 'var(--vg-gold-border)' };
-export const inputBlur  = { borderColor: 'var(--vg-border)' };
+export const inputFocus: React.CSSProperties = {
+  borderColor: 'var(--vg-gold-border)',
+  boxShadow:   '0 0 0 3px rgba(212,168,83,0.08)',
+};
+
+export const inputBlur: React.CSSProperties = {
+  borderColor: 'var(--vg-border)',
+  boxShadow:   'none',
+};
 
 export type VGTokens = typeof VG;
