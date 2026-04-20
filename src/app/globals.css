@@ -1072,3 +1072,117 @@ body::after {
   border-color: rgba(123,77,9,0.20);
   border-top-color: var(--vg-gold-text);
 }
+/* ─────────────────────────────────────────────────────────
+   MOBILE APP EXPERIENCE ADDITIONS
+   أضف هذا في نهاية globals.css
+───────────────────────────────────────────────────────── */
+
+/* ── Hide desktop footer on mobile — BottomNav replaces it ── */
+@media (max-width: 768px) {
+  .vg-desktop-footer {
+    display: none !important;
+  }
+
+  /* Give main content breathing room above bottom nav */
+  main {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Hide the old navbar on mobile when bottom nav is present */
+  .vg-nav {
+    height: 56px !important;
+  }
+
+  /* Remove the website-like padding on mobile sections */
+  [style*="clamp(4rem,8vw,7rem)"] {
+    padding-top: clamp(2.5rem, 5vw, 4rem) !important;
+    padding-bottom: clamp(2.5rem, 5vw, 4rem) !important;
+  }
+}
+
+/* ── Native app-like scroll behavior ── */
+@supports (-webkit-overflow-scrolling: touch) {
+  html {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+  }
+}
+
+/* ── Prevent body scroll bounce on iOS ── */
+html, body {
+  overscroll-behavior-y: none;
+}
+
+/* ── Status bar area fill on iPhone notch ── */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .vg-nav {
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(60px + env(safe-area-inset-top, 0px)) !important;
+  }
+}
+
+/* ── App-like tap feedback ── */
+@media (hover: none) and (pointer: coarse) {
+  a, button, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* ── Mobile: hero section full viewport ── */
+@media (max-width: 768px) {
+  /* AI chat page message bubbles — better mobile sizing */
+  [style*="maxWidth: '78%'"] {
+    max-width: 85% !important;
+  }
+
+  /* Quick action chips scrollable on mobile */
+  .vg-quick-chips {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .vg-quick-chips::-webkit-scrollbar { display: none; }
+}
+
+/* ── Bottom Nav specific light mode ── */
+:root:not(.dark) .vg-bottom-nav-inner {
+  background: rgba(244, 239, 229, 0.97) !important;
+  border-color: rgba(25, 14, 5, 0.12) !important;
+}
+
+/* ── Smooth page transitions ── */
+@media (prefers-reduced-motion: no-preference) {
+  main {
+    animation: pageIn 0.25s ease forwards;
+  }
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Mobile section headers more compact ── */
+@media (max-width: 480px) {
+  .vg-display {
+    font-size: clamp(2rem, 8vw, 3rem) !important;
+    line-height: 0.95 !important;
+  }
+}
+
+/* ── Pull to refresh visual ── */
+@supports (overscroll-behavior: contain) {
+  main {
+    overscroll-behavior: contain;
+  }
+}
