@@ -1,5 +1,8 @@
 'use client';
 // PATH: src/app/[locale]/ai/page.tsx
+// FIXED: Removed cheap "π POWERED BY PI NETWORK" footer bar
+// FIXED: Text direction — always LTR for chat container, content inherits user language
+// FIXED: World-class app-like chat UI
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
@@ -27,11 +30,11 @@ const QUICK_ACTIONS = [
 
 function TypingIndicator() {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', padding: '0 clamp(1rem,4vw,2rem)' }}>
-      <div style={{ width: '32px', height: '32px', background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'var(--vg-gold)' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', padding: '0 clamp(1rem,4vw,2rem)', direction: 'ltr' }}>
+      <div style={{ width: '32px', height: '32px', background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'var(--vg-gold)', borderRadius: '50%' }}>
         <Bot size={14} />
       </div>
-      <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', padding: '0.9rem 1.1rem', display: 'flex', gap: '5px', alignItems: 'center' }}>
+      <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', padding: '0.9rem 1.1rem', display: 'flex', gap: '5px', alignItems: 'center', borderRadius: '0 12px 12px 12px' }}>
         {[0, 1, 2].map(i => (
           <div key={i} style={{ width: '7px', height: '7px', background: 'var(--vg-gold)', borderRadius: '50%', animation: `bounce 1.2s ease-in-out ${i * 0.15}s infinite` }} />
         ))}
@@ -43,7 +46,7 @@ function TypingIndicator() {
 function HotelCard({ hotel, locale }: { hotel: any; locale: string }) {
   return (
     <div
-      style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', display: 'flex', overflow: 'hidden', transition: 'border-color 0.2s' }}
+      style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', display: 'flex', overflow: 'hidden', transition: 'border-color 0.2s', borderRadius: '8px' }}
       onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-gold-border)'}
       onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-border)'}
     >
@@ -101,13 +104,15 @@ function MessageBubble({ msg, locale }: { msg: Message; locale: string }) {
   const isUser = msg.role === 'user';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: '0.6rem', padding: '0 clamp(1rem,4vw,2rem)' }}>
+    // FIXED: direction always ltr for chat layout, text content inherits naturally
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: '0.6rem', padding: '0 clamp(1rem,4vw,2rem)', direction: 'ltr' }}>
       {!isUser && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ width: '24px', height: '24px', background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--vg-gold)' }}>
-            <Bot size={12} />
+          <div style={{ width: '28px', height: '28px', background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--vg-gold)' }}>
+            <Bot size={13} />
           </div>
-          <span style={{ ...monoLabel }}>Logy AI</span>
+          <span style={{ ...monoLabel, color: 'var(--vg-gold)' }}>Logy AI</span>
+          <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite', display: 'inline-block' }} />
         </div>
       )}
 
@@ -116,11 +121,17 @@ function MessageBubble({ msg, locale }: { msg: Message; locale: string }) {
         padding: '0.9rem 1.1rem',
         background: isUser ? 'var(--vg-gold)' : 'var(--vg-bg-card)',
         border: isUser ? 'none' : '1px solid var(--vg-border)',
-        color: isUser ? 'var(--vg-bg)' : 'var(--vg-text)',
+        borderRadius: isUser ? '18px 18px 4px 18px' : '4px 18px 18px 18px',
+        color: isUser ? '#fff' : 'var(--vg-text)',
         fontFamily: 'var(--font-dm-sans)',
         fontSize: VG.font.body,
         lineHeight: 1.7,
         whiteSpace: 'pre-wrap',
+        // Let text direction be natural per content
+        direction: 'auto' as any,
+        boxShadow: isUser
+          ? '0 2px 12px rgba(201,162,39,0.25)'
+          : '0 1px 4px rgba(0,0,0,0.08)',
       }}>
         {msg.content}
       </div>
@@ -131,7 +142,7 @@ function MessageBubble({ msg, locale }: { msg: Message; locale: string }) {
           <div style={{ ...monoLabel, marginBottom: '0.6rem', color: 'var(--vg-text-3)' }}>
             🏨 {msg.hotels.length} hotels found
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--vg-border)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {msg.hotels.slice(0, 4).map((hotel: any) => (
               <HotelCard key={hotel.id} hotel={hotel} locale={locale} />
             ))}
@@ -139,9 +150,8 @@ function MessageBubble({ msg, locale }: { msg: Message; locale: string }) {
         </div>
       )}
 
-      {/* FIX: timestamp font was 0.48rem — now VG.font.micro (0.65rem) */}
       {msg.timestamp && (
-        <div style={{ ...monoLabel, color: 'var(--vg-text-3)', fontSize: VG.font.micro }}>
+        <div style={{ ...monoLabel, color: 'var(--vg-text-3)', fontSize: '0.58rem', opacity: 0.7 }}>
           {msg.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
         </div>
       )}
@@ -150,7 +160,6 @@ function MessageBubble({ msg, locale }: { msg: Message; locale: string }) {
 }
 
 export default function AITravelPage() {
-  // FIX: use useParams() instead of window.location.pathname (avoids hydration error)
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
 
@@ -220,6 +229,7 @@ export default function AITravelPage() {
         position: 'sticky', top: 0, zIndex: 100,
         height: '60px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        direction: 'ltr',
       }}>
         {/* Left: Back + Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -238,7 +248,7 @@ export default function AITravelPage() {
           <div style={{ width: '1px', height: '20px', background: 'var(--vg-border)' }} />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-            <div style={{ width: '36px', height: '36px', background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--vg-gold)' }}>
+            <div style={{ width: '36px', height: '36px', background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--vg-gold)' }}>
               <Bot size={16} />
             </div>
             <div>
@@ -247,8 +257,7 @@ export default function AITravelPage() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.15rem' }}>
                 <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite' }} />
-                {/* FIX: was 0.48rem — now VG.font.micro */}
-                <span style={{ ...monoLabel, color: '#10b981', fontSize: VG.font.micro }}>Online</span>
+                <span style={{ ...monoLabel, color: '#10b981', fontSize: '0.58rem' }}>Online</span>
               </div>
             </div>
           </div>
@@ -259,11 +268,11 @@ export default function AITravelPage() {
           <style>{`@media(max-width:500px){.header-features{display:none!important}}`}</style>
           {[
             { icon: Globe, label: 'All Languages' },
-            { icon: Zap,   label: 'Instant Results' },
+            { icon: Zap,   label: 'Instant' },
           ].map(item => {
             const Icon = item.icon;
             return (
-              <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.3rem 0.7rem', border: '1px solid var(--vg-border)', background: 'var(--vg-bg-card)' }}>
+              <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.3rem 0.7rem', border: '1px solid var(--vg-border)', background: 'var(--vg-bg-card)', borderRadius: '8px' }}>
                 <Icon size={11} color="var(--vg-gold)" />
                 <span style={{ ...monoLabel, color: 'var(--vg-text-3)', letterSpacing: '0.12em' }}>{item.label}</span>
               </div>
@@ -287,7 +296,7 @@ export default function AITravelPage() {
 
       {/* ── Quick Actions ── */}
       {showQuick && messages.length <= 1 && (
-        <div style={{ maxWidth: '860px', width: '100%', margin: '0 auto', padding: '0 clamp(1rem,4vw,2rem) 0.75rem', boxSizing: 'border-box' }}>
+        <div style={{ maxWidth: '860px', width: '100%', margin: '0 auto', padding: '0 clamp(1rem,4vw,2rem) 0.75rem', boxSizing: 'border-box', direction: 'ltr' }}>
           <div style={{ ...monoLabel, color: 'var(--vg-text-3)', marginBottom: '0.6rem', display: 'block' }}>Try asking:</div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {QUICK_ACTIONS.map((action, i) => (
@@ -300,6 +309,7 @@ export default function AITravelPage() {
                   cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small,
                   display: 'flex', alignItems: 'center', gap: '0.4rem',
                   transition: 'border-color 0.2s, color 0.2s, background 0.2s', flexShrink: 0,
+                  borderRadius: '20px',
                 }}
                 onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--vg-gold-border)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--vg-gold)'; (e.currentTarget as HTMLButtonElement).style.background = 'var(--vg-gold-dim)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--vg-border)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--vg-text-2)'; (e.currentTarget as HTMLButtonElement).style.background = 'var(--vg-bg-card)'; }}
@@ -312,9 +322,20 @@ export default function AITravelPage() {
         </div>
       )}
 
-      {/* ── Input Bar ── */}
-      <div style={{ borderTop: '1px solid var(--vg-border)', background: 'var(--vg-bg-surface)', padding: '0.85rem clamp(1rem,4vw,2rem)', position: 'sticky', bottom: 0, zIndex: 50 }}>
+      {/* ── Input Bar — NO cheap footer, clean app-like ── */}
+      <div style={{
+        borderTop: '1px solid var(--vg-border)',
+        background: 'var(--vg-bg-surface)',
+        backdropFilter: 'blur(20px)',
+        padding: '0.85rem clamp(1rem,4vw,2rem)',
+        position: 'sticky', bottom: 0, zIndex: 50,
+        direction: 'ltr',
+      }}>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', maxWidth: '860px', margin: '0 auto' }}>
+          {/* Pi indicator — subtle, not cheap banner */}
+          <div style={{ width: '36px', height: '36px', flexShrink: 0, background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--vg-gold)', fontFamily: 'var(--font-space-mono)', fontSize: '1rem', fontWeight: 700 }}>
+            π
+          </div>
           <input
             ref={inputRef}
             value={input}
@@ -322,10 +343,17 @@ export default function AITravelPage() {
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
             placeholder="Ask anything in any language… 🌍"
             style={{
-              flex: 1, background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)',
-              padding: '0.85rem 1rem', color: 'var(--vg-text)',
-              fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.body,
-              outline: 'none', transition: 'border-color 0.2s',
+              flex: 1,
+              background: 'var(--vg-bg-card)',
+              border: '1px solid var(--vg-border)',
+              padding: '0.85rem 1rem',
+              color: 'var(--vg-text)',
+              fontFamily: 'var(--font-dm-sans)',
+              fontSize: VG.font.body,
+              outline: 'none',
+              transition: 'border-color 0.2s',
+              borderRadius: '24px',
+              direction: 'auto' as any,
             }}
             onFocus={e => e.target.style.borderColor = 'var(--vg-gold-border)'}
             onBlur={e => e.target.style.borderColor = 'var(--vg-border)'}
@@ -339,16 +367,15 @@ export default function AITravelPage() {
               border: loading || !input.trim() ? '1px solid var(--vg-border)' : 'none',
               cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: loading || !input.trim() ? 'var(--vg-text-3)' : 'var(--vg-bg)',
+              color: loading || !input.trim() ? 'var(--vg-text-3)' : '#fff',
               transition: 'all 0.2s',
+              borderRadius: '50%',
+              boxShadow: (!loading && input.trim()) ? '0 4px 16px rgba(201,162,39,0.4)' : 'none',
             }}
             aria-label="Send"
           >
             <Send size={16} />
           </button>
-        </div>
-        <div style={{ ...monoLabel, color: 'var(--vg-text-3)', textAlign: 'center', marginTop: '0.5rem', display: 'block' }}>
-          π Powered by Pi Network · All Languages Supported
         </div>
       </div>
 
