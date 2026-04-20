@@ -8,70 +8,89 @@
 ───────────────────────────────────────────── */
 @layer base {
   :root {
-    --background: 46 25% 96%;
-    --foreground: 30 60% 8%;
-    --card: 0 0% 100%;
-    --card-foreground: 30 60% 8%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 30 60% 8%;
-    --primary: 42 75% 40%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 40 20% 92%;
-    --secondary-foreground: 30 60% 8%;
-    --muted: 40 20% 92%;
-    --muted-foreground: 30 20% 40%;
-    --accent: 40 20% 92%;
-    --accent-foreground: 30 60% 8%;
+    --background: 38 28% 93%;
+    --foreground: 26 55% 7%;
+    --card: 36 30% 97%;
+    --card-foreground: 26 55% 7%;
+    --popover: 36 30% 97%;
+    --popover-foreground: 26 55% 7%;
+    --primary: 33 82% 26%;
+    --primary-foreground: 36 30% 97%;
+    --secondary: 36 20% 89%;
+    --secondary-foreground: 26 55% 7%;
+    --muted: 36 20% 89%;
+    --muted-foreground: 26 18% 36%;
+    --accent: 36 20% 89%;
+    --accent-foreground: 26 55% 7%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 40 15% 82%;
-    --input: 40 15% 82%;
-    --ring: 42 75% 40%;
+    --border: 33 18% 76%;
+    --input: 33 18% 76%;
+    --ring: 33 82% 26%;
     --radius: 0rem;
 
-    /* ── Light Mode Tokens ── */
-    --vg-bg:          #F6F3EC;
-    --vg-bg-card:     #FFFFFF;
-    --vg-bg-surface:  #EDE9DC;
-    --vg-bg-deep:     #E0DCCF;
-    --vg-text:        #1A1208;
-    --vg-text-2:      rgba(26,18,8,0.68);
-    --vg-text-3:      rgba(26,18,8,0.42);
+    /* ══════════════════════════════════════════════════
+       LIGHT MODE — "Aged Cognac & Ivory Parchment"
+       وضع نهاري فاخر: عاج دافئ + ذهب كونياك عميق
+    ══════════════════════════════════════════════════ */
 
-    /* Gold — darker in light mode for contrast on light backgrounds */
-    --vg-gold:        #7A560F;
-    --vg-gold-2:      #8A6412;
-    --vg-gold-3:      #A07820;
-    --vg-gold-dim:    rgba(122,86,15,0.10);
-    --vg-gold-dim2:   rgba(122,86,15,0.06);
-    --vg-gold-border: rgba(122,86,15,0.30);
-    --vg-gold-text:   #5C3A06;
+    /* ── Backgrounds — خلفيات عاجية متدرجة الدفء ── */
+    --vg-bg:           #F4EFE5;   /* عاج دافئ — ورق كتاب قديم */
+    --vg-bg-card:      #FDFAF3;   /* أبيض كريمي ناعم */
+    --vg-bg-surface:   #EAE2D2;   /* رمال دافئة */
+    --vg-bg-deep:      #DDD4C0;   /* رمال أعمق */
 
-    /* Borders — stronger in light mode */
-    --vg-border:      rgba(26,18,8,0.13);
-    --vg-border-2:    rgba(26,18,8,0.22);
+    /* ── Text — أسود قهوائي دافئ ── */
+    --vg-text:         #190E05;   /* أسود دافئ — تقريبًا بني داكن */
+    --vg-text-2:       rgba(25,14,5,0.68);
+    --vg-text-3:       rgba(25,14,5,0.40);
 
-    /* Nav */
-    --vg-nav-bg:      rgba(246,243,236,0.97);
-    --vg-nav-border:  rgba(26,18,8,0.12);
+    /* ── Gold — ذهب كونياك عميق يُقرأ جيدًا على الفاتح ── */
+    --vg-gold:         #7B4D09;   /* كونياك عنبري عميق */
+    --vg-gold-2:       #9B6311;   /* أفتح قليلًا */
+    --vg-gold-3:       #BA7B1C;   /* هايلايت */
+    --vg-gold-dim:     rgba(123,77,9,0.11);
+    --vg-gold-dim2:    rgba(123,77,9,0.06);
+    --vg-gold-border:  rgba(123,77,9,0.30);
+    --vg-gold-text:    #5A3407;   /* للنصوص فوق الفاتح جدًا */
 
-    /* Star */
-    --vg-star:        #8A5E08;
+    /* ── Borders — بني دافئ ── */
+    --vg-border:       rgba(25,14,5,0.13);
+    --vg-border-2:     rgba(25,14,5,0.24);
 
-    /* Skeleton — more visible in light mode */
-    --vg-skel-bg:     #D0CBBD;
-    --vg-skel-shine:  rgba(122,86,15,0.12);
+    /* ── Nav ── */
+    --vg-nav-bg:       rgba(244,239,229,0.97);
+    --vg-nav-border:   rgba(25,14,5,0.11);
 
-    /* Image filters — lighter in light mode */
-    --vg-thumb-filter: brightness(0.75) saturate(0.80);
-    --vg-thumb-hover:  brightness(0.62) saturate(0.72);
-    --vg-hero-filter:  brightness(0.60) saturate(0.72);
+    /* ── Star ── */
+    --vg-star:         #8C600A;
 
-    /* Transition helper */
+    /* ── Skeleton — أكثر وضوحًا على الفاتح ── */
+    --vg-skel-bg:      #D4C9B4;
+    --vg-skel-shine:   rgba(123,77,9,0.14);
+
+    /* ── Image filters — أفتح في النهار ── */
+    --vg-thumb-filter: brightness(0.80) saturate(0.82);
+    --vg-thumb-hover:  brightness(0.66) saturate(0.74);
+    --vg-hero-filter:  brightness(0.58) saturate(0.70);
+
+    /* ── Transition ── */
     --vg-transition-color: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-    --vg-gold-dim-card: rgba(122,86,15,0.07);
+    --vg-gold-dim-card: rgba(123,77,9,0.07);
+
+    /* ── Shadows — ظلال عنبرية دافئة ── */
+    --vg-shadow-sm:    0 1px 4px rgba(25,14,5,0.10);
+    --vg-shadow-md:    0 4px 16px rgba(25,14,5,0.12);
+    --vg-shadow-lg:    0 8px 32px rgba(25,14,5,0.14);
+    --vg-shadow-gold:  0 4px 24px rgba(123,77,9,0.15);
+
+    /* ── ShadCN شامل ── */
+    --vg-transition-color: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
   }
 
+  /* ══════════════════════════════════════════════════
+     DARK MODE — وضع ليلي (محافظ على الأصل)
+  ══════════════════════════════════════════════════ */
   .dark {
     --background: 250 60% 3%;
     --foreground: 42 25% 92%;
@@ -93,32 +112,35 @@
     --input: 250 20% 14%;
     --ring: 42 65% 47%;
 
-    /* ── Dark Mode Tokens ── */
-    --vg-bg:          #03020A;
-    --vg-bg-card:     #0E0C18;
-    --vg-bg-surface:  #09080F;
-    --vg-bg-deep:     #141220;
-    --vg-text:        #F2EEE6;
-    --vg-text-2:      rgba(242,238,230,0.55);
-    --vg-text-3:      rgba(242,238,230,0.24);
-    --vg-gold:        #C9A227;
-    --vg-gold-2:      #E8C255;
-    --vg-gold-3:      #F0D070;
-    --vg-gold-dim:    rgba(201,162,39,0.15);
-    --vg-gold-dim2:   rgba(201,162,39,0.06);
-    --vg-gold-border: rgba(201,162,39,0.28);
-    --vg-gold-text:   #F0D070;
-    --vg-border:      rgba(242,238,230,0.07);
-    --vg-border-2:    rgba(242,238,230,0.13);
-    --vg-nav-bg:      rgba(3,2,10,0.94);
-    --vg-nav-border:  rgba(242,238,230,0.06);
-    --vg-star:        #E8C255;
-    --vg-skel-bg:     rgba(255,255,255,0.05);
-    --vg-skel-shine:  rgba(201,162,39,0.08);
+    --vg-bg:           #03020A;
+    --vg-bg-card:      #0E0C18;
+    --vg-bg-surface:   #09080F;
+    --vg-bg-deep:      #141220;
+    --vg-text:         #F2EEE6;
+    --vg-text-2:       rgba(242,238,230,0.55);
+    --vg-text-3:       rgba(242,238,230,0.24);
+    --vg-gold:         #C9A227;
+    --vg-gold-2:       #E8C255;
+    --vg-gold-3:       #F0D070;
+    --vg-gold-dim:     rgba(201,162,39,0.15);
+    --vg-gold-dim2:    rgba(201,162,39,0.06);
+    --vg-gold-border:  rgba(201,162,39,0.28);
+    --vg-gold-text:    #F0D070;
+    --vg-border:       rgba(242,238,230,0.07);
+    --vg-border-2:     rgba(242,238,230,0.13);
+    --vg-nav-bg:       rgba(3,2,10,0.94);
+    --vg-nav-border:   rgba(242,238,230,0.06);
+    --vg-star:         #E8C255;
+    --vg-skel-bg:      rgba(255,255,255,0.05);
+    --vg-skel-shine:   rgba(201,162,39,0.08);
     --vg-thumb-filter: brightness(0.48) saturate(0.55);
     --vg-thumb-hover:  brightness(0.40) saturate(0.48);
     --vg-hero-filter:  brightness(0.50) saturate(0.65);
     --vg-gold-dim-card: rgba(201,162,39,0.08);
+    --vg-shadow-sm:    0 1px 4px rgba(0,0,0,0.35);
+    --vg-shadow-md:    0 4px 16px rgba(0,0,0,0.45);
+    --vg-shadow-lg:    0 8px 32px rgba(0,0,0,0.55);
+    --vg-shadow-gold:  0 4px 24px rgba(201,162,39,0.20);
   }
 }
 
@@ -160,6 +182,7 @@
 ───────────────────────────────────────────── */
 @layer components {
 
+  /* ══ Display Heading ══ */
   .vg-display {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-weight: 300;
@@ -170,6 +193,7 @@
 
   .vg-italic { font-style: italic; color: var(--vg-gold); }
 
+  /* ══ Overline ══ */
   .vg-overline {
     font-family: 'Space Mono', monospace;
     font-size: clamp(9px, 0.58rem, 11px);
@@ -189,7 +213,7 @@
     flex-shrink: 0;
   }
 
-  /* Light mode overline — darker gold */
+  /* ── Light mode overline — ذهب عميق ── */
   :root:not(.dark) .vg-overline {
     color: var(--vg-gold-text);
   }
@@ -197,7 +221,7 @@
     background: var(--vg-gold-text);
   }
 
-  /* ── Primary Button ── */
+  /* ══ Primary Button ══ */
   .vg-btn-primary {
     background: var(--vg-gold);
     color: #FFFFFF;
@@ -208,7 +232,7 @@
     letter-spacing: 0.22em;
     text-transform: uppercase;
     padding: 1rem 2.4rem;
-    transition: background 0.3s, transform 0.2s;
+    transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
@@ -216,19 +240,24 @@
     direction: ltr;
     white-space: nowrap;
   }
-  .vg-btn-primary:hover { background: var(--vg-gold-2); transform: translateY(-1px); }
+  .vg-btn-primary:hover {
+    background: var(--vg-gold-2);
+    transform: translateY(-1px);
+  }
   .vg-btn-primary:active { transform: translateY(0); }
 
-  /* Light mode — slightly darker gold button */
+  /* Light mode — زر ذهبي داكن أكثر ── */
   :root:not(.dark) .vg-btn-primary {
-    background: #6E4C0C;
-    color: #FFFFFF;
+    background: #7B4D09;
+    color: #FDFAF3;
+    box-shadow: 0 2px 12px rgba(123,77,9,0.28);
   }
   :root:not(.dark) .vg-btn-primary:hover {
-    background: #7A560F;
+    background: #6A4008;
+    box-shadow: 0 4px 20px rgba(123,77,9,0.38);
   }
 
-  /* ── Outline Button ── */
+  /* ══ Outline Button ══ */
   .vg-btn-outline {
     background: none;
     border: 1px solid var(--vg-gold-border);
@@ -239,7 +268,7 @@
     letter-spacing: 0.22em;
     text-transform: uppercase;
     padding: 0.9rem 2rem;
-    transition: background 0.3s, border-color 0.3s, color 0.3s;
+    transition: background 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s;
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
@@ -247,27 +276,39 @@
     direction: ltr;
     white-space: nowrap;
   }
-  .vg-btn-outline:hover { background: var(--vg-gold-dim); border-color: var(--vg-gold); }
+  .vg-btn-outline:hover {
+    background: var(--vg-gold-dim);
+    border-color: var(--vg-gold);
+  }
 
   /* Light mode outline button */
   :root:not(.dark) .vg-btn-outline {
     color: var(--vg-gold-text);
-    border-color: rgba(122,86,15,0.35);
+    border-color: rgba(123,77,9,0.32);
   }
   :root:not(.dark) .vg-btn-outline:hover {
     border-color: var(--vg-gold);
     color: var(--vg-gold);
-    background: rgba(122,86,15,0.08);
+    background: rgba(123,77,9,0.08);
+    box-shadow: 0 2px 12px rgba(123,77,9,0.12);
   }
 
+  /* ══ Card Base ══ */
   .vg-card {
     background: var(--vg-bg-card);
     border: 1px solid var(--vg-border);
-    transition: border-color 0.3s;
+    transition: border-color 0.3s, box-shadow 0.3s;
   }
   .vg-card:hover { border-color: var(--vg-gold-border); }
 
-  /* ── Badge ── */
+  :root:not(.dark) .vg-card {
+    box-shadow: var(--vg-shadow-sm);
+  }
+  :root:not(.dark) .vg-card:hover {
+    box-shadow: var(--vg-shadow-gold);
+  }
+
+  /* ══ Badge ══ */
   .vg-badge-outline {
     font-family: 'Space Mono', monospace;
     font-size: clamp(9px, 0.5rem, 11px);
@@ -285,8 +326,8 @@
 
   :root:not(.dark) .vg-badge-outline {
     color: var(--vg-gold-text);
-    background: rgba(122,86,15,0.09);
-    border-color: rgba(122,86,15,0.30);
+    background: rgba(123,77,9,0.10);
+    border-color: rgba(123,77,9,0.28);
   }
 
   .vg-badge-outline .dot {
@@ -301,7 +342,7 @@
     background: var(--vg-gold-text);
   }
 
-  /* ── Stat Number ── */
+  /* ══ Stat Number ══ */
   .vg-stat-num {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-weight: 300;
@@ -324,7 +365,7 @@
     direction: ltr;
   }
 
-  /* ── Ticker ── */
+  /* ══ Ticker ══ */
   .vg-ticker-wrap {
     overflow: hidden;
     border-top: 1px solid var(--vg-border);
@@ -333,6 +374,12 @@
     padding: 0.6rem 0;
     direction: ltr;
   }
+
+  :root:not(.dark) .vg-ticker-wrap {
+    background: linear-gradient(to right, var(--vg-bg-surface), var(--vg-bg-deep), var(--vg-bg-surface));
+    border-color: rgba(123,77,9,0.15);
+  }
+
   .vg-ticker-inner {
     display: inline-flex;
     white-space: nowrap;
@@ -348,8 +395,11 @@
   }
   .vg-ticker-item .tag { color: var(--vg-gold); margin-right: 0.4rem; }
 
-  /* ── Hero Section — ALWAYS DARK ── */
-  /* This section must NEVER show light-mode background */
+  :root:not(.dark) .vg-ticker-item .tag {
+    color: var(--vg-gold-text);
+  }
+
+  /* ══ Hero Section — ALWAYS DARK ══ */
   .vg-hero-force-dark {
     background: #03020A !important;
     color: #F2EEE6 !important;
@@ -357,14 +407,14 @@
     contain: layout style;
   }
 
-  /* ── Hotel Card ── */
+  /* ══ Hotel Card ══ */
   .vg-hotel-card {
     position: relative;
     overflow: hidden;
     cursor: pointer;
     background: var(--vg-bg-card);
     border: 1px solid var(--vg-border);
-    transition: border-color 0.4s;
+    transition: border-color 0.4s, box-shadow 0.4s, transform 0.3s;
     width: 100%;
     display: block;
   }
@@ -374,7 +424,15 @@
     filter: var(--vg-thumb-hover);
   }
 
-  /* Image filter via CSS variable — adapts light/dark */
+  :root:not(.dark) .vg-hotel-card {
+    box-shadow: var(--vg-shadow-sm);
+  }
+  :root:not(.dark) .vg-hotel-card:hover {
+    border-color: rgba(123,77,9,0.35);
+    box-shadow: var(--vg-shadow-gold);
+    background: #FDFAF3;
+  }
+
   .vg-hotel-thumb {
     width: 100%; height: 100%;
     object-fit: cover;
@@ -385,12 +443,12 @@
   .vg-price-tag {
     position: absolute;
     top: 1.1rem; right: 1.1rem;
-    background: rgba(3,2,10,0.80);
+    background: rgba(25,14,5,0.80);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(201,162,39,0.40);
+    border: 1px solid rgba(123,77,9,0.50);
     font-family: 'Space Mono', monospace;
     font-size: clamp(9px, 0.58rem, 11px);
-    color: #F0D070;
+    color: #F5D990;
     letter-spacing: 0.1em;
     padding: 0.28rem 0.75rem;
     z-index: 2;
@@ -398,7 +456,14 @@
     white-space: nowrap;
   }
 
-  /* ── Navbar ── */
+  :root:not(.dark) .vg-price-tag {
+    background: rgba(25,14,5,0.85);
+    border-color: rgba(123,77,9,0.60);
+    color: #F5D08A;
+    box-shadow: 0 2px 8px rgba(25,14,5,0.25);
+  }
+
+  /* ══ Navbar ══ */
   .vg-nav {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -407,11 +472,15 @@
     border-bottom: 0.5px solid var(--vg-nav-border);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    transition: background 0.4s, border-color 0.4s;
+    transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
     direction: ltr;
   }
 
-  /* ── Reveal Animation ── */
+  :root:not(.dark) .vg-nav {
+    box-shadow: 0 1px 16px rgba(25,14,5,0.08);
+  }
+
+  /* ══ Reveal Animation ══ */
   .vg-reveal {
     opacity: 0;
     transform: translateY(32px);
@@ -423,7 +492,7 @@
   .vg-reveal.d3 { transition-delay: 0.25s; }
   .vg-reveal.d4 { transition-delay: 0.35s; }
 
-  /* ── Feature Item ── */
+  /* ══ Feature Item ══ */
   .vg-feat {
     display: flex;
     gap: 1.1rem;
@@ -431,32 +500,38 @@
     padding: 1.3rem 1.4rem;
     background: var(--vg-bg-card);
     border-bottom: 0.5px solid var(--vg-border);
-    transition: background 0.25s, border-color 0.25s;
+    transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
     cursor: default;
     direction: ltr;
   }
   .vg-feat:hover { background: var(--vg-gold-dim2); }
 
   :root:not(.dark) .vg-feat:hover {
-    background: rgba(122,86,15,0.07);
-    border-color: rgba(122,86,15,0.18);
+    background: rgba(123,77,9,0.07);
+    border-color: rgba(123,77,9,0.18);
   }
 
-  /* ── Feature Icon ── */
+  /* ══ Feature Icon ══ */
   .vg-feat-icon {
     width: 34px; height: 34px; min-width: 34px;
     border: 0.5px solid var(--vg-gold-border);
     display: flex; align-items: center; justify-content: center;
     color: var(--vg-gold);
     flex-shrink: 0;
+    transition: background 0.2s, box-shadow 0.2s;
   }
 
   :root:not(.dark) .vg-feat-icon {
-    border-color: rgba(122,86,15,0.35);
+    border-color: rgba(123,77,9,0.32);
     color: var(--vg-gold-text);
+    background: rgba(123,77,9,0.06);
+  }
+  :root:not(.dark) .vg-feat:hover .vg-feat-icon {
+    background: rgba(123,77,9,0.12);
+    box-shadow: 0 2px 8px rgba(123,77,9,0.15);
   }
 
-  /* ── Pi Step ── */
+  /* ══ Pi Step ══ */
   .vg-pi-step {
     display: flex;
     align-items: center;
@@ -464,20 +539,17 @@
     padding: 1rem 1.1rem;
     background: var(--vg-bg-card);
     border-bottom: 0.5px solid var(--vg-border);
-    transition: background 0.25s;
+    transition: background 0.25s, box-shadow 0.25s;
     cursor: default;
     direction: ltr;
   }
   .vg-pi-step:hover { background: var(--vg-gold-dim2); }
 
-  :root:not(.dark) .vg-pi-step:hover {
-    background: rgba(122,86,15,0.07);
+  :root:not(.dark) .vg-pi-step {
+    box-shadow: inset 0 -1px 0 rgba(123,77,9,0.08);
   }
-
-  /* ── Hover Card States (Light Mode) ── */
-  :root:not(.dark) .vg-hotel-card:hover {
-    border-color: rgba(122,86,15,0.35);
-    background: #FDFCF8;
+  :root:not(.dark) .vg-pi-step:hover {
+    background: rgba(123,77,9,0.07);
   }
 }
 
@@ -530,7 +602,7 @@
    SMOOTH THEME TRANSITIONS
 ───────────────────────────────────────────── */
 *, *::before, *::after {
-  transition-property: background-color, border-color, color;
+  transition-property: background-color, border-color, color, box-shadow;
   transition-duration: 0.18s;
   transition-timing-function: ease;
 }
@@ -546,9 +618,9 @@ body::after {
   opacity: 0.022;
 }
 
-/* Less grain in light mode */
+/* Light mode grain أخف قليلًا */
 :root:not(.dark) body::after {
-  opacity: 0.010;
+  opacity: 0.012;
 }
 
 /* ─────────────────────────────────────────────
@@ -569,7 +641,16 @@ body::after {
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--vg-gold-border); border-radius: 2px; }
-:root:not(.dark)::-webkit-scrollbar-thumb { background: rgba(122,86,15,0.30); }
+
+:root:not(.dark)::-webkit-scrollbar-track {
+  background: var(--vg-bg-surface);
+}
+:root:not(.dark)::-webkit-scrollbar-thumb {
+  background: rgba(123,77,9,0.32);
+}
+:root:not(.dark)::-webkit-scrollbar-thumb:hover {
+  background: rgba(123,77,9,0.55);
+}
 
 /* ─────────────────────────────────────────────
    CURSOR
@@ -588,6 +669,15 @@ body::after {
   transform: translate(-50%, -50%);
   transition: width 0.2s, height 0.2s;
 }
+
+:root:not(.dark) #vg-cursor {
+  mix-blend-mode: multiply;
+  background: var(--vg-gold-text);
+}
+:root:not(.dark) #vg-cursor-ring {
+  border-color: rgba(123,77,9,0.35);
+}
+
 @media (pointer: coarse) { #vg-cursor, #vg-cursor-ring { display: none; } }
 
 /* ─────────────────────────────────────────────
@@ -620,36 +710,365 @@ body::after {
 }
 
 /* ─────────────────────────────────────────────
-   LIGHT MODE — SECTION SEPARATOR LINES
+   LIGHT MODE — SECTION SEPARATORS
 ───────────────────────────────────────────── */
 :root:not(.dark) .vg-section-border-top {
-  border-top: 1px solid rgba(26,18,8,0.12);
+  border-top: 1px solid rgba(25,14,5,0.12);
 }
 
 /* ─────────────────────────────────────────────
-   LIGHT MODE — FORM INPUTS BETTER CONTRAST
+   LIGHT MODE — FORM INPUTS
 ───────────────────────────────────────────── */
 :root:not(.dark) input:not([type='checkbox']):not([type='radio']):not([type='range']),
 :root:not(.dark) select,
 :root:not(.dark) textarea {
-  background-color: #FDFCF8;
-  border-color: rgba(26,18,8,0.18);
-  color: #1A1208;
+  background-color: #FDFAF3;
+  border-color: rgba(25,14,5,0.18);
+  color: #190E05;
+  box-shadow: inset 0 1px 3px rgba(25,14,5,0.06);
 }
 
 :root:not(.dark) input:focus:not([type='checkbox']):not([type='radio']):not([type='range']),
 :root:not(.dark) select:focus,
 :root:not(.dark) textarea:focus {
-  border-color: rgba(122,86,15,0.50);
+  border-color: rgba(123,77,9,0.55);
   outline: none;
-  box-shadow: 0 0 0 2px rgba(122,86,15,0.10);
+  box-shadow: 0 0 0 3px rgba(123,77,9,0.10), inset 0 1px 3px rgba(25,14,5,0.04);
 }
 
 /* ─────────────────────────────────────────────
-   LIGHT MODE — DROPDOWN / SELECT SOLID BG
+   LIGHT MODE — DROPDOWNS & SELECTS
 ───────────────────────────────────────────── */
 :root:not(.dark) [style*="background: 'var(--vg-bg-card)'"],
 :root:not(.dark) [data-dropdown] {
-  background-color: #FFFFFF;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  background-color: #FDFAF3;
+  box-shadow: 0 8px 32px rgba(25,14,5,0.14);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — GOLD GRADIENT ACCENTS
+   خطوط وتفاصيل ذهبية مخصصة للوضع النهاري
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-gold-line-h {
+  background: linear-gradient(to right, transparent, rgba(123,77,9,0.50), transparent);
+}
+
+:root:not(.dark) .vg-gold-line-v {
+  background: linear-gradient(to bottom, transparent, rgba(123,77,9,0.50), transparent);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — GLASS CARD (للـ modal وغيره)
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-glass {
+  background: rgba(253,250,243,0.90);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(123,77,9,0.20);
+  box-shadow: var(--vg-shadow-lg);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — SKELETON CARDS
+───────────────────────────────────────────── */
+:root:not(.dark) [style*="vg-skel-bg"] {
+  background: var(--vg-skel-bg);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — SPECIAL SECTION BACKGROUNDS
+   لتمييز الأقسام عن بعضها في الوضع النهاري
+───────────────────────────────────────────── */
+:root:not(.dark) section[style*="var(--vg-bg-surface)"],
+:root:not(.dark) div[style*="var(--vg-bg-surface)"] {
+  background-color: var(--vg-bg-surface);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — BORDERS الذهبية مكثفة
+───────────────────────────────────────────── */
+:root:not(.dark) [style*="var(--vg-gold-border)"] {
+  border-color: rgba(123,77,9,0.30);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — NAV DROPDOWN MENUS
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-nav-dropdown {
+  background: #FDFAF3;
+  border: 1px solid rgba(25,14,5,0.14);
+  box-shadow: 0 8px 32px rgba(25,14,5,0.12);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — STATS SECTION
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-stats-grid {
+  background: var(--vg-bg-surface);
+  border: 1px solid rgba(25,14,5,0.10);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — FOOTER
+───────────────────────────────────────────── */
+:root:not(.dark) footer {
+  background: var(--vg-bg-surface) !important;
+  border-top-color: rgba(25,14,5,0.12) !important;
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — BOOKING CARD & PAYMENT CARD
+───────────────────────────────────────────── */
+:root:not(.dark) [style*="var(--vg-gold-dim)"] {
+  background: rgba(123,77,9,0.09);
+}
+
+:root:not(.dark) [style*="background: 'var(--vg-gold-dim)'"] {
+  background: rgba(123,77,9,0.09) !important;
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — HOVER STATES على الكروت
+───────────────────────────────────────────── */
+:root:not(.dark) [style*="var(--vg-gold-dim2)"] {
+  background: rgba(123,77,9,0.05);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — الخط الذهبي في البطاقات
+───────────────────────────────────────────── */
+:root:not(.dark) [style*="linear-gradient(to right, var(--vg-gold)"] {
+  opacity: 0.85;
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — MAP & LOCATION pins
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-map-pin {
+  color: var(--vg-gold-text);
+  background: rgba(123,77,9,0.10);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — AI Chat Bubble
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-ai-bubble {
+  background: #FDFAF3;
+  border-color: rgba(25,14,5,0.14);
+  box-shadow: var(--vg-shadow-sm);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — STAR RATING
+───────────────────────────────────────────── */
+:root:not(.dark) [style*="var(--vg-star)"] {
+  color: var(--vg-star);
+  fill: var(--vg-star);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — PAGINATION
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-page-active {
+  background: var(--vg-gold-text);
+  color: #FDFAF3;
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — Booking ID / Mono text
+───────────────────────────────────────────── */
+:root:not(.dark) [style*="var(--vg-text-3)"] {
+  color: rgba(25,14,5,0.40);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — Status colors (تأكيد الحجز)
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-status-confirmed {
+  background: rgba(16,185,129,0.10);
+  border-color: rgba(16,185,129,0.28);
+  color: #065F46;
+}
+
+:root:not(.dark) .vg-status-pending {
+  background: rgba(123,77,9,0.10);
+  border-color: rgba(123,77,9,0.28);
+  color: var(--vg-gold-text);
+}
+
+:root:not(.dark) .vg-status-cancelled {
+  background: rgba(239,68,68,0.08);
+  border-color: rgba(239,68,68,0.25);
+  color: #991B1B;
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — TOAST / NOTIFICATION
+───────────────────────────────────────────── */
+:root:not(.dark) [data-sonner-toast] {
+  background: #FDFAF3 !important;
+  border-color: rgba(25,14,5,0.16) !important;
+  color: #190E05 !important;
+  box-shadow: var(--vg-shadow-md) !important;
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — LIGHTBOX
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-lightbox-bg {
+  background: rgba(25,14,5,0.92);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — REVIEW MODAL
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-modal-overlay {
+  background: rgba(25,14,5,0.75);
+}
+
+:root:not(.dark) .vg-modal-card {
+  background: #FDFAF3;
+  border-color: rgba(123,77,9,0.28);
+  box-shadow: var(--vg-shadow-lg);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — FEATURED BADGE في الكروت
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-badge-featured {
+  background: rgba(25,14,5,0.82);
+  color: #F5D08A;
+  border-color: rgba(123,77,9,0.55);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — PRICE TAG فوق الصور
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-price-tag {
+  background: rgba(25,14,5,0.88);
+  color: #F5D08A;
+  border-color: rgba(123,77,9,0.60);
+  box-shadow: 0 2px 10px rgba(25,14,5,0.30);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — GRADIENT على الصور (overlay)
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-img-overlay {
+  background: linear-gradient(to top, rgba(25,14,5,0.90) 0%, transparent 55%);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — SECTION TAG الأعلى
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-section-surface {
+  background: var(--vg-bg-surface);
+  border-bottom: 1px solid rgba(25,14,5,0.10);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — SWITCH TOGGLE (Theme Toggle)
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-toggle {
+  background: rgba(123,77,9,0.12);
+  border-color: rgba(123,77,9,0.30);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — SKELETON SHIMMER مكثف
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-skeleton {
+  background: var(--vg-skel-bg);
+}
+
+:root:not(.dark) .vg-skeleton-shine {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--vg-skel-shine) 50%,
+    transparent 100%
+  );
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — GLOW EFFECT خلف الأقسام
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-glow-amber {
+  background: radial-gradient(
+    ellipse 60% 50% at 50% 50%,
+    rgba(123,77,9,0.08) 0%,
+    transparent 70%
+  );
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — BORDER SEPARATOR خطوط الفصل
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-divider {
+  background: linear-gradient(to right, transparent, rgba(123,77,9,0.35), transparent);
+  height: 1px;
+  opacity: 0.7;
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — FILTER PANEL (الفلاتر)
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-filter-panel {
+  background: #FDFAF3;
+  border-bottom: 1px solid rgba(123,77,9,0.22);
+  box-shadow: 0 4px 16px rgba(25,14,5,0.10);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — CATEGORY CHIP
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-chip {
+  background: rgba(123,77,9,0.08);
+  border: 1px solid rgba(123,77,9,0.22);
+  color: var(--vg-gold-text);
+}
+
+:root:not(.dark) .vg-chip:hover {
+  background: rgba(123,77,9,0.15);
+  border-color: rgba(123,77,9,0.40);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — BREADCRUMB
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-breadcrumb {
+  color: rgba(25,14,5,0.50);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+:root:not(.dark) .vg-breadcrumb-active {
+  color: var(--vg-gold-text);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — WALLET CARD (Pi Balance)
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-wallet-card {
+  background: linear-gradient(135deg, #EAE2D2 0%, #F5EDD8 50%, #EAE2D2 100%);
+  border: 1px solid rgba(123,77,9,0.28);
+  box-shadow: var(--vg-shadow-gold);
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — SUCCESS CHECK ICON
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-success-icon {
+  background: rgba(16,185,129,0.10);
+  border: 1px solid rgba(16,185,129,0.30);
+  color: #065F46;
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE — LOADING SPINNER
+───────────────────────────────────────────── */
+:root:not(.dark) .vg-spinner {
+  border-color: rgba(123,77,9,0.20);
+  border-top-color: var(--vg-gold-text);
 }
