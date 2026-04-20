@@ -1,705 +1,856 @@
-/* PATH: src/app/globals.css */
+/* ═══════════════════════════════════════════════════════════════
+   VA TRAVEL — CINEMATIC NOIR LUXURY DESIGN SYSTEM
+   Reimagined from scratch. Bold. Editorial. Unforgettable.
+═══════════════════════════════════════════════════════════════ */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─────────────────────────────────────────────
-   DESIGN TOKENS
-───────────────────────────────────────────── */
+/* ── Google Fonts ──────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&family=Cairo:wght@300;400;500;600&display=swap');
+
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE TOKEN SYSTEM — "Noir Champagne"
+══════════════════════════════════════════════════════════════ */
 @layer base {
   :root {
-    --background: 38 28% 93%;
-    --foreground: 26 55% 7%;
-    --card: 36 30% 97%;
-    --card-foreground: 26 55% 7%;
-    --popover: 36 30% 97%;
-    --popover-foreground: 26 55% 7%;
-    --primary: 33 82% 26%;
-    --primary-foreground: 36 30% 97%;
-    --secondary: 36 20% 89%;
-    --secondary-foreground: 26 55% 7%;
-    --muted: 36 20% 89%;
-    --muted-foreground: 26 18% 36%;
-    --accent: 36 20% 89%;
-    --accent-foreground: 26 55% 7%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 33 18% 76%;
-    --input: 33 18% 76%;
-    --ring: 33 82% 26%;
-    --radius: 0rem;
-
-    /* ══════════════════════════════════════════════════
-       LIGHT MODE — "Aged Cognac & Ivory Parchment"
-       وضع نهاري فاخر: عاج دافئ + ذهب كونياك عميق
-    ══════════════════════════════════════════════════ */
-
-    /* ── Backgrounds — خلفيات عاجية متدرجة الدفء ── */
-    --vg-bg:           #F4EFE5;   /* عاج دافئ — ورق كتاب قديم */
-    --vg-bg-card:      #FDFAF3;   /* أبيض كريمي ناعم */
-    --vg-bg-surface:   #EAE2D2;   /* رمال دافئة */
-    --vg-bg-deep:      #DDD4C0;   /* رمال أعمق */
-
-    /* ── Text — أسود قهوائي دافئ ── */
-    --vg-text:         #190E05;   /* أسود دافئ — تقريبًا بني داكن */
-    --vg-text-2:       rgba(25,14,5,0.68);
-    --vg-text-3:       rgba(25,14,5,0.40);
-
-    /* ── Gold — ذهب كونياك عميق يُقرأ جيدًا على الفاتح ── */
-    --vg-gold:         #7B4D09;   /* كونياك عنبري عميق */
-    --vg-gold-2:       #9B6311;   /* أفتح قليلًا */
-    --vg-gold-3:       #BA7B1C;   /* هايلايت */
-    --vg-gold-dim:     rgba(123,77,9,0.11);
-    --vg-gold-dim2:    rgba(123,77,9,0.06);
-    --vg-gold-border:  rgba(123,77,9,0.30);
-    --vg-gold-text:    #5A3407;   /* للنصوص فوق الفاتح جدًا */
-
-    /* ── Borders — بني دافئ ── */
-    --vg-border:       rgba(25,14,5,0.13);
-    --vg-border-2:     rgba(25,14,5,0.24);
-
-    /* ── Nav ── */
-    --vg-nav-bg:       rgba(244,239,229,0.97);
-    --vg-nav-border:   rgba(25,14,5,0.11);
-
-    /* ── Star ── */
-    --vg-star:         #8C600A;
-
-    /* ── Skeleton — أكثر وضوحًا على الفاتح ── */
-    --vg-skel-bg:      #D4C9B4;
-    --vg-skel-shine:   rgba(123,77,9,0.14);
-
-    /* ── Image filters — أفتح في النهار ── */
-    --vg-thumb-filter: brightness(0.80) saturate(0.82);
-    --vg-thumb-hover:  brightness(0.66) saturate(0.74);
-    --vg-hero-filter:  brightness(0.58) saturate(0.70);
-
-    /* ── Transition ── */
-    --vg-transition-color: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-    --vg-gold-dim-card: rgba(123,77,9,0.07);
-
-    /* ── Shadows — ظلال عنبرية دافئة ── */
-    --vg-shadow-sm:    0 1px 4px rgba(25,14,5,0.10);
-    --vg-shadow-md:    0 4px 16px rgba(25,14,5,0.12);
-    --vg-shadow-lg:    0 8px 32px rgba(25,14,5,0.14);
-    --vg-shadow-gold:  0 4px 24px rgba(123,77,9,0.15);
-
-    /* ── ShadCN شامل ── */
-    --vg-transition-color: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-  }
-
-  /* ══════════════════════════════════════════════════
-     DARK MODE — وضع ليلي (محافظ على الأصل)
-  ══════════════════════════════════════════════════ */
-  .dark {
-    --background: 250 60% 3%;
-    --foreground: 42 25% 92%;
-    --card: 250 50% 6%;
-    --card-foreground: 42 25% 92%;
-    --popover: 250 50% 6%;
-    --popover-foreground: 42 25% 92%;
-    --primary: 42 65% 47%;
-    --primary-foreground: 250 60% 3%;
+    /* ShadCN compat */
+    --background: 252 60% 3%;
+    --foreground: 42 30% 95%;
+    --card: 250 55% 5%;
+    --card-foreground: 42 30% 95%;
+    --popover: 250 55% 5%;
+    --popover-foreground: 42 30% 95%;
+    --primary: 40 68% 56%;
+    --primary-foreground: 252 60% 3%;
     --secondary: 250 30% 10%;
-    --secondary-foreground: 42 25% 92%;
+    --secondary-foreground: 42 30% 95%;
     --muted: 250 30% 10%;
-    --muted-foreground: 42 15% 55%;
+    --muted-foreground: 42 15% 52%;
     --accent: 250 30% 10%;
-    --accent-foreground: 42 25% 92%;
+    --accent-foreground: 42 30% 95%;
     --destructive: 0 62% 38%;
     --destructive-foreground: 0 0% 100%;
-    --border: 250 20% 14%;
-    --input: 250 20% 14%;
-    --ring: 42 65% 47%;
+    --border: 250 20% 12%;
+    --input: 250 20% 12%;
+    --ring: 40 68% 56%;
+    --radius: 0rem;
 
-    --vg-bg:           #03020A;
-    --vg-bg-card:      #0E0C18;
-    --vg-bg-surface:   #09080F;
-    --vg-bg-deep:      #141220;
-    --vg-text:         #F2EEE6;
-    --vg-text-2:       rgba(242,238,230,0.55);
-    --vg-text-3:       rgba(242,238,230,0.24);
-    --vg-gold:         #C9A227;
-    --vg-gold-2:       #E8C255;
-    --vg-gold-3:       #F0D070;
-    --vg-gold-dim:     rgba(201,162,39,0.15);
-    --vg-gold-dim2:    rgba(201,162,39,0.06);
-    --vg-gold-border:  rgba(201,162,39,0.28);
-    --vg-gold-text:    #F0D070;
-    --vg-border:       rgba(242,238,230,0.07);
-    --vg-border-2:     rgba(242,238,230,0.13);
-    --vg-nav-bg:       rgba(3,2,10,0.94);
-    --vg-nav-border:   rgba(242,238,230,0.06);
-    --vg-star:         #E8C255;
-    --vg-skel-bg:      rgba(255,255,255,0.05);
-    --vg-skel-shine:   rgba(201,162,39,0.08);
-    --vg-thumb-filter: brightness(0.48) saturate(0.55);
-    --vg-thumb-hover:  brightness(0.40) saturate(0.48);
-    --vg-hero-filter:  brightness(0.50) saturate(0.65);
-    --vg-gold-dim-card: rgba(201,162,39,0.08);
-    --vg-shadow-sm:    0 1px 4px rgba(0,0,0,0.35);
-    --vg-shadow-md:    0 4px 16px rgba(0,0,0,0.45);
-    --vg-shadow-lg:    0 8px 32px rgba(0,0,0,0.55);
-    --vg-shadow-gold:  0 4px 24px rgba(201,162,39,0.20);
+    /* ── Va Travel Core Palette ─────────────────────────────── */
+
+    /* Backgrounds: cinematic depth layers */
+    --vg-bg:            #06050F;   /* Void black — canvas */
+    --vg-bg-card:       #0D0C1C;   /* Elevated surface */
+    --vg-bg-surface:    #110F20;   /* Mid layer */
+    --vg-bg-deep:       #080718;   /* Deepest */
+    --vg-bg-glass:      rgba(13,12,28,0.72);
+    --vg-bg-glass-2:    rgba(13,12,28,0.88);
+
+    /* Text: warm ivory scale */
+    --vg-text:          #FAF7F2;
+    --vg-text-2:        rgba(250,247,242,0.62);
+    --vg-text-3:        rgba(250,247,242,0.28);
+    --vg-text-4:        rgba(250,247,242,0.12);
+
+    /* Champagne Gold: the signature accent */
+    --vg-gold:          #D4A853;   /* Aged champagne */
+    --vg-gold-2:        #ECC870;   /* Warm highlight */
+    --vg-gold-3:        #B8892F;   /* Deep bronze */
+    --vg-gold-4:        #F5DFA0;   /* Pale shimmer */
+    --vg-gold-dim:      rgba(212,168,83,0.10);
+    --vg-gold-dim2:     rgba(212,168,83,0.05);
+    --vg-gold-border:   rgba(212,168,83,0.24);
+    --vg-gold-glow:     rgba(212,168,83,0.15);
+
+    /* Borders */
+    --vg-border:        rgba(250,247,242,0.06);
+    --vg-border-2:      rgba(250,247,242,0.12);
+    --vg-border-gold:   rgba(212,168,83,0.24);
+
+    /* Semantic */
+    --vg-star:          #D4A853;
+    --vg-success:       #2DD4BF;
+    --vg-error:         #F87171;
+
+    /* Nav */
+    --vg-nav-bg:        rgba(6,5,15,0.82);
+    --vg-nav-border:    rgba(250,247,242,0.05);
+
+    /* Skeleton */
+    --vg-skel-bg:       rgba(255,255,255,0.04);
+    --vg-skel-shine:    rgba(212,168,83,0.07);
+
+    /* Image filters */
+    --vg-thumb-filter:  brightness(0.55) saturate(0.62);
+    --vg-thumb-hover:   brightness(0.72) saturate(0.80);
+    --vg-hero-filter:   brightness(0.48) saturate(0.55);
+
+    /* Shadows */
+    --vg-shadow-sm:     0 2px 8px rgba(0,0,0,0.5);
+    --vg-shadow-md:     0 8px 32px rgba(0,0,0,0.6);
+    --vg-shadow-lg:     0 20px 60px rgba(0,0,0,0.7);
+    --vg-shadow-gold:   0 8px 40px rgba(212,168,83,0.18);
+    --vg-shadow-card:   0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(250,247,242,0.04);
+
+    /* Transitions */
+    --vg-ease:          cubic-bezier(0.22, 1, 0.36, 1);
+    --vg-ease-in:       cubic-bezier(0.55, 0, 1, 0.45);
+    --transition-color: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     LIGHT MODE — "Ivory Atelier"
+  ══════════════════════════════════════════════════════════ */
+  .light, :root.light {
+    --background: 40 25% 97%;
+    --foreground: 26 55% 7%;
+    --card: 38 20% 99%;
+    --border: 33 18% 80%;
+
+    --vg-bg:            #F8F5F0;
+    --vg-bg-card:       #FDFCF9;
+    --vg-bg-surface:    #EDE8DF;
+    --vg-bg-deep:       #E3DDD3;
+    --vg-bg-glass:      rgba(253,252,249,0.85);
+    --vg-bg-glass-2:    rgba(253,252,249,0.96);
+
+    --vg-text:          #150E07;
+    --vg-text-2:        rgba(21,14,7,0.65);
+    --vg-text-3:        rgba(21,14,7,0.38);
+    --vg-text-4:        rgba(21,14,7,0.14);
+
+    --vg-gold:          #8B5C0A;
+    --vg-gold-2:        #A87020;
+    --vg-gold-3:        #6E4608;
+    --vg-gold-4:        #C49A3C;
+    --vg-gold-dim:      rgba(139,92,10,0.10);
+    --vg-gold-dim2:     rgba(139,92,10,0.05);
+    --vg-gold-border:   rgba(139,92,10,0.26);
+    --vg-gold-glow:     rgba(139,92,10,0.12);
+
+    --vg-border:        rgba(21,14,7,0.10);
+    --vg-border-2:      rgba(21,14,7,0.18);
+    --vg-border-gold:   rgba(139,92,10,0.26);
+
+    --vg-star:          #9B6810;
+    --vg-nav-bg:        rgba(248,245,240,0.92);
+    --vg-nav-border:    rgba(21,14,7,0.08);
+
+    --vg-skel-bg:       rgba(21,14,7,0.07);
+    --vg-skel-shine:    rgba(139,92,10,0.12);
+
+    --vg-thumb-filter:  brightness(0.82) saturate(0.78);
+    --vg-thumb-hover:   brightness(0.70) saturate(0.70);
+    --vg-hero-filter:   brightness(0.55) saturate(0.65);
+
+    --vg-shadow-sm:     0 2px 8px rgba(21,14,7,0.10);
+    --vg-shadow-md:     0 8px 32px rgba(21,14,7,0.12);
+    --vg-shadow-lg:     0 20px 60px rgba(21,14,7,0.15);
+    --vg-shadow-gold:   0 8px 40px rgba(139,92,10,0.15);
+    --vg-shadow-card:   0 4px 24px rgba(21,14,7,0.08), 0 0 0 1px rgba(21,14,7,0.06);
   }
 }
 
-/* ─────────────────────────────────────────────
-   BASE
-───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   BASE RESET & FOUNDATION
+═══════════════════════════════════════════════════════════ */
 @layer base {
-  * { @apply border-border; box-sizing: border-box; }
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
   html {
     scroll-behavior: smooth;
     direction: ltr;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    font-feature-settings: 'kern' 1, 'liga' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
     background-color: var(--vg-bg);
     color: var(--vg-text);
     font-family: 'DM Sans', system-ui, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    scrollbar-gutter: stable;
+    line-height: 1.6;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-weight: 300;
+    line-height: 1;
     color: var(--vg-text);
+    letter-spacing: -0.01em;
   }
 
-  img { max-width: 100%; height: auto; }
-  button, a, [role="button"] { touch-action: manipulation; }
+  img { max-width: 100%; height: auto; display: block; }
+  button, a { touch-action: manipulation; }
+  a { text-decoration: none; color: inherit; }
+  input, select, textarea { border-radius: 0 !important; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 3px; height: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--vg-gold-border);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--vg-gold);
+  }
 }
 
-/* ─────────────────────────────────────────────
-   COMPONENT CLASSES
-───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   TYPOGRAPHY COMPONENTS
+═══════════════════════════════════════════════════════════ */
 @layer components {
 
-  /* ══ Display Heading ══ */
+  /* Display — Cinematic serif headings */
   .vg-display {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-weight: 300;
-    line-height: 0.92;
-    letter-spacing: -0.01em;
+    line-height: 0.90;
+    letter-spacing: -0.02em;
     color: var(--vg-text);
   }
 
-  .vg-italic { font-style: italic; color: var(--vg-gold); }
+  .vg-italic {
+    font-style: italic;
+    color: var(--vg-gold);
+  }
 
-  /* ══ Overline ══ */
+  /* Overline — refined label with separator */
   .vg-overline {
     font-family: 'Space Mono', monospace;
     font-size: clamp(9px, 0.58rem, 11px);
-    letter-spacing: 0.32em;
+    letter-spacing: 0.34em;
     text-transform: uppercase;
     color: var(--vg-gold);
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.85rem;
     direction: ltr;
   }
   .vg-overline::before {
     content: '';
-    width: 1.1rem;
+    width: 1.4rem;
     height: 1px;
-    background: var(--vg-gold);
+    background: linear-gradient(to right, var(--vg-gold), transparent);
     flex-shrink: 0;
   }
 
-  /* ── Light mode overline — ذهب عميق ── */
-  :root:not(.dark) .vg-overline {
-    color: var(--vg-gold-text);
-  }
-  :root:not(.dark) .vg-overline::before {
-    background: var(--vg-gold-text);
-  }
+  /* ── BUTTONS ─────────────────────────────────────────────── */
 
-  /* ══ Primary Button ══ */
+  /* Primary: Solid gold with shimmer */
   .vg-btn-primary {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 0.9rem 2.2rem;
+    min-height: 48px;
+    overflow: hidden;
     background: var(--vg-gold);
-    color: #FFFFFF;
     border: none;
     cursor: pointer;
     font-family: 'Space Mono', monospace;
-    font-size: clamp(9px, 0.58rem, 12px);
-    letter-spacing: 0.22em;
+    font-size: 0.62rem;
+    letter-spacing: 0.28em;
     text-transform: uppercase;
-    padding: 1rem 2.4rem;
-    transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    min-height: 44px;
-    direction: ltr;
+    color: #09080F;
+    font-weight: 700;
+    text-decoration: none;
     white-space: nowrap;
+    direction: ltr;
+    transition: transform 0.25s var(--vg-ease),
+                box-shadow 0.25s var(--vg-ease),
+                background 0.25s ease;
+    box-shadow: 0 4px 20px rgba(212,168,83,0.28);
   }
+
+  .vg-btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg,
+      transparent 30%,
+      rgba(255,255,255,0.30) 50%,
+      transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.5s var(--vg-ease);
+  }
+
   .vg-btn-primary:hover {
     background: var(--vg-gold-2);
-    transform: translateY(-1px);
-  }
-  .vg-btn-primary:active { transform: translateY(0); }
-
-  /* Light mode — زر ذهبي داكن أكثر ── */
-  :root:not(.dark) .vg-btn-primary {
-    background: #7B4D09;
-    color: #FDFAF3;
-    box-shadow: 0 2px 12px rgba(123,77,9,0.28);
-  }
-  :root:not(.dark) .vg-btn-primary:hover {
-    background: #6A4008;
-    box-shadow: 0 4px 20px rgba(123,77,9,0.38);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(212,168,83,0.38);
   }
 
-  /* ══ Outline Button ══ */
+  .vg-btn-primary:hover::before {
+    transform: translateX(100%);
+  }
+
+  .vg-btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 12px rgba(212,168,83,0.22);
+  }
+
+  /* Outline: Ghost button with glass fill */
   .vg-btn-outline {
-    background: none;
-    border: 1px solid var(--vg-gold-border);
-    color: var(--vg-gold);
-    cursor: pointer;
-    font-family: 'Space Mono', monospace;
-    font-size: clamp(9px, 0.58rem, 12px);
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    padding: 0.9rem 2rem;
-    transition: background 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s;
+    position: relative;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.55rem;
-    min-height: 44px;
-    direction: ltr;
-    white-space: nowrap;
-  }
-  .vg-btn-outline:hover {
-    background: var(--vg-gold-dim);
-    border-color: var(--vg-gold);
-  }
-
-  /* Light mode outline button */
-  :root:not(.dark) .vg-btn-outline {
-    color: var(--vg-gold-text);
-    border-color: rgba(123,77,9,0.32);
-  }
-  :root:not(.dark) .vg-btn-outline:hover {
-    border-color: var(--vg-gold);
+    padding: 0.85rem 2rem;
+    min-height: 48px;
+    background: transparent;
+    border: 1px solid var(--vg-gold-border);
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
     color: var(--vg-gold);
-    background: rgba(123,77,9,0.08);
-    box-shadow: 0 2px 12px rgba(123,77,9,0.12);
+    text-decoration: none;
+    white-space: nowrap;
+    direction: ltr;
+    transition: all 0.25s var(--vg-ease);
+    overflow: hidden;
   }
 
-  /* ══ Card Base ══ */
+  .vg-btn-outline::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--vg-gold-dim);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .vg-btn-outline:hover {
+    border-color: var(--vg-gold);
+    color: var(--vg-gold-2);
+    box-shadow: 0 0 0 1px var(--vg-gold) inset, 0 4px 24px var(--vg-gold-glow);
+    transform: translateY(-1px);
+  }
+
+  .vg-btn-outline:hover::before { opacity: 1; }
+
+  /* ── CARDS ───────────────────────────────────────────────── */
+
   .vg-card {
     background: var(--vg-bg-card);
     border: 1px solid var(--vg-border);
-    transition: border-color 0.3s, box-shadow 0.3s;
-  }
-  .vg-card:hover { border-color: var(--vg-gold-border); }
-
-  :root:not(.dark) .vg-card {
-    box-shadow: var(--vg-shadow-sm);
-  }
-  :root:not(.dark) .vg-card:hover {
-    box-shadow: var(--vg-shadow-gold);
+    box-shadow: var(--vg-shadow-card);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s var(--vg-ease);
   }
 
-  /* ══ Badge ══ */
-  .vg-badge-outline {
-    font-family: 'Space Mono', monospace;
-    font-size: clamp(9px, 0.5rem, 11px);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    background: var(--vg-gold-dim);
-    border: 1px solid var(--vg-gold-border);
-    color: var(--vg-gold);
-    padding: 0.25rem 0.7rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    direction: ltr;
+  .vg-card:hover {
+    border-color: var(--vg-gold-border);
+    box-shadow: var(--vg-shadow-card), 0 12px 48px rgba(212,168,83,0.10);
   }
 
-  :root:not(.dark) .vg-badge-outline {
-    color: var(--vg-gold-text);
-    background: rgba(123,77,9,0.10);
-    border-color: rgba(123,77,9,0.28);
+  .vg-card-glass {
+    background: var(--vg-bg-glass);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    border: 1px solid rgba(250,247,242,0.08);
   }
 
-  .vg-badge-outline .dot {
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: var(--vg-gold);
-    animation: gold-pulse 2s infinite;
-    flex-shrink: 0;
-  }
+  /* ── HOTEL CARD — World-class ────────────────────────────── */
 
-  :root:not(.dark) .vg-badge-outline .dot {
-    background: var(--vg-gold-text);
-  }
-
-  /* ══ Stat Number ══ */
-  .vg-stat-num {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-weight: 300;
-    font-size: clamp(2rem, 4vw, 3.5rem);
-    color: var(--vg-gold);
-    line-height: 1;
-  }
-
-  :root:not(.dark) .vg-stat-num {
-    color: var(--vg-gold-text);
-  }
-
-  .vg-stat-label {
-    font-family: 'Space Mono', monospace;
-    font-size: clamp(9px, 0.52rem, 11px);
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--vg-text-3);
-    margin-top: 0.35rem;
-    direction: ltr;
-  }
-
-  /* ══ Ticker ══ */
-  .vg-ticker-wrap {
-    overflow: hidden;
-    border-top: 1px solid var(--vg-border);
-    border-bottom: 1px solid var(--vg-border);
-    background: var(--vg-bg-surface);
-    padding: 0.6rem 0;
-    direction: ltr;
-  }
-
-  :root:not(.dark) .vg-ticker-wrap {
-    background: linear-gradient(to right, var(--vg-bg-surface), var(--vg-bg-deep), var(--vg-bg-surface));
-    border-color: rgba(123,77,9,0.15);
-  }
-
-  .vg-ticker-inner {
-    display: inline-flex;
-    white-space: nowrap;
-    animation: ticker-scroll 35s linear infinite;
-  }
-  .vg-ticker-item {
-    font-family: 'Space Mono', monospace;
-    font-size: clamp(9px, 0.52rem, 11px);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--vg-text-2);
-    padding: 0 2.5rem;
-  }
-  .vg-ticker-item .tag { color: var(--vg-gold); margin-right: 0.4rem; }
-
-  :root:not(.dark) .vg-ticker-item .tag {
-    color: var(--vg-gold-text);
-  }
-
-  /* ══ Hero Section — ALWAYS DARK ══ */
-  .vg-hero-force-dark {
-    background: #03020A !important;
-    color: #F2EEE6 !important;
-    isolation: isolate;
-    contain: layout style;
-  }
-
-  /* ══ Hotel Card ══ */
   .vg-hotel-card {
     position: relative;
     overflow: hidden;
     cursor: pointer;
     background: var(--vg-bg-card);
     border: 1px solid var(--vg-border);
-    transition: border-color 0.4s, box-shadow 0.4s, transform 0.3s;
-    width: 100%;
+    box-shadow: var(--vg-shadow-card);
     display: block;
-  }
-  .vg-hotel-card:hover { border-color: var(--vg-gold-border); }
-  .vg-hotel-card:hover .vg-hotel-thumb {
-    transform: scale(1.06);
-    filter: var(--vg-thumb-hover);
+    width: 100%;
+    transition:
+      border-color 0.4s ease,
+      box-shadow 0.4s ease,
+      transform 0.4s var(--vg-ease);
   }
 
-  :root:not(.dark) .vg-hotel-card {
-    box-shadow: var(--vg-shadow-sm);
+  .vg-hotel-card:hover {
+    border-color: var(--vg-gold-border);
+    box-shadow:
+      var(--vg-shadow-md),
+      0 0 0 1px var(--vg-gold-border) inset,
+      0 16px 60px rgba(212,168,83,0.12);
+    transform: translateY(-3px);
   }
-  :root:not(.dark) .vg-hotel-card:hover {
-    border-color: rgba(123,77,9,0.35);
-    box-shadow: var(--vg-shadow-gold);
-    background: #FDFAF3;
+
+  .vg-hotel-card:hover .vg-hotel-thumb {
+    transform: scale(1.08);
+    filter: var(--vg-thumb-hover);
   }
 
   .vg-hotel-thumb {
     width: 100%; height: 100%;
     object-fit: cover;
     filter: var(--vg-thumb-filter);
-    transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.5s;
+    transition:
+      transform 0.8s cubic-bezier(0.23, 1, 0.32, 1),
+      filter 0.5s ease;
   }
 
+  /* Price badge */
   .vg-price-tag {
     position: absolute;
-    top: 1.1rem; right: 1.1rem;
-    background: rgba(25,14,5,0.80);
+    top: 1rem; right: 1rem;
+    background: rgba(6,5,15,0.88);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(123,77,9,0.50);
+    border: 1px solid rgba(212,168,83,0.40);
     font-family: 'Space Mono', monospace;
-    font-size: clamp(9px, 0.58rem, 11px);
-    color: #F5D990;
-    letter-spacing: 0.1em;
-    padding: 0.28rem 0.75rem;
-    z-index: 2;
+    font-size: 0.60rem;
+    color: var(--vg-gold-2);
+    letter-spacing: 0.08em;
+    padding: 0.30rem 0.75rem;
+    z-index: 3;
     direction: ltr;
     white-space: nowrap;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
   }
 
-  :root:not(.dark) .vg-price-tag {
-    background: rgba(25,14,5,0.85);
-    border-color: rgba(123,77,9,0.60);
-    color: #F5D08A;
-    box-shadow: 0 2px 8px rgba(25,14,5,0.25);
+  /* ── BADGE ───────────────────────────────────────────────── */
+
+  .vg-badge-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.28rem 0.75rem;
+    background: var(--vg-gold-dim);
+    border: 1px solid var(--vg-gold-border);
+    color: var(--vg-gold);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.54rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    direction: ltr;
   }
 
-  /* ══ Navbar ══ */
+  .vg-badge-outline .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--vg-gold);
+    animation: pulse-dot 2.2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  /* ── STAT NUMBER ─────────────────────────────────────────── */
+
+  .vg-stat-num {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 300;
+    font-size: clamp(2.2rem, 4.5vw, 4rem);
+    color: var(--vg-gold);
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+  }
+
+  .vg-stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--vg-text-3);
+    margin-top: 0.5rem;
+    direction: ltr;
+  }
+
+  /* ── NAV ─────────────────────────────────────────────────── */
+
   .vg-nav {
     position: fixed;
     top: 0; left: 0; right: 0;
     z-index: 500;
     background: var(--vg-nav-bg);
-    border-bottom: 0.5px solid var(--vg-nav-border);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+    border-bottom: 1px solid var(--vg-nav-border);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    transition:
+      background 0.4s ease,
+      border-color 0.4s ease,
+      box-shadow 0.4s ease;
     direction: ltr;
   }
 
-  :root:not(.dark) .vg-nav {
-    box-shadow: 0 1px 16px rgba(25,14,5,0.08);
-  }
+  /* ── FEATURE ITEM ────────────────────────────────────────── */
 
-  /* ══ Reveal Animation ══ */
-  .vg-reveal {
-    opacity: 0;
-    transform: translateY(32px);
-    transition: opacity 0.9s ease, transform 0.9s ease;
-  }
-  .vg-reveal.visible { opacity: 1; transform: none; }
-  .vg-reveal.d1 { transition-delay: 0.05s; }
-  .vg-reveal.d2 { transition-delay: 0.15s; }
-  .vg-reveal.d3 { transition-delay: 0.25s; }
-  .vg-reveal.d4 { transition-delay: 0.35s; }
-
-  /* ══ Feature Item ══ */
   .vg-feat {
     display: flex;
-    gap: 1.1rem;
+    gap: 1.2rem;
     align-items: flex-start;
-    padding: 1.3rem 1.4rem;
+    padding: 1.5rem 1.6rem;
     background: var(--vg-bg-card);
-    border-bottom: 0.5px solid var(--vg-border);
-    transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+    border: 1px solid var(--vg-border);
+    transition:
+      background 0.3s ease,
+      border-color 0.3s ease,
+      transform 0.3s var(--vg-ease),
+      box-shadow 0.3s ease;
     cursor: default;
     direction: ltr;
   }
-  .vg-feat:hover { background: var(--vg-gold-dim2); }
 
-  :root:not(.dark) .vg-feat:hover {
-    background: rgba(123,77,9,0.07);
-    border-color: rgba(123,77,9,0.18);
+  .vg-feat:hover {
+    background: var(--vg-bg-surface);
+    border-color: var(--vg-gold-border);
+    transform: translateX(3px);
+    box-shadow: 0 4px 20px rgba(212,168,83,0.08);
   }
 
-  /* ══ Feature Icon ══ */
   .vg-feat-icon {
-    width: 34px; height: 34px; min-width: 34px;
-    border: 0.5px solid var(--vg-gold-border);
+    width: 36px; height: 36px; min-width: 36px;
+    border: 1px solid var(--vg-gold-border);
+    background: var(--vg-gold-dim);
     display: flex; align-items: center; justify-content: center;
     color: var(--vg-gold);
     flex-shrink: 0;
-    transition: background 0.2s, box-shadow 0.2s;
+    transition: background 0.25s ease, box-shadow 0.25s ease;
   }
 
-  :root:not(.dark) .vg-feat-icon {
-    border-color: rgba(123,77,9,0.32);
-    color: var(--vg-gold-text);
-    background: rgba(123,77,9,0.06);
-  }
-  :root:not(.dark) .vg-feat:hover .vg-feat-icon {
-    background: rgba(123,77,9,0.12);
-    box-shadow: 0 2px 8px rgba(123,77,9,0.15);
+  .vg-feat:hover .vg-feat-icon {
+    background: rgba(212,168,83,0.18);
+    box-shadow: 0 0 0 3px rgba(212,168,83,0.10);
   }
 
-  /* ══ Pi Step ══ */
+  /* ── PI STEP ─────────────────────────────────────────────── */
+
   .vg-pi-step {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 1rem 1.1rem;
+    padding: 1rem 1.2rem;
     background: var(--vg-bg-card);
-    border-bottom: 0.5px solid var(--vg-border);
-    transition: background 0.25s, box-shadow 0.25s;
+    border-bottom: 1px solid var(--vg-border);
+    transition: background 0.25s ease;
     cursor: default;
     direction: ltr;
   }
-  .vg-pi-step:hover { background: var(--vg-gold-dim2); }
 
-  :root:not(.dark) .vg-pi-step {
-    box-shadow: inset 0 -1px 0 rgba(123,77,9,0.08);
+  .vg-pi-step:hover {
+    background: var(--vg-bg-surface);
   }
-  :root:not(.dark) .vg-pi-step:hover {
-    background: rgba(123,77,9,0.07);
+
+  /* ── TICKER ──────────────────────────────────────────────── */
+
+  .vg-ticker-wrap {
+    overflow: hidden;
+    border-top: 1px solid var(--vg-border);
+    border-bottom: 1px solid var(--vg-border);
+    background: var(--vg-bg-surface);
+    padding: 0.8rem 0;
+    direction: ltr;
+  }
+
+  .vg-ticker-inner {
+    display: inline-flex;
+    white-space: nowrap;
+    animation: ticker-scroll 40s linear infinite;
+  }
+
+  .vg-ticker-item {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--vg-text-3);
+    padding: 0 2.5rem;
+    transition: color 0.2s;
+  }
+
+  .vg-ticker-item:hover { color: var(--vg-gold); }
+  .vg-ticker-item .tag { color: var(--vg-gold); margin-right: 0.5rem; }
+
+  /* ── REVEAL ANIMATION ────────────────────────────────────── */
+
+  .vg-reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+      opacity 0.85s var(--vg-ease),
+      transform 0.85s var(--vg-ease);
+  }
+  .vg-reveal.visible { opacity: 1; transform: none; }
+  .vg-reveal.d1 { transition-delay: 0.08s; }
+  .vg-reveal.d2 { transition-delay: 0.18s; }
+  .vg-reveal.d3 { transition-delay: 0.28s; }
+  .vg-reveal.d4 { transition-delay: 0.38s; }
+  .vg-reveal.d5 { transition-delay: 0.48s; }
+
+  /* ── HERO — Always dark ──────────────────────────────────── */
+  .vg-hero-force-dark {
+    background: #06050F !important;
+    color: #FAF7F2 !important;
+    isolation: isolate;
+    contain: layout style;
+  }
+
+  /* ── INPUT ───────────────────────────────────────────────── */
+  .vg-input {
+    width: 100%;
+    background: var(--vg-bg-surface);
+    border: 1px solid var(--vg-border);
+    padding: 0.8rem 1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    color: var(--vg-text);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+  }
+  .vg-input:focus {
+    border-color: var(--vg-gold-border);
+    box-shadow: 0 0 0 3px rgba(212,168,83,0.08);
+  }
+  .vg-input::placeholder { color: var(--vg-text-3); }
+
+  /* ── DIVIDER LINE ────────────────────────────────────────── */
+  .vg-gold-line {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--vg-gold-border), transparent);
+    opacity: 0.7;
+  }
+
+  /* ── GOLD GRADIENT TOP ACCENT ────────────────────────────── */
+  .vg-gold-top-line {
+    height: 2px;
+    background: linear-gradient(to right, var(--vg-gold), var(--vg-gold-2));
+  }
+
+  /* ── DESKTOP FOOTER VISIBILITY ───────────────────────────── */
+  .vg-desktop-footer { display: block; }
+
+  @media (max-width: 768px) {
+    .vg-desktop-footer { display: none !important; }
+    main { padding-bottom: calc(72px + env(safe-area-inset-bottom, 8px)) !important; }
   }
 }
 
-/* ─────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════
+   GRADIENT MESH BACKGROUNDS
+═══════════════════════════════════════════════════════════ */
+.vg-mesh-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 30%, rgba(212,168,83,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 80% 70%, rgba(212,168,83,0.04) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 40% at 50% 100%, rgba(6,5,15,0.95) 0%, transparent 60%);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GRAIN OVERLAY — subtle luxury texture
+═══════════════════════════════════════════════════════════ */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.018;
+  mix-blend-mode: overlay;
+}
+
+.light body::after, :root.light body::after { opacity: 0.010; }
+
+/* ═══════════════════════════════════════════════════════════
+   CUSTOM CURSOR
+═══════════════════════════════════════════════════════════ */
+#vg-cursor {
+  position: fixed; width: 7px; height: 7px;
+  background: var(--vg-gold);
+  border-radius: 50%;
+  pointer-events: none; z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s, opacity 0.2s;
+  mix-blend-mode: difference;
+}
+#vg-cursor-ring {
+  position: fixed; width: 38px; height: 38px;
+  border: 1px solid var(--vg-gold-border);
+  border-radius: 50%;
+  pointer-events: none; z-index: 9997;
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.3s var(--vg-ease),
+    height 0.3s var(--vg-ease),
+    border-color 0.3s ease,
+    transform 0.12s linear;
+}
+
+@media (pointer: coarse) { #vg-cursor, #vg-cursor-ring { display: none; } }
+
+/* ═══════════════════════════════════════════════════════════
    SHADCN OVERRIDES
-───────────────────────────────────────────── */
+═══════════════════════════════════════════════════════════ */
 @layer base {
-  .bg-gray-50, .bg-gray-100  { background-color: var(--vg-bg) !important; }
-  .bg-white                  { background-color: var(--vg-bg-card) !important; }
-  .dark .bg-gray-900         { background-color: var(--vg-bg) !important; }
-  .dark .bg-gray-800         { background-color: var(--vg-bg-card) !important; }
-  .text-muted-foreground     { color: var(--vg-text-2) !important; }
+  .bg-gray-50, .bg-gray-100 { background-color: var(--vg-bg) !important; }
+  .bg-white { background-color: var(--vg-bg-card) !important; }
+  .text-muted-foreground { color: var(--vg-text-2) !important; }
 
   input:not([type='checkbox']):not([type='radio']):not([type='range']),
   select, textarea {
     background-color: var(--vg-bg-surface);
     color: var(--vg-text);
     border-color: var(--vg-border);
-    direction: inherit;
   }
   input::placeholder, textarea::placeholder { color: var(--vg-text-3); }
 
-  .dark input:not([type='checkbox']):not([type='radio']):not([type='range']),
-  .dark select, .dark textarea {
-    background-color: var(--vg-bg-surface) !important;
-    color: var(--vg-text) !important;
-    border-color: var(--vg-border-2) !important;
-  }
-
-  .text-primary   { color: var(--vg-gold) !important; }
-  .bg-primary     { background-color: var(--vg-gold) !important; }
+  .text-primary { color: var(--vg-gold) !important; }
+  .bg-primary { background-color: var(--vg-gold) !important; }
   .border-primary { border-color: var(--vg-gold-border) !important; }
 }
 
-/* ─────────────────────────────────────────────
-   UTILITIES
-───────────────────────────────────────────── */
-@layer utilities {
-  .text-vg-gold    { color: var(--vg-gold); }
-  .text-vg-2       { color: var(--vg-text-2); }
-  .text-vg-3       { color: var(--vg-text-3); }
-  .bg-vg           { background-color: var(--vg-bg); }
-  .bg-vg-card      { background-color: var(--vg-bg-card); }
-  .bg-vg-surface   { background-color: var(--vg-bg-surface); }
-  .hover-lift      { transition: transform 0.2s ease; }
-  .hover-lift:hover { transform: translateY(-2px); }
+/* ═══════════════════════════════════════════════════════════
+   KEYFRAMES
+═══════════════════════════════════════════════════════════ */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.78); }
 }
 
-/* ─────────────────────────────────────────────
-   SMOOTH THEME TRANSITIONS
-───────────────────────────────────────────── */
-*, *::before, *::after {
-  transition-property: background-color, border-color, color, box-shadow;
-  transition-duration: 0.18s;
-  transition-timing-function: ease;
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
-/* ─────────────────────────────────────────────
-   GRAIN OVERLAY
-───────────────────────────────────────────── */
-body::after {
-  content: '';
-  position: fixed; inset: 0;
-  pointer-events: none; z-index: 9999;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-  opacity: 0.022;
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
-/* Light mode grain أخف قليلًا */
-:root:not(.dark) body::after {
-  opacity: 0.012;
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* ─────────────────────────────────────────────
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(212,168,83,0.2); }
+  50% { box-shadow: 0 0 40px rgba(212,168,83,0.35); }
+}
+
+@keyframes shimmer-btn {
+  0% { transform: translateX(-100%); }
+  50%, 100% { transform: translateX(100%); }
+}
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════
    RESPONSIVE GRID
-───────────────────────────────────────────── */
+═══════════════════════════════════════════════════════════ */
 @media (max-width: 480px) {
   [style*="minmax(280px"] { grid-template-columns: 1fr !important; }
   [style*="minmax(260px"] { grid-template-columns: 1fr !important; }
   [style*="minmax(220px"] { grid-template-columns: 1fr !important; }
 }
+
 @media (min-width: 481px) and (max-width: 767px) {
   [style*="minmax(280px"] { grid-template-columns: repeat(2, 1fr) !important; }
 }
 
-/* ─────────────────────────────────────────────
-   SCROLLBAR
-───────────────────────────────────────────── */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--vg-gold-border); border-radius: 2px; }
-
-:root:not(.dark)::-webkit-scrollbar-track {
-  background: var(--vg-bg-surface);
-}
-:root:not(.dark)::-webkit-scrollbar-thumb {
-  background: rgba(123,77,9,0.32);
-}
-:root:not(.dark)::-webkit-scrollbar-thumb:hover {
-  background: rgba(123,77,9,0.55);
+/* ═══════════════════════════════════════════════════════════
+   SMOOTH TRANSITIONS
+═══════════════════════════════════════════════════════════ */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, box-shadow, opacity;
+  transition-duration: 0.18s;
+  transition-timing-function: ease;
 }
 
-/* ─────────────────────────────────────────────
-   CURSOR
-───────────────────────────────────────────── */
-#vg-cursor {
-  position: fixed; width: 6px; height: 6px;
-  background: var(--vg-gold); border-radius: 50%;
-  pointer-events: none; z-index: 9998;
-  transform: translate(-50%, -50%);
-  mix-blend-mode: multiply;
-}
-#vg-cursor-ring {
-  position: fixed; width: 36px; height: 36px;
-  border: 1px solid var(--vg-gold-border); border-radius: 50%;
-  pointer-events: none; z-index: 9997;
-  transform: translate(-50%, -50%);
-  transition: width 0.2s, height 0.2s;
+/* Remove transition from animated elements */
+.vg-ticker-inner,
+.vg-reveal,
+.vg-hotel-thumb,
+.vg-hotel-card,
+.vg-btn-primary,
+.vg-btn-outline,
+.vg-feat,
+[style*="animation"],
+[style*="transition"] {
+  transition: unset;
 }
 
-:root:not(.dark) #vg-cursor {
-  mix-blend-mode: multiply;
-  background: var(--vg-gold-text);
-}
-:root:not(.dark) #vg-cursor-ring {
-  border-color: rgba(123,77,9,0.35);
+.vg-hotel-thumb {
+  transition:
+    transform 0.8s cubic-bezier(0.23, 1, 0.32, 1),
+    filter 0.5s ease !important;
 }
 
-@media (pointer: coarse) { #vg-cursor, #vg-cursor-ring { display: none; } }
-
-/* ─────────────────────────────────────────────
-   KEYFRAMES
-───────────────────────────────────────────── */
-@keyframes gold-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.6; transform: scale(0.85); }
-}
-@keyframes ticker-scroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-@keyframes spin  { to { transform: rotate(360deg); } }
-@keyframes shimmer {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+.vg-hotel-card {
+  transition:
+    border-color 0.4s ease,
+    box-shadow 0.4s ease,
+    transform 0.4s var(--vg-ease) !important;
 }
 
-/* ─────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════
+   MOBILE APP EXPERIENCE
+═══════════════════════════════════════════════════════════ */
+html, body { overscroll-behavior-y: none; }
+
+@supports (-webkit-overflow-scrolling: touch) {
+  html { -webkit-overflow-scrolling: touch; }
+}
+
+@supports (padding-top: env(safe-area-inset-top)) {
+  .vg-nav {
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(60px + env(safe-area-inset-top, 0px)) !important;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  a, button, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PAGE TRANSITION
+═══════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: no-preference) {
+  main { animation: page-in 0.3s var(--vg-ease) forwards; }
+}
+
+/* ═══════════════════════════════════════════════════════════
    REDUCE MOTION
-───────────────────────────────────────────── */
+═══════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -709,480 +860,65 @@ body::after {
   .vg-ticker-inner { animation: none; }
 }
 
-/* ─────────────────────────────────────────────
-   LIGHT MODE — SECTION SEPARATORS
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-section-border-top {
-  border-top: 1px solid rgba(25,14,5,0.12);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — FORM INPUTS
-───────────────────────────────────────────── */
-:root:not(.dark) input:not([type='checkbox']):not([type='radio']):not([type='range']),
-:root:not(.dark) select,
-:root:not(.dark) textarea {
-  background-color: #FDFAF3;
-  border-color: rgba(25,14,5,0.18);
-  color: #190E05;
-  box-shadow: inset 0 1px 3px rgba(25,14,5,0.06);
-}
-
-:root:not(.dark) input:focus:not([type='checkbox']):not([type='radio']):not([type='range']),
-:root:not(.dark) select:focus,
-:root:not(.dark) textarea:focus {
-  border-color: rgba(123,77,9,0.55);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(123,77,9,0.10), inset 0 1px 3px rgba(25,14,5,0.04);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — DROPDOWNS & SELECTS
-───────────────────────────────────────────── */
-:root:not(.dark) [style*="background: 'var(--vg-bg-card)'"],
-:root:not(.dark) [data-dropdown] {
-  background-color: #FDFAF3;
-  box-shadow: 0 8px 32px rgba(25,14,5,0.14);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — GOLD GRADIENT ACCENTS
-   خطوط وتفاصيل ذهبية مخصصة للوضع النهاري
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-gold-line-h {
-  background: linear-gradient(to right, transparent, rgba(123,77,9,0.50), transparent);
-}
-
-:root:not(.dark) .vg-gold-line-v {
-  background: linear-gradient(to bottom, transparent, rgba(123,77,9,0.50), transparent);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — GLASS CARD (للـ modal وغيره)
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-glass {
-  background: rgba(253,250,243,0.90);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(123,77,9,0.20);
-  box-shadow: var(--vg-shadow-lg);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — SKELETON CARDS
-───────────────────────────────────────────── */
-:root:not(.dark) [style*="vg-skel-bg"] {
-  background: var(--vg-skel-bg);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — SPECIAL SECTION BACKGROUNDS
-   لتمييز الأقسام عن بعضها في الوضع النهاري
-───────────────────────────────────────────── */
-:root:not(.dark) section[style*="var(--vg-bg-surface)"],
-:root:not(.dark) div[style*="var(--vg-bg-surface)"] {
-  background-color: var(--vg-bg-surface);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — BORDERS الذهبية مكثفة
-───────────────────────────────────────────── */
-:root:not(.dark) [style*="var(--vg-gold-border)"] {
-  border-color: rgba(123,77,9,0.30);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — NAV DROPDOWN MENUS
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-nav-dropdown {
-  background: #FDFAF3;
-  border: 1px solid rgba(25,14,5,0.14);
-  box-shadow: 0 8px 32px rgba(25,14,5,0.12);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — STATS SECTION
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-stats-grid {
-  background: var(--vg-bg-surface);
-  border: 1px solid rgba(25,14,5,0.10);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — FOOTER
-───────────────────────────────────────────── */
-:root:not(.dark) footer {
+/* ═══════════════════════════════════════════════════════════
+   LIGHT MODE ADJUSTMENTS — Ivory Atelier
+═══════════════════════════════════════════════════════════ */
+.light footer, :root.light footer {
   background: var(--vg-bg-surface) !important;
-  border-top-color: rgba(25,14,5,0.12) !important;
+  border-top-color: var(--vg-border) !important;
 }
 
-/* ─────────────────────────────────────────────
-   LIGHT MODE — BOOKING CARD & PAYMENT CARD
-───────────────────────────────────────────── */
-:root:not(.dark) [style*="var(--vg-gold-dim)"] {
-  background: rgba(123,77,9,0.09);
+.light .vg-overline, :root.light .vg-overline {
+  color: var(--vg-gold);
 }
 
-:root:not(.dark) [style*="background: 'var(--vg-gold-dim)'"] {
-  background: rgba(123,77,9,0.09) !important;
+.light .vg-overline::before, :root.light .vg-overline::before {
+  background: linear-gradient(to right, var(--vg-gold), transparent);
 }
 
-/* ─────────────────────────────────────────────
-   LIGHT MODE — HOVER STATES على الكروت
-───────────────────────────────────────────── */
-:root:not(.dark) [style*="var(--vg-gold-dim2)"] {
-  background: rgba(123,77,9,0.05);
+.light .vg-btn-primary, :root.light .vg-btn-primary {
+  background: var(--vg-gold);
+  color: #FDFCF9;
+  box-shadow: 0 4px 20px rgba(139,92,10,0.28);
 }
 
-/* ─────────────────────────────────────────────
-   LIGHT MODE — الخط الذهبي في البطاقات
-───────────────────────────────────────────── */
-:root:not(.dark) [style*="linear-gradient(to right, var(--vg-gold)"] {
-  opacity: 0.85;
+.light .vg-btn-primary:hover, :root.light .vg-btn-primary:hover {
+  background: var(--vg-gold-2);
+  box-shadow: 0 8px 32px rgba(139,92,10,0.38);
 }
 
-/* ─────────────────────────────────────────────
-   LIGHT MODE — MAP & LOCATION pins
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-map-pin {
-  color: var(--vg-gold-text);
-  background: rgba(123,77,9,0.10);
+.light .vg-stat-num, :root.light .vg-stat-num {
+  color: var(--vg-gold);
 }
 
-/* ─────────────────────────────────────────────
-   LIGHT MODE — AI Chat Bubble
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-ai-bubble {
-  background: #FDFAF3;
-  border-color: rgba(25,14,5,0.14);
-  box-shadow: var(--vg-shadow-sm);
+.light .vg-price-tag, :root.light .vg-price-tag {
+  background: rgba(21,14,7,0.88);
+  border-color: rgba(139,92,10,0.50);
+  color: #F5DFA0;
 }
 
-/* ─────────────────────────────────────────────
-   LIGHT MODE — STAR RATING
-───────────────────────────────────────────── */
-:root:not(.dark) [style*="var(--vg-star)"] {
-  color: var(--vg-star);
-  fill: var(--vg-star);
+.light input:not([type='checkbox']):not([type='radio']):not([type='range']),
+.light select,
+.light textarea,
+:root.light input:not([type='checkbox']):not([type='radio']):not([type='range']),
+:root.light select,
+:root.light textarea {
+  background-color: #FDFCF9 !important;
+  border-color: rgba(21,14,7,0.14) !important;
+  color: var(--vg-text) !important;
+  box-shadow: inset 0 1px 3px rgba(21,14,7,0.05);
 }
 
-/* ─────────────────────────────────────────────
-   LIGHT MODE — PAGINATION
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-page-active {
-  background: var(--vg-gold-text);
-  color: #FDFAF3;
+.light input:focus, :root.light input:focus,
+.light select:focus, :root.light select:focus,
+.light textarea:focus, :root.light textarea:focus {
+  border-color: rgba(139,92,10,0.50) !important;
+  box-shadow: 0 0 0 3px rgba(139,92,10,0.08), inset 0 1px 3px rgba(21,14,7,0.04) !important;
 }
 
-/* ─────────────────────────────────────────────
-   LIGHT MODE — Booking ID / Mono text
-───────────────────────────────────────────── */
-:root:not(.dark) [style*="var(--vg-text-3)"] {
-  color: rgba(25,14,5,0.40);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — Status colors (تأكيد الحجز)
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-status-confirmed {
-  background: rgba(16,185,129,0.10);
-  border-color: rgba(16,185,129,0.28);
-  color: #065F46;
-}
-
-:root:not(.dark) .vg-status-pending {
-  background: rgba(123,77,9,0.10);
-  border-color: rgba(123,77,9,0.28);
-  color: var(--vg-gold-text);
-}
-
-:root:not(.dark) .vg-status-cancelled {
-  background: rgba(239,68,68,0.08);
-  border-color: rgba(239,68,68,0.25);
-  color: #991B1B;
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — TOAST / NOTIFICATION
-───────────────────────────────────────────── */
-:root:not(.dark) [data-sonner-toast] {
-  background: #FDFAF3 !important;
-  border-color: rgba(25,14,5,0.16) !important;
-  color: #190E05 !important;
-  box-shadow: var(--vg-shadow-md) !important;
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — LIGHTBOX
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-lightbox-bg {
-  background: rgba(25,14,5,0.92);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — REVIEW MODAL
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-modal-overlay {
-  background: rgba(25,14,5,0.75);
-}
-
-:root:not(.dark) .vg-modal-card {
-  background: #FDFAF3;
-  border-color: rgba(123,77,9,0.28);
-  box-shadow: var(--vg-shadow-lg);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — FEATURED BADGE في الكروت
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-badge-featured {
-  background: rgba(25,14,5,0.82);
-  color: #F5D08A;
-  border-color: rgba(123,77,9,0.55);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — PRICE TAG فوق الصور
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-price-tag {
-  background: rgba(25,14,5,0.88);
-  color: #F5D08A;
-  border-color: rgba(123,77,9,0.60);
-  box-shadow: 0 2px 10px rgba(25,14,5,0.30);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — GRADIENT على الصور (overlay)
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-img-overlay {
-  background: linear-gradient(to top, rgba(25,14,5,0.90) 0%, transparent 55%);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — SECTION TAG الأعلى
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-section-surface {
-  background: var(--vg-bg-surface);
-  border-bottom: 1px solid rgba(25,14,5,0.10);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — SWITCH TOGGLE (Theme Toggle)
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-toggle {
-  background: rgba(123,77,9,0.12);
-  border-color: rgba(123,77,9,0.30);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — SKELETON SHIMMER مكثف
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-skeleton {
-  background: var(--vg-skel-bg);
-}
-
-:root:not(.dark) .vg-skeleton-shine {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--vg-skel-shine) 50%,
-    transparent 100%
-  );
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — GLOW EFFECT خلف الأقسام
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-glow-amber {
-  background: radial-gradient(
-    ellipse 60% 50% at 50% 50%,
-    rgba(123,77,9,0.08) 0%,
-    transparent 70%
-  );
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — BORDER SEPARATOR خطوط الفصل
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-divider {
-  background: linear-gradient(to right, transparent, rgba(123,77,9,0.35), transparent);
-  height: 1px;
-  opacity: 0.7;
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — FILTER PANEL (الفلاتر)
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-filter-panel {
-  background: #FDFAF3;
-  border-bottom: 1px solid rgba(123,77,9,0.22);
-  box-shadow: 0 4px 16px rgba(25,14,5,0.10);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — CATEGORY CHIP
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-chip {
-  background: rgba(123,77,9,0.08);
-  border: 1px solid rgba(123,77,9,0.22);
-  color: var(--vg-gold-text);
-}
-
-:root:not(.dark) .vg-chip:hover {
-  background: rgba(123,77,9,0.15);
-  border-color: rgba(123,77,9,0.40);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — BREADCRUMB
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-breadcrumb {
-  color: rgba(25,14,5,0.50);
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
-:root:not(.dark) .vg-breadcrumb-active {
-  color: var(--vg-gold-text);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — WALLET CARD (Pi Balance)
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-wallet-card {
-  background: linear-gradient(135deg, #EAE2D2 0%, #F5EDD8 50%, #EAE2D2 100%);
-  border: 1px solid rgba(123,77,9,0.28);
-  box-shadow: var(--vg-shadow-gold);
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — SUCCESS CHECK ICON
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-success-icon {
-  background: rgba(16,185,129,0.10);
-  border: 1px solid rgba(16,185,129,0.30);
-  color: #065F46;
-}
-
-/* ─────────────────────────────────────────────
-   LIGHT MODE — LOADING SPINNER
-───────────────────────────────────────────── */
-:root:not(.dark) .vg-spinner {
-  border-color: rgba(123,77,9,0.20);
-  border-top-color: var(--vg-gold-text);
-}
-/* ─────────────────────────────────────────────────────────
-   MOBILE APP EXPERIENCE ADDITIONS
-   أضف هذا في نهاية globals.css
-───────────────────────────────────────────────────────── */
-
-/* ── Hide desktop footer on mobile — BottomNav replaces it ── */
-@media (max-width: 768px) {
-  .vg-desktop-footer {
-    display: none !important;
-  }
-
-  /* Give main content breathing room above bottom nav */
-  main {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-
-  /* Hide the old navbar on mobile when bottom nav is present */
-  .vg-nav {
-    height: 56px !important;
-  }
-
-  /* Remove the website-like padding on mobile sections */
-  [style*="clamp(4rem,8vw,7rem)"] {
-    padding-top: clamp(2.5rem, 5vw, 4rem) !important;
-    padding-bottom: clamp(2.5rem, 5vw, 4rem) !important;
-  }
-}
-
-/* ── Native app-like scroll behavior ── */
-@supports (-webkit-overflow-scrolling: touch) {
-  html {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: none;
-  }
-}
-
-/* ── Prevent body scroll bounce on iOS ── */
-html, body {
-  overscroll-behavior-y: none;
-}
-
-/* ── Status bar area fill on iPhone notch ── */
-@supports (padding-top: env(safe-area-inset-top)) {
-  .vg-nav {
-    padding-top: env(safe-area-inset-top, 0px);
-    height: calc(60px + env(safe-area-inset-top, 0px)) !important;
-  }
-}
-
-/* ── App-like tap feedback ── */
-@media (hover: none) and (pointer: coarse) {
-  a, button, [role="button"] {
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-}
-
-/* ── Mobile: hero section full viewport ── */
-@media (max-width: 768px) {
-  /* AI chat page message bubbles — better mobile sizing */
-  [style*="maxWidth: '78%'"] {
-    max-width: 85% !important;
-  }
-
-  /* Quick action chips scrollable on mobile */
-  .vg-quick-chips {
-    flex-wrap: nowrap !important;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  .vg-quick-chips::-webkit-scrollbar { display: none; }
-}
-
-/* ── Bottom Nav specific light mode ── */
-:root:not(.dark) .vg-bottom-nav-inner {
-  background: rgba(244, 239, 229, 0.97) !important;
-  border-color: rgba(25, 14, 5, 0.12) !important;
-}
-
-/* ── Smooth page transitions ── */
-@media (prefers-reduced-motion: no-preference) {
-  main {
-    animation: pageIn 0.25s ease forwards;
-  }
-}
-
-@keyframes pageIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ── Mobile section headers more compact ── */
-@media (max-width: 480px) {
-  .vg-display {
-    font-size: clamp(2rem, 8vw, 3rem) !important;
-    line-height: 0.95 !important;
-  }
-}
-
-/* ── Pull to refresh visual ── */
-@supports (overscroll-behavior: contain) {
-  main {
-    overscroll-behavior: contain;
-  }
+/* Bottom Nav light mode */
+.light .vg-bottom-nav-inner, :root.light .vg-bottom-nav-inner {
+  background: rgba(248,245,240,0.96) !important;
+  border-color: rgba(21,14,7,0.10) !important;
+  box-shadow: 0 -2px 20px rgba(21,14,7,0.08) !important;
 }
