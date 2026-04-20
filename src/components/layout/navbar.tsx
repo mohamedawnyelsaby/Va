@@ -1,9 +1,6 @@
 'use client';
 // PATH: src/components/layout/navbar.tsx
-// FIX: Light mode — solid backgrounds in dropdowns, good contrast everywhere
-// FIX: Scrolled light mode — cream background, dark text/icons
-// FIX: Mobile menu — always solid background, never transparent
-// FIX: Over hero (transparent) — always light text (hero is always dark)
+// UPDATED: وضع نهاري كامل بنفس تفاصيل الوضع الليلي
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
@@ -92,48 +89,57 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
   ];
 
   // ─── Background Strategy ─────────────────────────────────────────────────
-  // Hero is ALWAYS dark (#03020A). When NOT scrolled → transparent (shows hero dark bg).
-  // When scrolled → solid theme-appropriate background.
-  // Light mode scrolled: solid cream — no transparency bleed.
-  // Dark mode scrolled: solid near-black.
+  // Hero دائمًا داكن (#03020A). فوق الهيرو → شفاف.
+  // بعد التمرير: خلفية صلبة حسب الثيم.
+  //
+  // DARK: شبه أسود شفاف مع blur
+  // LIGHT: عاجي كريمي صلب مع ظل عنبري خفي
 
-  const onHero = !scrolled; // Transparent over hero
+  const onHero = !scrolled;
 
+  // ── Nav Background ──
   const navBg = scrolled
     ? (isDark
         ? 'rgba(3,2,10,0.96)'
-        : '#F6F3EC')  // Solid cream in light mode — no transparency
+        : 'rgba(244,239,229,0.98)')
     : 'transparent';
 
   const navBorder = scrolled
     ? (isDark
         ? '0.5px solid rgba(242,238,230,0.08)'
-        : '0.5px solid rgba(26,18,8,0.14)')
+        : '0.5px solid rgba(25,14,5,0.12)')
     : 'none';
 
-  const navBlur = scrolled && isDark ? 'blur(20px)' : 'none';
-  const navShadow = scrolled && !isDark ? '0 1px 12px rgba(26,18,8,0.08)' : 'none';
+  const navBlur    = scrolled && isDark ? 'blur(20px)' : scrolled && !isDark ? 'blur(12px)' : 'none';
+  const navShadow  = scrolled && !isDark
+    ? '0 1px 20px rgba(25,14,5,0.10), 0 0 0 1px rgba(123,77,9,0.08)'
+    : scrolled && isDark
+    ? '0 1px 20px rgba(0,0,0,0.40)'
+    : 'none';
 
-  // When over hero (transparent): always light text (hero is dark)
-  // When scrolled in light mode: dark text/icons
-  // When scrolled in dark mode: light text/icons
+  // ── Text / Icon Colors ──
+  // فوق الهيرو: دائمًا فاتح (الهيرو داكن)
+  // بعد التمرير في النهار: داكن وغامق
+  // بعد التمرير في الليل: فاتح شفاف
   const navTextColor = onHero
-    ? 'rgba(242,238,230,0.80)'
-    : (isDark ? 'rgba(242,238,230,0.65)' : 'rgba(26,18,8,0.72)');
+    ? 'rgba(242,238,230,0.82)'
+    : (isDark ? 'rgba(242,238,230,0.65)' : 'rgba(25,14,5,0.72)');
 
   const navLogoColor = onHero
     ? '#F2EEE6'
-    : (isDark ? 'var(--vg-text)' : '#1A1208');
+    : (isDark ? 'var(--vg-text)' : '#190E05');
 
   const iconBorderColor = onHero
     ? 'rgba(242,238,230,0.25)'
-    : (isDark ? 'rgba(242,238,230,0.12)' : 'rgba(26,18,8,0.20)');
+    : (isDark ? 'rgba(242,238,230,0.12)' : 'rgba(25,14,5,0.20)');
 
-  const iconBg = onHero ? 'rgba(242,238,230,0.08)' : 'transparent';
+  const iconBg = onHero
+    ? 'rgba(242,238,230,0.08)'
+    : (isDark ? 'transparent' : 'rgba(25,14,5,0.04)');
 
   const iconColor = onHero
-    ? 'rgba(242,238,230,0.78)'
-    : (isDark ? 'rgba(242,238,230,0.65)' : 'rgba(26,18,8,0.68)');
+    ? 'rgba(242,238,230,0.80)'
+    : (isDark ? 'rgba(242,238,230,0.65)' : 'rgba(25,14,5,0.68)');
 
   const iconBtnStyle: React.CSSProperties = {
     background:  iconBg,
@@ -147,33 +153,46 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
     flexShrink:  0,
   };
 
-  // Dropdown background — always solid (no transparency)
-  const dropdownBg = isDark ? '#0E0C18' : '#FFFFFF';
-  const dropdownBorder = isDark ? '1px solid rgba(242,238,230,0.10)' : '1px solid rgba(26,18,8,0.14)';
-  const dropdownShadow = isDark ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 32px rgba(26,18,8,0.12)';
-  const dropdownItemColor = isDark ? 'rgba(242,238,230,0.65)' : 'rgba(26,18,8,0.72)';
-  const dropdownDivider = isDark ? '0.5px solid rgba(242,238,230,0.06)' : '0.5px solid rgba(26,18,8,0.08)';
-  const dropdownHoverBg = isDark ? 'rgba(242,238,230,0.04)' : 'rgba(26,18,8,0.04)';
+  // ── Dropdown Styles ──
+  // دائمًا صلبة — لا شفافية في الـ dropdown
+  const dropdownBg     = isDark ? '#0E0C18' : '#FDFAF3';
+  const dropdownBorder = isDark
+    ? '1px solid rgba(242,238,230,0.10)'
+    : '1px solid rgba(25,14,5,0.14)';
+  const dropdownShadow = isDark
+    ? '0 8px 32px rgba(0,0,0,0.50)'
+    : '0 8px 40px rgba(25,14,5,0.14), 0 0 0 1px rgba(123,77,9,0.08)';
+  const dropdownItemColor = isDark
+    ? 'rgba(242,238,230,0.65)'
+    : 'rgba(25,14,5,0.72)';
+  const dropdownDivider = isDark
+    ? '0.5px solid rgba(242,238,230,0.06)'
+    : '0.5px solid rgba(25,14,5,0.08)';
+  const dropdownHoverBg = isDark
+    ? 'rgba(242,238,230,0.04)'
+    : 'rgba(123,77,9,0.06)';
 
-  // Mobile menu background — ALWAYS solid
-  const mobileMenuBg = isDark ? '#09080F' : '#F6F3EC';
-  const mobileNavTextColor = isDark ? 'var(--vg-text)' : '#1A1208';
-  const mobileDivider = isDark ? '0.5px solid rgba(242,238,230,0.08)' : '0.5px solid rgba(26,18,8,0.10)';
+  // ── Mobile Menu ──
+  const mobileMenuBg      = isDark ? '#09080F' : '#F4EFE5';
+  const mobileNavTextColor = isDark ? 'var(--vg-text)' : '#190E05';
+  const mobileDivider      = isDark
+    ? '0.5px solid rgba(242,238,230,0.08)'
+    : '0.5px solid rgba(25,14,5,0.10)';
 
   return (
     <>
       <nav
         dir="ltr"
         style={{
-          position:            'fixed',
+          position:             'fixed',
           top: 0, left: 0, right: 0,
-          zIndex:              500,
-          background:          navBg,
-          borderBottom:        navBorder,
-          backdropFilter:      navBlur,
-          WebkitBackdropFilter:navBlur,
-          boxShadow:           navShadow,
-          transition:          'background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease',
+          zIndex:               500,
+          background:           navBg,
+          borderBottom:         navBorder,
+          backdropFilter:       navBlur,
+          WebkitBackdropFilter: navBlur,
+          boxShadow:            navShadow,
+          transition:           'background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease',
         }}
       >
         <div style={{
@@ -236,12 +255,14 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                 onMouseEnter={e => {
                   const el = e.currentTarget as HTMLButtonElement;
                   el.style.borderColor = 'var(--vg-gold-border)';
-                  el.style.color = 'var(--vg-gold)';
+                  el.style.color       = 'var(--vg-gold)';
+                  if (!isDark) el.style.background = 'rgba(123,77,9,0.08)';
                 }}
                 onMouseLeave={e => {
                   const el = e.currentTarget as HTMLButtonElement;
                   el.style.borderColor = iconBorderColor;
-                  el.style.color = iconColor;
+                  el.style.color       = iconColor;
+                  el.style.background  = iconBg;
                 }}
               >
                 {isDark ? <Sun size={15} /> : <Moon size={15} />}
@@ -263,12 +284,14 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                 onMouseEnter={e => {
                   const el = e.currentTarget as HTMLButtonElement;
                   el.style.borderColor = 'var(--vg-gold-border)';
-                  el.style.color = 'var(--vg-gold)';
+                  el.style.color       = 'var(--vg-gold)';
+                  if (!isDark) el.style.background = 'rgba(123,77,9,0.08)';
                 }}
                 onMouseLeave={e => {
                   const el = e.currentTarget as HTMLButtonElement;
                   el.style.borderColor = iconBorderColor;
-                  el.style.color = iconColor;
+                  el.style.color       = iconColor;
+                  el.style.background  = iconBg;
                 }}
               >
                 <Globe size={12} />
@@ -281,8 +304,7 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                   position:  'absolute',
                   top:       'calc(100% + 0.5rem)',
                   right:     0,
-                  // ALWAYS solid — no transparency
-                  background:dropdownBg,
+                  background: dropdownBg,
                   border:    dropdownBorder,
                   minWidth:  '148px',
                   zIndex:    999,
@@ -298,7 +320,9 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                         fontFamily:     'var(--font-space-mono)',
                         fontSize:       VG.font.micro,
                         letterSpacing:  '0.12em',
-                        color:          l.code === locale ? 'var(--vg-gold)' : dropdownItemColor,
+                        color:          l.code === locale
+                          ? (isDark ? 'var(--vg-gold)' : 'var(--vg-gold-text)')
+                          : dropdownItemColor,
                         textDecoration: 'none',
                         background:     l.code === locale ? 'var(--vg-gold-dim)' : 'none',
                         borderBottom:   dropdownDivider,
@@ -308,11 +332,13 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                       onMouseEnter={e => {
                         if (l.code !== locale) {
                           (e.currentTarget as HTMLElement).style.background = dropdownHoverBg;
+                          if (!isDark)(e.currentTarget as HTMLElement).style.color = 'var(--vg-gold-text)';
                         }
                       }}
                       onMouseLeave={e => {
                         if (l.code !== locale) {
                           (e.currentTarget as HTMLElement).style.background = 'none';
+                          (e.currentTarget as HTMLElement).style.color = dropdownItemColor;
                         }
                       }}>
                       <span style={{ opacity: 0.5, width: '18px', fontSize: VG.font.micro }}>{l.label}</span>
@@ -330,23 +356,31 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                   <button
                     onClick={() => setUserOpen(v => !v)}
                     style={{
-                      width:        '32px',
-                      height:       '32px',
-                      background:   'var(--vg-gold-dim)',
-                      border:       '1px solid var(--vg-gold-border)',
-                      cursor:       'pointer',
-                      color:        'var(--vg-gold)',
-                      display:      'flex',
-                      alignItems:   'center',
+                      width:          '32px',
+                      height:         '32px',
+                      background:     'var(--vg-gold-dim)',
+                      border:         '1px solid var(--vg-gold-border)',
+                      cursor:         'pointer',
+                      color:          isDark ? 'var(--vg-gold)' : 'var(--vg-gold-text)',
+                      display:        'flex',
+                      alignItems:     'center',
                       justifyContent: 'center',
-                      fontFamily:   'var(--font-cormorant)',
-                      fontSize:     '1rem',
-                      fontWeight:   300,
-                      transition:   'background 0.2s',
-                      flexShrink:   0,
+                      fontFamily:     'var(--font-cormorant)',
+                      fontSize:       '1rem',
+                      fontWeight:     300,
+                      transition:     'background 0.2s, box-shadow 0.2s',
+                      flexShrink:     0,
                     }}
-                    onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(201,162,39,0.25)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'var(--vg-gold-dim)'}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLButtonElement).style.background = isDark
+                        ? 'rgba(201,162,39,0.25)'
+                        : 'rgba(123,77,9,0.18)';
+                      if (!isDark)(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 2px 10px rgba(123,77,9,0.20)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLButtonElement).style.background = 'var(--vg-gold-dim)';
+                      (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+                    }}
                   >
                     {initial}
                   </button>
@@ -362,19 +396,27 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                       zIndex:    999,
                       boxShadow: dropdownShadow,
                     }}>
+                      {/* User info header */}
                       <div style={{
                         padding:      '0.9rem 1rem',
-                        borderBottom: `1px solid ${isDark ? 'rgba(242,238,230,0.07)' : 'rgba(26,18,8,0.08)'}`,
-                        background:   'var(--vg-gold-dim)',
+                        borderBottom: `1px solid ${isDark ? 'rgba(242,238,230,0.07)' : 'rgba(25,14,5,0.08)'}`,
+                        background:   isDark
+                          ? 'var(--vg-gold-dim)'
+                          : 'linear-gradient(135deg, rgba(123,77,9,0.08) 0%, rgba(123,77,9,0.04) 100%)',
                       }}>
-                        <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1rem', color: 'var(--vg-text)', marginBottom: '0.15rem' }}>
+                        <div style={{
+                          fontFamily: 'var(--font-cormorant)',
+                          fontSize:   '1rem',
+                          color:      isDark ? 'var(--vg-text)' : '#190E05',
+                          marginBottom: '0.15rem',
+                        }}>
                           {session.user?.name}
                         </div>
                         <div style={{
                           fontFamily:    'var(--font-space-mono)',
                           fontSize:      VG.font.micro,
                           letterSpacing: '0.1em',
-                          color:         'var(--vg-text-3)',
+                          color:         isDark ? 'rgba(242,238,230,0.35)' : 'rgba(25,14,5,0.42)',
                           overflow:      'hidden',
                           textOverflow:  'ellipsis',
                           whiteSpace:    'nowrap',
@@ -403,11 +445,11 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                               direction:      'ltr',
                             }}
                             onMouseEnter={e => {
-                              (e.currentTarget as HTMLElement).style.color = 'var(--vg-gold)';
-                              (e.currentTarget as HTMLElement).style.background = 'var(--vg-gold-dim2)';
+                              (e.currentTarget as HTMLElement).style.color      = isDark ? 'var(--vg-gold)' : 'var(--vg-gold-text)';
+                              (e.currentTarget as HTMLElement).style.background = dropdownHoverBg;
                             }}
                             onMouseLeave={e => {
-                              (e.currentTarget as HTMLElement).style.color = dropdownItemColor;
+                              (e.currentTarget as HTMLElement).style.color      = dropdownItemColor;
                               (e.currentTarget as HTMLElement).style.background = 'none';
                             }}>
                             <Icon size={12} /> {item.label}
@@ -434,11 +476,13 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                           direction:      'ltr',
                         }}
                         onMouseEnter={e => {
-                          (e.currentTarget as HTMLButtonElement).style.color = '#ef4444';
-                          (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.05)';
+                          (e.currentTarget as HTMLButtonElement).style.color      = '#ef4444';
+                          (e.currentTarget as HTMLButtonElement).style.background = isDark
+                            ? 'rgba(239,68,68,0.06)'
+                            : 'rgba(239,68,68,0.06)';
                         }}
                         onMouseLeave={e => {
-                          (e.currentTarget as HTMLButtonElement).style.color = dropdownItemColor;
+                          (e.currentTarget as HTMLButtonElement).style.color      = dropdownItemColor;
                           (e.currentTarget as HTMLButtonElement).style.background = 'none';
                         }}
                       >
@@ -464,12 +508,14 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                       whiteSpace:     'nowrap',
                     }}
                     onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.color = 'var(--vg-gold)';
+                      (e.currentTarget as HTMLElement).style.color       = isDark ? 'var(--vg-gold)' : 'var(--vg-gold-text)';
                       (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-gold-border)';
+                      if (!isDark)(e.currentTarget as HTMLElement).style.background = 'rgba(123,77,9,0.06)';
                     }}
                     onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.color = navTextColor;
+                      (e.currentTarget as HTMLElement).style.color       = navTextColor;
                       (e.currentTarget as HTMLElement).style.borderColor = iconBorderColor;
+                      (e.currentTarget as HTMLElement).style.background  = 'transparent';
                     }}
                   >
                     {tr.nav.signIn}
@@ -494,8 +540,9 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                   background: 'none',
                   border:     'none',
                   cursor:     'pointer',
-                  // Always visible regardless of mode
-                  color:      onHero ? 'rgba(242,238,230,0.88)' : (isDark ? 'rgba(242,238,230,0.88)' : 'rgba(26,18,8,0.82)'),
+                  color:      onHero
+                    ? 'rgba(242,238,230,0.90)'
+                    : (isDark ? 'rgba(242,238,230,0.88)' : 'rgba(25,14,5,0.82)'),
                   padding:    '0.4rem',
                   display:    'flex',
                   alignItems: 'center',
@@ -509,27 +556,26 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
         </div>
       </nav>
 
-      {/* Mobile Menu — ALWAYS solid background, never transparent */}
+      {/* Mobile Menu — خلفية صلبة دائمًا */}
       {isMobile && menuOpen && (
         <div
           dir="ltr"
           style={{
-            position:        'fixed',
-            inset:           0,
-            zIndex:          499,
-            // Solid background — no page content showing through
-            background:      mobileMenuBg,
-            display:         'flex',
-            flexDirection:   'column',
-            paddingTop:      '60px',
+            position:      'fixed',
+            inset:         0,
+            zIndex:        499,
+            background:    mobileMenuBg,
+            display:       'flex',
+            flexDirection: 'column',
+            paddingTop:    '60px',
           }}
         >
           <div style={{
-            flex:       1,
-            display:    'flex',
+            flex:          1,
+            display:       'flex',
             flexDirection: 'column',
-            padding:    '2rem clamp(1.5rem, 6vw, 3rem)',
-            overflowY:  'auto',
+            padding:       '2rem clamp(1.5rem, 6vw, 3rem)',
+            overflowY:     'auto',
           }}>
             {NAV.map((l, i) => (
               <Link
@@ -551,10 +597,13 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                   display:       'flex',
                   alignItems:    'center',
                   gap:           '1rem',
+                  transition:    'color 0.2s',
                 }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = isDark ? 'var(--vg-gold)' : 'var(--vg-gold-text)'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = mobileNavTextColor}
               >
                 <em style={{
-                  color:         'var(--vg-gold)',
+                  color:         isDark ? 'var(--vg-gold)' : 'var(--vg-gold-text)',
                   fontStyle:     'italic',
                   fontSize:      '0.5em',
                   fontFamily:    'var(--font-space-mono)',
@@ -609,7 +658,7 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
               )}
             </div>
 
-            {/* Language row in mobile menu */}
+            {/* Language row */}
             <div style={{
               marginTop:  '1.5rem',
               display:    'flex',
@@ -628,9 +677,15 @@ export function Navbar({ locale, isRTL = false }: { locale: string; isRTL?: bool
                     fontSize:       VG.font.micro,
                     letterSpacing:  '0.15em',
                     padding:        '0.4rem 0.7rem',
-                    border:         `1px solid ${l.code === locale ? 'var(--vg-gold-border)' : (isDark ? 'rgba(242,238,230,0.12)' : 'rgba(26,18,8,0.15)')}`,
-                    background:     l.code === locale ? 'var(--vg-gold-dim)' : 'none',
-                    color:          l.code === locale ? 'var(--vg-gold)' : (isDark ? 'rgba(242,238,230,0.55)' : 'rgba(26,18,8,0.55)'),
+                    border:         l.code === locale
+                      ? `1px solid var(--vg-gold-border)`
+                      : `1px solid ${isDark ? 'rgba(242,238,230,0.12)' : 'rgba(25,14,5,0.16)'}`,
+                    background:     l.code === locale
+                      ? 'var(--vg-gold-dim)'
+                      : 'none',
+                    color:          l.code === locale
+                      ? (isDark ? 'var(--vg-gold)' : 'var(--vg-gold-text)')
+                      : (isDark ? 'rgba(242,238,230,0.55)' : 'rgba(25,14,5,0.55)'),
                     textDecoration: 'none',
                     transition:     'all 0.15s',
                   }}
