@@ -1,6 +1,5 @@
 'use client';
 // PATH: src/components/layout/footer.tsx
-// UPDATED: وضع نهاري مكتمل مع تفاصيل عالية الجودة
 import Link from 'next/link';
 import { VG } from '@/lib/tokens';
 import { t } from '@/lib/i18n/translations';
@@ -16,10 +15,10 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
   const tr = t(locale);
 
   const SECTIONS: Record<string, string> = {
-    Explore:  tr.footer.sections.explore,
-    Account:  tr.footer.sections.account,
-    Company:  tr.footer.sections.company,
-    Legal:    tr.footer.sections.legal,
+    Explore: tr.footer.sections.explore,
+    Account: tr.footer.sections.account,
+    Company: tr.footer.sections.company,
+    Legal:   tr.footer.sections.legal,
   };
 
   const LINK_LABELS: Record<string, string[]> = {
@@ -30,17 +29,17 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
   };
 
   return (
-    <footer
+    <div
       style={{
-        background:   'var(--vg-bg-surface)',
-        borderTop:    '1px solid var(--vg-border)',
-        padding:      'clamp(3rem,6vw,5rem) clamp(1.5rem,7vw,5rem) 2rem',
-        direction:    'ltr',
-        position:     'relative',
-        overflow:     'hidden',
+        background:  'var(--vg-bg-surface)',
+        borderTop:   '1px solid var(--vg-border)',
+        padding:     'clamp(3rem,6vw,5rem) clamp(1.5rem,7vw,5rem) 2rem',
+        direction:   'ltr',
+        position:    'relative',
+        overflow:    'hidden',
       }}
     >
-      {/* Light mode: خلفية متدرجة خفية */}
+      {/* Ambient glow */}
       <div style={{
         position:      'absolute',
         inset:         0,
@@ -49,6 +48,8 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
       }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
+
+        {/* Main grid */}
         <div style={{
           display:             'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
@@ -56,7 +57,7 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
           marginBottom:        '3rem',
         }}>
 
-          {/* Brand */}
+          {/* Brand Column */}
           <div>
             <Link href={`/${locale}`} style={{ textDecoration: 'none' }}>
               <div style={{
@@ -69,6 +70,7 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
                 Va<em style={{ color: 'var(--vg-gold)', fontStyle: 'italic' }}> Travel</em>
               </div>
             </Link>
+
             <p style={{
               fontFamily:   'var(--font-dm-sans)',
               fontSize:     VG.font.small,
@@ -79,13 +81,14 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
             }}>
               {tr.footer.description}
             </p>
+
             {/* Social Icons */}
             <div style={{ display: 'flex', gap: '0.8rem' }}>
               {[['𝕏','#','X'],['in','#','LinkedIn'],['π','#','Pi']].map(([icon, href, label]) => (
                 
-                  key={icon}
-                  href={href}
-                  aria-label={label}
+                  key={String(icon)}
+                  href={String(href)}
+                  aria-label={String(label)}
                   style={{
                     width:          '32px',
                     height:         '32px',
@@ -100,18 +103,16 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
                     background:     'transparent',
                   }}
                   onMouseEnter={e => {
-                    const el = e.currentTarget as HTMLElement;
+                    const el = e.currentTarget as HTMLAnchorElement;
                     el.style.color       = 'var(--vg-gold)';
                     el.style.borderColor = 'var(--vg-gold-border)';
                     el.style.background  = 'var(--vg-gold-dim)';
-                    el.style.boxShadow   = '0 2px 8px rgba(123,77,9,0.15)';
                   }}
                   onMouseLeave={e => {
-                    const el = e.currentTarget as HTMLElement;
+                    const el = e.currentTarget as HTMLAnchorElement;
                     el.style.color       = 'var(--vg-text-2)';
                     el.style.borderColor = 'var(--vg-border)';
                     el.style.background  = 'transparent';
-                    el.style.boxShadow   = 'none';
                   }}
                 >
                   {icon}
@@ -120,7 +121,7 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
             </div>
           </div>
 
-          {/* Link columns */}
+          {/* Link Columns */}
           {Object.entries(LINK_SLUGS).map(([col, items]) => (
             <div key={col}>
               <div style={{
@@ -135,7 +136,7 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
               </div>
               {items.map(([, slug], i) => (
                 <Link
-                  key={slug}
+                  key={String(slug)}
                   href={`/${locale}/${slug}`}
                   style={{
                     display:        'block',
@@ -158,18 +159,17 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
 
         {/* Newsletter */}
         <div style={{
-          background:  'var(--vg-gold-dim)',
-          border:      '1px solid var(--vg-gold-border)',
-          padding:     '1.5rem',
-          marginBottom:'2.5rem',
-          display:     'flex',
-          gap:         '1rem',
-          alignItems:  'center',
-          flexWrap:    'wrap',
-          position:    'relative',
-          overflow:    'hidden',
+          background:   'var(--vg-gold-dim)',
+          border:       '1px solid var(--vg-gold-border)',
+          padding:      '1.5rem',
+          marginBottom: '2.5rem',
+          display:      'flex',
+          gap:          '1rem',
+          alignItems:   'center',
+          flexWrap:     'wrap',
+          position:     'relative',
+          overflow:     'hidden',
         }}>
-          {/* Subtle pattern */}
           <div style={{
             position:      'absolute',
             right:         '-20px',
@@ -215,18 +215,15 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
                 color:       'var(--vg-text)',
                 outline:     'none',
                 width:       '200px',
-                transition:  'border-color 0.2s, box-shadow 0.2s',
+                transition:  'border-color 0.2s',
               }}
-              onFocus={e => {
-                e.target.style.borderColor = 'var(--vg-gold)';
-                e.target.style.boxShadow   = '0 0 0 3px rgba(123,77,9,0.10)';
-              }}
-              onBlur={e => {
-                e.target.style.borderColor = 'var(--vg-gold-border)';
-                e.target.style.boxShadow   = 'none';
-              }}
+              onFocus={e => (e.target.style.borderColor = 'var(--vg-gold)')}
+              onBlur={e  => (e.target.style.borderColor = 'var(--vg-gold-border)')}
             />
-            <button className="vg-btn-primary" style={{ padding: '0.65rem 1.2rem', fontSize: VG.font.micro, flexShrink: 0 }}>
+            <button
+              className="vg-btn-primary"
+              style={{ padding: '0.65rem 1.2rem', fontSize: VG.font.micro, flexShrink: 0 }}
+            >
               {tr.footer.newsletter.btn}
             </button>
           </div>
@@ -234,13 +231,13 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
 
         {/* Bottom bar */}
         <div style={{
-          borderTop:  '1px solid var(--vg-border)',
-          paddingTop: '1.5rem',
-          display:    'flex',
-          flexWrap:   'wrap',
-          gap:        '1rem',
+          borderTop:      '1px solid var(--vg-border)',
+          paddingTop:     '1.5rem',
+          display:        'flex',
+          flexWrap:       'wrap',
+          gap:            '1rem',
           justifyContent: 'space-between',
-          alignItems: 'center',
+          alignItems:     'center',
         }}>
           <span style={{
             fontFamily:    'var(--font-space-mono)',
@@ -251,6 +248,7 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
           }}>
             © {new Date().getFullYear()} {tr.footer.copyright}
           </span>
+
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <span style={{
               fontFamily:    'var(--font-space-mono)',
@@ -261,10 +259,14 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
             }}>
               {tr.footer.poweredBy}
             </span>
-            <div className="vg-badge-outline"><span className="dot" />{tr.footer.aiPowered}</div>
+            <div className="vg-badge-outline">
+              <span className="dot" />
+              {tr.footer.aiPowered}
+            </div>
           </div>
         </div>
+
       </div>
-    </footer>
+    </div>
   );
 }
