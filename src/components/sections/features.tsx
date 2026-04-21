@@ -115,18 +115,18 @@ export function FeaturesSection({ locale }: { locale: string }) {
               <div>
                 <div style={{
                   fontFamily: 'var(--font-cormorant)',
-                  fontSize: '1.35rem',
+                  fontSize: 'clamp(1.1rem, 2.5vw, 1.35rem)',
                   fontWeight: 300,
                   color: 'var(--vg-text)',
                   marginBottom: '0.6rem',
                   letterSpacing: '-0.01em',
-                  lineHeight: 1.1,
+                  lineHeight: 1.3,
                 }}>
                   {feat.title}
                 </div>
                 <p style={{
                   fontFamily: 'var(--font-dm-sans)',
-                  fontSize: '0.80rem',
+                  fontSize: 'clamp(0.75rem, 1.8vw, 0.80rem)',
                   color: 'var(--vg-text-2)',
                   lineHeight: 1.75,
                   margin: 0,
