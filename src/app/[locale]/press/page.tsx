@@ -1,4 +1,6 @@
 // PATH: src/app/[locale]/press/page.tsx
+"use client";
+
 export default function PressPage() {
   const PRESS_ITEMS = [
     { outlet: 'TechCrunch', headline: 'Va Travel brings Pi Network payments to luxury hospitality', date: '2025' },
