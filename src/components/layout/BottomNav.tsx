@@ -2,9 +2,8 @@
 // PATH: src/components/layout/BottomNav.tsx
 // World-class mobile bottom navigation — transforms website to app
 
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState, useCallback } from 'react';
 
 interface NavItem {
   href: string;
@@ -98,6 +97,7 @@ const ProfileIcon = ({ active }: { active: boolean }) => (
 
 export function BottomNav({ locale }: { locale: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [visible, setVisible] = useState(true);
   const [lastY, setLastY] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -106,15 +106,33 @@ export function BottomNav({ locale }: { locale: string }) {
 
   // Hide on scroll down, show on scroll up — native app behavior
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      const y = window.scrollY;
-      if (y < 60) { setVisible(true); return; }
-      setVisible(y < lastY || y < 80);
-      setLastY(y);
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const y = window.scrollY;
+          if (y < 60) { setVisible(true); ticking = false; return; }
+          setVisible(prev => {
+            setLastY(prevY => { 
+              const show = y < prevY || y < 80;
+              if (show !== prev) return y;
+              return y;
+            });
+            return y < lastY || y < 80;
+          });
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastY]);
+
+  const navigate = useCallback((href: string) => {
+    // Use replace to avoid stacking history — native app behaviour
+    router.replace(href);
+  }, [router]);
 
   if (!mounted) return null;
 
@@ -299,9 +317,9 @@ export function BottomNav({ locale }: { locale: string }) {
             const active = isActive(href);
             const isAI = label === 'AI';
             return (
-              <Link
+              <button
                 key={href}
-                href={href}
+                onClick={() => navigate(href)}
                 className={`vg-nav-tab${active ? ' active' : ''}`}
                 data-ai={isAI ? 'true' : undefined}
                 aria-label={label}
@@ -311,7 +329,7 @@ export function BottomNav({ locale }: { locale: string }) {
                   <Icon active={active} />
                 </span>
                 <span className="vg-nav-tab-label">{label}</span>
-              </Link>
+              </button>
             );
           })}
         </div>
