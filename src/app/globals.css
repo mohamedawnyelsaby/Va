@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
-   VA TRAVEL — CINEMATIC NOIR LUXURY DESIGN SYSTEM v2.0
-   Unified. Consistent. Production-Grade.
+   VA TRAVEL — DESIGN SYSTEM v3.0
+   Fixed: Arabic RTL, Light mode, Mobile typography
 ═══════════════════════════════════════════════════════════════ */
 @tailwind base;
 @tailwind components;
@@ -8,12 +8,8 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Space+Mono:wght@400;700&family=Cairo:wght@300;400;500;600&display=swap');
 
-/* ══════════════════════════════════════════════════════════════
-   TOKEN SYSTEM — DARK MODE (DEFAULT: "Noir Champagne")
-══════════════════════════════════════════════════════════════ */
 @layer base {
   :root {
-    /* ── ShadCN compat ──────────────────────────────────────── */
     --background:            252 60% 3%;
     --foreground:            42 30% 95%;
     --card:                  250 55% 5%;
@@ -35,7 +31,6 @@
     --ring:                  40 68% 56%;
     --radius:                0rem;
 
-    /* ── Backgrounds ────────────────────────────────────────── */
     --vg-bg:           #06050F;
     --vg-bg-card:      #0D0C1C;
     --vg-bg-surface:   #110F20;
@@ -43,13 +38,11 @@
     --vg-bg-glass:     rgba(13, 12, 28, 0.72);
     --vg-bg-glass-2:   rgba(13, 12, 28, 0.92);
 
-    /* ── Text Scale ─────────────────────────────────────────── */
     --vg-text:         #FAF7F2;
     --vg-text-2:       rgba(250, 247, 242, 0.62);
     --vg-text-3:       rgba(250, 247, 242, 0.30);
     --vg-text-4:       rgba(250, 247, 242, 0.12);
 
-    /* ── Gold Palette ───────────────────────────────────────── */
     --vg-gold:         #D4A853;
     --vg-gold-2:       #ECC870;
     --vg-gold-3:       #B8892F;
@@ -59,48 +52,47 @@
     --vg-gold-border:  rgba(212, 168, 83, 0.24);
     --vg-gold-glow:    rgba(212, 168, 83, 0.16);
 
-    /* ── Borders ────────────────────────────────────────────── */
     --vg-border:       rgba(250, 247, 242, 0.07);
     --vg-border-2:     rgba(250, 247, 242, 0.14);
     --vg-border-gold:  rgba(212, 168, 83, 0.24);
 
-    /* ── Semantic ───────────────────────────────────────────── */
     --vg-star:         #D4A853;
     --vg-success:      #2DD4BF;
     --vg-error:        #F87171;
     --vg-warning:      #FBBF24;
 
-    /* ── Navigation ─────────────────────────────────────────── */
     --vg-nav-bg:       rgba(6, 5, 15, 0.85);
     --vg-nav-border:   rgba(250, 247, 242, 0.05);
 
-    /* ── Skeleton ───────────────────────────────────────────── */
     --vg-skel-bg:      rgba(255, 255, 255, 0.04);
     --vg-skel-shine:   rgba(212, 168, 83, 0.07);
 
-    /* ── Image Filters ──────────────────────────────────────── */
     --vg-thumb-filter: brightness(0.55) saturate(0.62);
     --vg-thumb-hover:  brightness(0.72) saturate(0.80);
     --vg-hero-filter:  brightness(0.48) saturate(0.55);
 
-    /* ── Shadows ────────────────────────────────────────────── */
     --vg-shadow-sm:    0 2px 8px rgba(0, 0, 0, 0.50);
     --vg-shadow-md:    0 8px 32px rgba(0, 0, 0, 0.60);
     --vg-shadow-lg:    0 20px 60px rgba(0, 0, 0, 0.70);
     --vg-shadow-gold:  0 8px 40px rgba(212, 168, 83, 0.18);
     --vg-shadow-card:  0 4px 24px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(250, 247, 242, 0.04);
 
-    /* ── Transitions ────────────────────────────────────────── */
     --vg-ease:         cubic-bezier(0.22, 1, 0.36, 1);
     --vg-ease-in:      cubic-bezier(0.55, 0, 1, 0.45);
     --transition-base: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+
+    /* ── Typography tokens — override per locale ── */
+    --vg-font-display:  'Cormorant Garamond', Georgia, serif;
+    --vg-font-body:     'DM Sans', system-ui, sans-serif;
+    --vg-font-mono:     'Space Mono', monospace;
+    --vg-lh-display:    1.05;
+    --vg-lh-body:       1.7;
+    --vg-fw-display:    300;
+    --vg-ls-display:    -0.02em;
   }
 
-  /* ══════════════════════════════════════════════════════════
-     LIGHT MODE — "Ivory Atelier"
-  ══════════════════════════════════════════════════════════ */
-  .light,
-  :root.light {
+  /* ── LIGHT MODE ── */
+  .light, :root.light {
     --background:            40 25% 97%;
     --foreground:            26 55% 7%;
     --card:                  38 20% 99%;
@@ -110,21 +102,19 @@
     --muted:                 35 15% 92%;
     --muted-foreground:      25 20% 40%;
 
-    /* ── Backgrounds ────────────────────────────────────────── */
     --vg-bg:           #F5F1EA;
     --vg-bg-card:      #FDFCF9;
     --vg-bg-surface:   #EAE5DA;
+    --vg-bg-card:      #FDFCF9;
     --vg-bg-deep:      #DDD8CC;
     --vg-bg-glass:     rgba(253, 252, 249, 0.88);
     --vg-bg-glass-2:   rgba(253, 252, 249, 0.97);
 
-    /* ── Text Scale ─────────────────────────────────────────── */
     --vg-text:         #1A1208;
     --vg-text-2:       rgba(26, 18, 8, 0.62);
     --vg-text-3:       rgba(26, 18, 8, 0.38);
     --vg-text-4:       rgba(26, 18, 8, 0.14);
 
-    /* ── Gold Palette (darker for light bg) ─────────────────── */
     --vg-gold:         #8A5C0A;
     --vg-gold-2:       #A87020;
     --vg-gold-3:       #6E4608;
@@ -134,28 +124,21 @@
     --vg-gold-border:  rgba(138, 92, 10, 0.28);
     --vg-gold-glow:    rgba(138, 92, 10, 0.14);
 
-    /* ── Borders ────────────────────────────────────────────── */
     --vg-border:       rgba(26, 18, 8, 0.09);
     --vg-border-2:     rgba(26, 18, 8, 0.18);
     --vg-border-gold:  rgba(138, 92, 10, 0.28);
-
-    /* ── Semantic ───────────────────────────────────────────── */
     --vg-star:         #9B6810;
 
-    /* ── Navigation ─────────────────────────────────────────── */
     --vg-nav-bg:       rgba(245, 241, 234, 0.95);
     --vg-nav-border:   rgba(26, 18, 8, 0.08);
 
-    /* ── Skeleton ───────────────────────────────────────────── */
     --vg-skel-bg:      rgba(26, 18, 8, 0.07);
     --vg-skel-shine:   rgba(138, 92, 10, 0.12);
 
-    /* ── Image Filters ──────────────────────────────────────── */
     --vg-thumb-filter: brightness(0.80) saturate(0.75);
     --vg-thumb-hover:  brightness(0.68) saturate(0.68);
     --vg-hero-filter:  brightness(0.52) saturate(0.62);
 
-    /* ── Shadows ────────────────────────────────────────────── */
     --vg-shadow-sm:    0 2px 8px rgba(26, 18, 8, 0.10);
     --vg-shadow-md:    0 8px 32px rgba(26, 18, 8, 0.12);
     --vg-shadow-lg:    0 20px 60px rgba(26, 18, 8, 0.16);
@@ -168,15 +151,11 @@
    RESET & BASE
 ═══════════════════════════════════════════════════════════ */
 @layer base {
-  *,
-  *::before,
-  *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   html {
     scroll-behavior: smooth;
-    direction: ltr;
     -webkit-text-size-adjust: 100%;
-    font-feature-settings: 'kern' 1, 'liga' 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -184,60 +163,91 @@
   body {
     background-color: var(--vg-bg);
     color: var(--vg-text);
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: var(--vg-font-body);
     overflow-x: hidden;
     line-height: 1.6;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-weight: 300;
-    line-height: 1.15;
+    font-family: var(--vg-font-display);
+    font-weight: var(--vg-fw-display);
+    line-height: var(--vg-lh-display);
     color: var(--vg-text);
-    letter-spacing: -0.01em;
-  }
-
-  /* Arabic — Cairo font needs more breathing room */
-  [dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3,
-  [dir="rtl"] h4, [dir="rtl"] h5, [dir="rtl"] h6 {
-    font-family: 'Cairo', system-ui, sans-serif;
-    line-height: 1.45;
-    letter-spacing: 0;
-  }
-
-  /* Arabic body text */
-  [dir="rtl"] p, [dir="rtl"] span, [dir="rtl"] div {
-    font-family: 'Cairo', system-ui, sans-serif;
-    line-height: 1.9;
+    letter-spacing: var(--vg-ls-display);
   }
 
   img     { max-width: 100%; height: auto; display: block; }
-  button,
-  a       { touch-action: manipulation; }
-  a       { text-decoration: none; color: inherit; }
+  button, a { touch-action: manipulation; }
+  a { text-decoration: none; color: inherit; }
 
-  input,
-  select,
-  textarea {
+  input, select, textarea {
     border-radius: 0 !important;
     background-color: var(--vg-bg-surface);
     color: var(--vg-text);
     border-color: var(--vg-border);
   }
-  input::placeholder,
-  textarea::placeholder { color: var(--vg-text-3); }
+  input::placeholder, textarea::placeholder { color: var(--vg-text-3); }
 
-  /* Scrollbar */
   ::-webkit-scrollbar       { width: 3px; height: 3px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--vg-gold-border); border-radius: 999px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--vg-gold); }
+  ::selection { background: var(--vg-gold-dim); color: var(--vg-gold); }
+}
 
-  /* Selection */
-  ::selection {
-    background: var(--vg-gold-dim);
-    color: var(--vg-gold);
+/* ═══════════════════════════════════════════════════════════
+   ARABIC RTL — data-locale="ar" on the wrapper div
+   Uses data attribute so it wins over inline styles
+═══════════════════════════════════════════════════════════ */
+[data-locale="ar"] {
+  --vg-font-display:  'Cairo', system-ui, sans-serif;
+  --vg-font-body:     'Cairo', system-ui, sans-serif;
+  --vg-lh-display:    1.55;
+  --vg-lh-body:       1.95;
+  --vg-fw-display:    500;
+  --vg-ls-display:    0;
+}
+
+/* All inline fontFamily overrides get beaten by this */
+[data-locale="ar"] * {
+  font-family: 'Cairo', system-ui, sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+/* Keep mono/label elements LTR */
+[data-locale="ar"] .vg-ltr,
+[data-locale="ar"] .vg-overline,
+[data-locale="ar"] .vg-stat-label,
+[data-locale="ar"] .vg-price-tag,
+[data-locale="ar"] .vg-badge-outline,
+[data-locale="ar"] .vg-btn-primary,
+[data-locale="ar"] .vg-btn-outline,
+[data-locale="ar"] [dir="ltr"] {
+  font-family: 'Space Mono', monospace !important;
+  direction: ltr !important;
+  letter-spacing: inherit !important;
+}
+
+/* Hero heading in Arabic */
+[data-locale="ar"] h1 {
+  font-size: clamp(2.5rem, 10vw, 6rem) !important;
+  line-height: 1.55 !important;
+  font-weight: 600 !important;
+}
+[data-locale="ar"] h2 {
+  font-size: clamp(1.6rem, 5vw, 3.5rem) !important;
+  line-height: 1.5 !important;
+  font-weight: 500 !important;
+}
+
+@media (max-width: 640px) {
+  [data-locale="ar"] h1 {
+    font-size: clamp(2rem, 9vw, 3rem) !important;
+    line-height: 1.6 !important;
+  }
+  [data-locale="ar"] h2 {
+    font-size: clamp(1.3rem, 5.5vw, 2rem) !important;
   }
 }
 
@@ -246,12 +256,11 @@
 ═══════════════════════════════════════════════════════════ */
 @layer components {
 
-  /* ── Display Typography ─────────────────────────────────── */
   .vg-display {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-weight: 300;
-    line-height: 0.90;
-    letter-spacing: -0.02em;
+    font-family: var(--vg-font-display);
+    font-weight: var(--vg-fw-display);
+    line-height: var(--vg-lh-display);
+    letter-spacing: var(--vg-ls-display);
     color: var(--vg-text);
   }
 
@@ -260,7 +269,12 @@
     color: var(--vg-gold);
   }
 
-  /* ── Overline Label ─────────────────────────────────────── */
+  /* In Arabic, no italic — use gold color only */
+  [data-locale="ar"] .vg-italic {
+    font-style: normal !important;
+    color: var(--vg-gold);
+  }
+
   .vg-overline {
     font-family: 'Space Mono', monospace;
     font-size: clamp(9px, 0.60rem, 11px);
@@ -280,7 +294,6 @@
     flex-shrink: 0;
   }
 
-  /* ── Primary Button ─────────────────────────────────────── */
   .vg-btn-primary {
     position: relative;
     display: inline-flex;
@@ -319,11 +332,9 @@
     box-shadow: 0 8px 32px rgba(212, 168, 83, 0.35);
   }
   .vg-btn-primary:hover::before { transform: translateX(100%); }
-  .vg-btn-primary:active        { transform: translateY(0); }
-  .light .vg-btn-primary,
-  :root.light .vg-btn-primary   { color: #FDFCF9; }
+  .vg-btn-primary:active { transform: translateY(0); }
+  .light .vg-btn-primary, :root.light .vg-btn-primary { color: #FDFCF9; }
 
-  /* ── Outline Button ─────────────────────────────────────── */
   .vg-btn-outline {
     position: relative;
     display: inline-flex;
@@ -362,7 +373,6 @@
   }
   .vg-btn-outline:hover::before { opacity: 1; }
 
-  /* ── Card ───────────────────────────────────────────────── */
   .vg-card {
     background: var(--vg-bg-card);
     border: 1px solid var(--vg-border);
@@ -374,7 +384,6 @@
     box-shadow: var(--vg-shadow-card), 0 12px 48px rgba(212, 168, 83, 0.08);
   }
 
-  /* ── Hotel Card ─────────────────────────────────────────── */
   .vg-hotel-card {
     position: relative;
     overflow: hidden;
@@ -403,7 +412,6 @@
     transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1), filter 0.5s ease;
   }
 
-  /* ── Price Badge ────────────────────────────────────────── */
   .vg-price-tag {
     position: absolute;
     top: 1rem;
@@ -422,7 +430,6 @@
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
   }
 
-  /* ── Badge ──────────────────────────────────────────────── */
   .vg-badge-outline {
     display: inline-flex;
     align-items: center;
@@ -446,7 +453,6 @@
     flex-shrink: 0;
   }
 
-  /* ── Stat Number ────────────────────────────────────────── */
   .vg-stat-num {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-weight: 300;
@@ -464,7 +470,6 @@
     direction: ltr;
   }
 
-  /* ── Nav ────────────────────────────────────────────────── */
   .vg-nav {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -477,7 +482,6 @@
     direction: ltr;
   }
 
-  /* ── Feature Item ───────────────────────────────────────── */
   .vg-feat {
     display: flex;
     gap: 1.2rem;
@@ -487,7 +491,6 @@
     border: 1px solid var(--vg-border);
     transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s var(--vg-ease);
     cursor: default;
-    direction: ltr;
   }
   .vg-feat:hover {
     background: var(--vg-bg-surface);
@@ -513,7 +516,6 @@
     box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.10);
   }
 
-  /* ── Pi Step Row ────────────────────────────────────────── */
   .vg-pi-step {
     display: flex;
     align-items: center;
@@ -523,11 +525,9 @@
     border-bottom: 1px solid var(--vg-border);
     transition: background 0.2s ease;
     cursor: default;
-    direction: ltr;
   }
   .vg-pi-step:hover { background: var(--vg-bg-surface); }
 
-  /* ── Ticker ─────────────────────────────────────────────── */
   .vg-ticker-wrap {
     overflow: hidden;
     border-top: 1px solid var(--vg-border);
@@ -550,10 +550,9 @@
     padding: 0 2.5rem;
     transition: color 0.2s;
   }
-  .vg-ticker-item:hover  { color: var(--vg-gold); }
-  .vg-ticker-item .tag   { color: var(--vg-gold); margin-right: 0.5rem; }
+  .vg-ticker-item:hover { color: var(--vg-gold); }
+  .vg-ticker-item .tag  { color: var(--vg-gold); margin-right: 0.5rem; }
 
-  /* ── Reveal Animation ───────────────────────────────────── */
   .vg-reveal {
     opacity: 0;
     transform: translateY(26px);
@@ -566,7 +565,6 @@
   .vg-reveal.d4 { transition-delay: 0.38s; }
   .vg-reveal.d5 { transition-delay: 0.48s; }
 
-  /* ── Hero Dark Override ─────────────────────────────────── */
   .vg-hero-force-dark {
     background: #06050F !important;
     color: #FAF7F2 !important;
@@ -574,13 +572,12 @@
     contain: layout style;
   }
 
-  /* ── Input ──────────────────────────────────────────────── */
   .vg-input {
     width: 100%;
     background: var(--vg-bg-surface);
     border: 1px solid var(--vg-border);
     padding: 0.8rem 1rem;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--vg-font-body);
     font-size: 0.875rem;
     color: var(--vg-text);
     outline: none;
@@ -593,7 +590,6 @@
   }
   .vg-input::placeholder { color: var(--vg-text-3); }
 
-  /* ── Gold Divider Lines ─────────────────────────────────── */
   .vg-gold-line {
     height: 1px;
     background: linear-gradient(to right, transparent, var(--vg-gold-border), transparent);
@@ -604,7 +600,6 @@
     background: linear-gradient(to right, var(--vg-gold), var(--vg-gold-2));
   }
 
-  /* ── Desktop Footer Toggle ──────────────────────────────── */
   .vg-desktop-footer { display: block; }
 
   @media (max-width: 768px) {
@@ -639,8 +634,7 @@ body::after {
   opacity: 0.018;
   mix-blend-mode: overlay;
 }
-.light body::after,
-:root.light body::after { opacity: 0.010; }
+.light body::after, :root.light body::after { opacity: 0.010; }
 
 /* ═══════════════════════════════════════════════════════════
    CUSTOM CURSOR
@@ -669,70 +663,56 @@ body::after {
 @media (pointer: coarse) { #vg-cursor, #vg-cursor-ring { display: none; } }
 
 /* ═══════════════════════════════════════════════════════════
-   SHADCN OVERRIDES — Aligned with VG system
+   SHADCN OVERRIDES
 ═══════════════════════════════════════════════════════════ */
 @layer base {
-  .bg-background          { background-color: var(--vg-bg) !important; }
-  .bg-card                { background-color: var(--vg-bg-card) !important; }
-  .bg-muted               { background-color: var(--vg-bg-surface) !important; }
-  .text-muted-foreground  { color: var(--vg-text-2) !important; }
-  .text-primary           { color: var(--vg-gold) !important; }
-  .bg-primary             { background-color: var(--vg-gold) !important; }
-  .border-input           { border-color: var(--vg-border) !important; }
-  .ring-ring              { --tw-ring-color: var(--vg-gold-border); }
+  .bg-background         { background-color: var(--vg-bg) !important; }
+  .bg-card               { background-color: var(--vg-bg-card) !important; }
+  .bg-muted              { background-color: var(--vg-bg-surface) !important; }
+  .text-muted-foreground { color: var(--vg-text-2) !important; }
+  .text-primary          { color: var(--vg-gold) !important; }
+  .bg-primary            { background-color: var(--vg-gold) !important; }
+  .border-input          { border-color: var(--vg-border) !important; }
+  .ring-ring             { --tw-ring-color: var(--vg-gold-border); }
+  .border                { border-color: var(--vg-border); }
 
-  .border { border-color: var(--vg-border); }
-
-  /* Inputs — unified */
   input:not([type='checkbox']):not([type='radio']):not([type='range']),
-  select,
-  textarea {
+  select, textarea {
     background-color: var(--vg-bg-surface) !important;
     color: var(--vg-text) !important;
     border-color: var(--vg-border) !important;
   }
   input:focus:not([type='checkbox']):not([type='radio']):not([type='range']),
-  select:focus,
-  textarea:focus {
+  select:focus, textarea:focus {
     border-color: var(--vg-gold-border) !important;
     box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.08) !important;
     outline: none !important;
   }
-
-  /* Light mode inputs */
   .light input:focus:not([type='checkbox']):not([type='radio']):not([type='range']),
   :root.light input:focus:not([type='checkbox']):not([type='radio']):not([type='range']),
-  .light select:focus,
-  :root.light select:focus,
-  .light textarea:focus,
-  :root.light textarea:focus {
+  .light select:focus, :root.light select:focus,
+  .light textarea:focus, :root.light textarea:focus {
     border-color: rgba(138, 92, 10, 0.50) !important;
-    box-shadow: 0 0 0 3px rgba(138, 92, 10, 0.08), inset 0 1px 3px rgba(26, 18, 8, 0.04) !important;
+    box-shadow: 0 0 0 3px rgba(138, 92, 10, 0.08) !important;
   }
 }
 
 /* ═══════════════════════════════════════════════════════════
    KEYFRAMES
 ═══════════════════════════════════════════════════════════ */
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.5; transform: scale(0.78); }
-}
-@keyframes ticker-scroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-@keyframes spin     { to { transform: rotate(360deg); } }
-@keyframes shimmer  { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-@keyframes fade-up  { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fade-in  { from { opacity: 0; } to { opacity: 1; } }
-@keyframes scale-in { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
-@keyframes float    { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
-@keyframes pulse    { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-@keyframes bounce   { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-6px); opacity: 1; } }
-@keyframes page-in  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes navPip   { from { transform: translateX(-50%) scale(0); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
-@keyframes aiGlow   { 0%, 100% { opacity: 0.3; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.05); } }
+@keyframes pulse-dot  { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.78)} }
+@keyframes ticker-scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+@keyframes spin       { to{transform:rotate(360deg)} }
+@keyframes shimmer    { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+@keyframes fade-up    { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fade-in    { from{opacity:0} to{opacity:1} }
+@keyframes scale-in   { from{opacity:0;transform:scale(.94)} to{opacity:1;transform:scale(1)} }
+@keyframes float      { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes pulse      { 0%,100%{opacity:1} 50%{opacity:.4} }
+@keyframes bounce     { 0%,60%,100%{transform:translateY(0);opacity:.5} 30%{transform:translateY(-6px);opacity:1} }
+@keyframes page-in    { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes navPip     { from{transform:translateX(-50%) scale(0);opacity:0} to{transform:translateX(-50%) scale(1);opacity:1} }
+@keyframes aiGlow     { 0%,100%{opacity:.3;transform:scale(.95)} 50%{opacity:1;transform:scale(1.05)} }
 
 /* ═══════════════════════════════════════════════════════════
    RESPONSIVE GRID HELPERS
@@ -749,56 +729,25 @@ body::after {
 /* ═══════════════════════════════════════════════════════════
    SMOOTH GLOBAL TRANSITIONS
 ═══════════════════════════════════════════════════════════ */
-*,
-*::before,
-*::after {
+*, *::before, *::after {
   transition-property: background-color, border-color, color, box-shadow, opacity;
   transition-duration: 0.18s;
   transition-timing-function: ease;
 }
+.vg-ticker-inner, .vg-reveal, .vg-hotel-thumb, .vg-hotel-card,
+.vg-btn-primary, .vg-btn-outline, .vg-feat,
+[style*="animation"], [class*="animate"] { transition: unset; }
 
-/* Strip transitions from animated elements so they run freely */
-.vg-ticker-inner,
-.vg-reveal,
-.vg-hotel-thumb,
-.vg-hotel-card,
-.vg-btn-primary,
-.vg-btn-outline,
-.vg-feat,
-[style*="animation"],
-[class*="animate"] {
-  transition: unset;
-}
-
-.vg-hotel-thumb {
-  transition:
-    transform 0.8s cubic-bezier(0.23, 1, 0.32, 1),
-    filter 0.5s ease !important;
-}
-.vg-hotel-card {
-  transition:
-    border-color 0.35s ease,
-    box-shadow 0.35s ease,
-    transform 0.35s var(--vg-ease) !important;
-}
-.vg-btn-primary {
-  transition:
-    transform 0.25s var(--vg-ease),
-    box-shadow 0.25s var(--vg-ease),
-    background 0.25s ease !important;
-}
-.vg-btn-outline {
-  transition: all 0.25s var(--vg-ease) !important;
-}
+.vg-hotel-thumb { transition: transform 0.8s cubic-bezier(0.23,1,0.32,1), filter 0.5s ease !important; }
+.vg-hotel-card  { transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s var(--vg-ease) !important; }
+.vg-btn-primary { transition: transform 0.25s var(--vg-ease), box-shadow 0.25s var(--vg-ease), background 0.25s ease !important; }
+.vg-btn-outline { transition: all 0.25s var(--vg-ease) !important; }
 
 /* ═══════════════════════════════════════════════════════════
    MOBILE APP EXPERIENCE
 ═══════════════════════════════════════════════════════════ */
 html, body { overscroll-behavior-y: none; }
-
-@supports (-webkit-overflow-scrolling: touch) {
-  html { -webkit-overflow-scrolling: touch; }
-}
+@supports (-webkit-overflow-scrolling: touch) { html { -webkit-overflow-scrolling: touch; } }
 @supports (padding-top: env(safe-area-inset-top)) {
   .vg-nav {
     padding-top: env(safe-area-inset-top, 0px);
@@ -820,9 +769,6 @@ html, body { overscroll-behavior-y: none; }
   main { animation: page-in 0.3s var(--vg-ease) forwards; }
 }
 
-/* ═══════════════════════════════════════════════════════════
-   REDUCED MOTION
-═══════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -833,27 +779,96 @@ html, body { overscroll-behavior-y: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════
-   LIGHT MODE — SPECIFIC OVERRIDES
+   LIGHT MODE OVERRIDES
 ═══════════════════════════════════════════════════════════ */
-.light footer,
-:root.light footer {
+.light footer, :root.light footer {
   background: var(--vg-bg-surface) !important;
   border-top-color: var(--vg-border) !important;
 }
-.light .vg-price-tag,
-:root.light .vg-price-tag {
+.light .vg-price-tag, :root.light .vg-price-tag {
   background: rgba(26, 18, 8, 0.88);
   border-color: rgba(138, 92, 10, 0.50);
   color: #F5DFA0;
 }
-.light .vg-bottom-nav-inner,
-:root.light .vg-bottom-nav-inner {
+.light .vg-bottom-nav-inner, :root.light .vg-bottom-nav-inner {
   background: rgba(245, 241, 234, 0.96) !important;
   border-color: rgba(26, 18, 8, 0.10) !important;
   box-shadow: 0 -2px 20px rgba(26, 18, 8, 0.08) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SAFE PAGE PADDING — ensures content never hides under nav
+   SAFE PAGE PADDING
 ═══════════════════════════════════════════════════════════ */
 .vg-page { padding-top: 60px; min-height: 100vh; background: var(--vg-bg); }
+
+/* ═══════════════════════════════════════════════════════════
+   ARABIC RTL — COMPLETE OVERRIDE
+   Fixes font, line-height, and direction for all Arabic text
+═══════════════════════════════════════════════════════════ */
+
+/* Force Cairo on everything inside RTL */
+[dir="rtl"],
+[dir="rtl"] body,
+[dir="rtl"] p,
+[dir="rtl"] span,
+[dir="rtl"] div,
+[dir="rtl"] li,
+[dir="rtl"] label,
+[dir="rtl"] button,
+[dir="rtl"] a {
+  font-family: 'Cairo', system-ui, sans-serif;
+  line-height: 1.85;
+}
+
+/* RTL Headings */
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3,
+[dir="rtl"] h4,
+[dir="rtl"] h5,
+[dir="rtl"] h6 {
+  font-family: 'Cairo', system-ui, sans-serif !important;
+  font-weight: 600 !important;
+  line-height: 1.5 !important;
+  letter-spacing: 0 !important;
+}
+
+/* vg-display in RTL */
+[dir="rtl"] .vg-display {
+  font-family: 'Cairo', system-ui, sans-serif !important;
+  font-weight: 600 !important;
+  line-height: 1.45 !important;
+  letter-spacing: 0 !important;
+}
+
+/* Mobile Arabic heading sizes */
+@media (max-width: 640px) {
+  [dir="rtl"] h1 { font-size: clamp(2rem, 9vw, 3.5rem) !important; }
+  [dir="rtl"] h2 { font-size: clamp(1.4rem, 6vw, 2.2rem) !important; }
+  [dir="rtl"] .vg-display { font-size: clamp(1.4rem, 6vw, 2.2rem) !important; }
+}
+
+/* Keep these LTR even in RTL pages */
+[dir="rtl"] .vg-overline,
+[dir="rtl"] .vg-stat-label,
+[dir="rtl"] .vg-stat-num,
+[dir="rtl"] .vg-price-tag,
+[dir="rtl"] .vg-badge-outline,
+[dir="rtl"] .vg-btn-primary,
+[dir="rtl"] .vg-btn-outline,
+[dir="rtl"] nav[dir="ltr"],
+[dir="rtl"] [dir="ltr"] {
+  direction: ltr !important;
+}
+
+/* Light mode — fix card background */
+.light .vg-card,
+:root.light .vg-card {
+  background: #FDFCF9;
+  border-color: rgba(26, 18, 8, 0.09);
+}
+
+.light section,
+:root.light section {
+  background-color: var(--vg-bg) !important;
+}
