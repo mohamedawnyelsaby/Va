@@ -227,8 +227,8 @@ export function HeroSection({ locale }: { locale: string }) {
           <h1 style={{
             fontFamily: 'var(--font-cormorant)',
             fontWeight: 300,
-            fontSize: 'clamp(4.5rem, 8.5vw, 8rem)',
-            lineHeight: 0.88,
+            fontSize: 'clamp(3.8rem, 8.5vw, 8rem)',
+            lineHeight: 1.05,
             letterSpacing: '-0.03em',
             marginBottom: '2.5rem',
             color: '#FAF7F2',
