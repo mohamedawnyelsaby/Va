@@ -1,6 +1,4 @@
 // PATH: src/app/[locale]/layout.tsx
-// UPDATED: Added world-class BottomNav for mobile app experience
-// FIXED: RTL only for Arabic, strict LTR everywhere else
 import { notFound } from 'next/navigation';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -25,24 +23,19 @@ export default async function LocaleLayout({
     <div
       lang={locale}
       dir={isRTL ? 'rtl' : 'ltr'}
+      data-locale={locale}
       style={{
-        direction:  isRTL ? 'rtl' : 'ltr',
-        fontFamily: isRTL
-          ? 'var(--font-cairo), system-ui, sans-serif'
-          : 'var(--font-dm-sans), system-ui, sans-serif',
-        minHeight:  '100vh',
-        textAlign:  isRTL ? 'right' : 'left',
+        minHeight: '100vh',
+        textAlign: isRTL ? 'right' : 'left',
       }}
     >
       <Navbar locale={locale} isRTL={isRTL} />
-      <main style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+      <main>
         {children}
       </main>
-      {/* Desktop footer — hidden on mobile (BottomNav replaces it) */}
       <div className="vg-desktop-footer">
         <Footer locale={locale} isRTL={isRTL} />
       </div>
-      {/* Mobile bottom navigation — app-like experience */}
       <BottomNav locale={locale} />
     </div>
   );
