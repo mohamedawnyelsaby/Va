@@ -1,390 +1,239 @@
-'use client';
-// PATH: src/app/[locale]/ai/page.tsx
-// FIXED: Removed cheap "π POWERED BY PI NETWORK" footer bar
-// FIXED: Text direction — always LTR for chat container, content inherits user language
-// FIXED: World-class app-like chat UI
+/* ============================================================
+   PATH: app/[locale]/ai/page.tsx
+   ============================================================ */
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
-import { Bot, Send, Globe, Zap, ArrowLeft, Hotel, Star, MapPin } from 'lucide-react';
-import { VG, monoLabel } from '@/lib/tokens';
-import { formatCurrency } from '@/lib/utils';
-import Link from 'next/link';
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import styles from './page.module.css';
 
 interface Message {
+  id: string;
   role: 'user' | 'assistant';
   content: string;
-  hotels?: any[];
-  searchParams?: any;
-  timestamp?: Date;
+  time: string;
 }
 
-const QUICK_ACTIONS = [
-  { text: 'Hotels in Dubai tonight', emoji: '🇦🇪', label: 'Dubai' },
-  { text: 'Cheap hotels in Paris',   emoji: '🇫🇷', label: 'Paris' },
-  { text: 'فنادق في القاهرة',        emoji: '🇪🇬', label: 'القاهرة' },
-  { text: 'Luxury hotels London',    emoji: '🇬🇧', label: 'London' },
-  { text: 'Hotels en Barcelona',     emoji: '🇪🇸', label: 'Barcelona' },
-  { text: '東京のホテル',              emoji: '🇯🇵', label: 'Tokyo' },
+const SUGGESTIONS = [
+  { flag: '🇦🇪', text: 'Hotels in Dubai tonight' },
+  { flag: '🇫🇷', text: 'Cheap hotels in Paris' },
+  { flag: '🇪🇬', text: 'فنادق في القاهرة' },
+  { flag: '🇬🇧', text: 'Luxury hotels London' },
+  { flag: '🇪🇸', text: 'Hotels en Barcelona' },
+  { flag: '🇯🇵', text: '東京のホテル' },
 ];
 
-function TypingIndicator() {
-  return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', padding: '0 clamp(1rem,4vw,2rem)', direction: 'ltr' }}>
-      <div style={{ width: '32px', height: '32px', background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'var(--vg-gold)', borderRadius: '50%' }}>
-        <Bot size={14} />
-      </div>
-      <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', padding: '0.9rem 1.1rem', display: 'flex', gap: '5px', alignItems: 'center', borderRadius: '0 12px 12px 12px' }}>
-        {[0, 1, 2].map(i => (
-          <div key={i} style={{ width: '7px', height: '7px', background: 'var(--vg-gold)', borderRadius: '50%', animation: `bounce 1.2s ease-in-out ${i * 0.15}s infinite` }} />
-        ))}
-      </div>
-    </div>
-  );
+function formatTime(date: Date): string {
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
-function HotelCard({ hotel, locale }: { hotel: any; locale: string }) {
-  return (
-    <div
-      style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', display: 'flex', overflow: 'hidden', transition: 'border-color 0.2s', borderRadius: '8px' }}
-      onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-gold-border)'}
-      onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-border)'}
-    >
-      {hotel.thumbnail && (
-        <img src={hotel.thumbnail} alt={hotel.name} style={{ width: '88px', height: '88px', objectFit: 'cover', flexShrink: 0, filter: 'brightness(0.85) saturate(0.75)' }} />
-      )}
-      <div style={{ padding: '0.75rem 1rem', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.05rem', fontWeight: 300, color: 'var(--vg-text)', marginBottom: '0.3rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {hotel.name}
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            {hotel.stars > 0 && (
-              <span style={{ color: 'var(--vg-star)', fontSize: VG.font.micro, letterSpacing: '0.08em' }}>
-                {'★'.repeat(Math.min(hotel.stars, 5))}
-              </span>
-            )}
-            {hotel.rating && (
-              <span style={{ ...monoLabel, background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', color: 'var(--vg-gold)', padding: '0.12rem 0.5rem' }}>
-                {hotel.rating} {hotel.reviewText}
-              </span>
-            )}
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-          <button
-            onClick={() => {
-              const urlParams = new URLSearchParams({
-                hotelId: hotel.id,
-                hotelName: hotel.name,
-                checkIn: hotel.checkIn || '',
-                checkOut: hotel.checkOut || '',
-                price: hotel.price.toString(),
-                source: 'booking.com',
-                thumbnail: hotel.thumbnail || '',
-              });
-              window.location.href = `/${locale}/booking?${urlParams.toString()}`;
-            }}
-            className="vg-btn-primary"
-            style={{ padding: '0.45rem 0.9rem', fontSize: VG.font.micro }}
-          >
-            Book →
-          </button>
-          <div>
-            <span className="vg-stat-num" style={{ fontSize: '1rem' }}>${hotel.price}</span>
-            <span style={{ ...monoLabel, marginLeft: '0.25rem', color: 'var(--vg-text-3)' }}>/night</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MessageBubble({ msg, locale }: { msg: Message; locale: string }) {
-  const isUser = msg.role === 'user';
-
-  return (
-    // FIXED: direction always ltr for chat layout, text content inherits naturally
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: '0.6rem', padding: '0 clamp(1rem,4vw,2rem)', direction: 'ltr' }}>
-      {!isUser && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ width: '28px', height: '28px', background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--vg-gold)' }}>
-            <Bot size={13} />
-          </div>
-          <span style={{ ...monoLabel, color: 'var(--vg-gold)' }}>Logy AI</span>
-          <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite', display: 'inline-block' }} />
-        </div>
-      )}
-
-      <div style={{
-        maxWidth: '78%',
-        padding: '0.9rem 1.1rem',
-        background: isUser ? 'var(--vg-gold)' : 'var(--vg-bg-card)',
-        border: isUser ? 'none' : '1px solid var(--vg-border)',
-        borderRadius: isUser ? '18px 18px 4px 18px' : '4px 18px 18px 18px',
-        color: isUser ? '#fff' : 'var(--vg-text)',
-        fontFamily: 'var(--font-dm-sans)',
-        fontSize: VG.font.body,
-        lineHeight: 1.7,
-        whiteSpace: 'pre-wrap',
-        // Let text direction be natural per content
-        direction: 'auto' as any,
-        boxShadow: isUser
-          ? '0 2px 12px rgba(201,162,39,0.25)'
-          : '0 1px 4px rgba(0,0,0,0.08)',
-      }}>
-        {msg.content}
-      </div>
-
-      {/* Hotel results */}
-      {msg.hotels && msg.hotels.length > 0 && (
-        <div style={{ width: '100%', maxWidth: '520px' }}>
-          <div style={{ ...monoLabel, marginBottom: '0.6rem', color: 'var(--vg-text-3)' }}>
-            🏨 {msg.hotels.length} hotels found
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {msg.hotels.slice(0, 4).map((hotel: any) => (
-              <HotelCard key={hotel.id} hotel={hotel} locale={locale} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {msg.timestamp && (
-        <div style={{ ...monoLabel, color: 'var(--vg-text-3)', fontSize: '0.58rem', opacity: 0.7 }}>
-          {msg.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function AITravelPage() {
-  const params = useParams();
-  const locale = (params?.locale as string) || 'en';
+export default function AIPage({ params }: { params: { locale: string } }) {
+  const locale = params?.locale ?? 'en';
+  const isAr = locale === 'ar';
 
   const [messages, setMessages] = useState<Message[]>([
     {
+      id: '0',
       role: 'assistant',
-      content: '🌍 Welcome to Logy AI!\n\nI speak your language — write in any language and I\'ll respond in kind.\n\nWhere would you like to go?',
-      timestamp: new Date(),
+      content: isAr
+        ? '🌍 مرحباً بك في Logy AI!\n\nأتحدث لغتك — اكتب بأي لغة وسأرد بها.\n\nإلى أين تريد السفر؟'
+        : '🌍 Welcome to Logy AI!\n\nI speak your language — write in any language and I\'ll respond in kind.\n\nWhere would you like to go?',
+      time: formatTime(new Date()),
     }
   ]);
+
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [history, setHistory] = useState<any[]>([]);
-  const [showQuick, setShowQuick] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  const sendMessage = useCallback(async (text?: string) => {
-    const msg = (text || input).trim();
-    if (!msg || loading) return;
+  const send = async (text: string) => {
+    if (!text.trim() || loading) return;
+
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: text.trim(),
+      time: formatTime(new Date()),
+    };
+
+    setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
-    setShowQuick(false);
-
-    setMessages(prev => [...prev, { role: 'user', content: msg, timestamp: new Date() }]);
 
     try {
-      const res = await fetch('/api/ai/travel', {
+      const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg, history }),
+        body: JSON.stringify({ message: text.trim(), locale }),
       });
+
       const data = await res.json();
+
       setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.message || 'Sorry, please try again.',
-        hotels: data.hotels,
-        searchParams: data.searchParams,
-        timestamp: new Date(),
+        content: data.reply || (isAr ? 'حدث خطأ ما. حاول مرة أخرى.' : 'Something went wrong. Please try again.'),
+        time: formatTime(new Date()),
       }]);
-      if (data.history) setHistory(data.history);
     } catch {
       setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: '⚠️ Connection error. Please try again.',
-        timestamp: new Date(),
+        content: isAr ? 'حدث خطأ في الاتصال. تحقق من الإنترنت.' : 'Connection error. Please check your internet.',
+        time: formatTime(new Date()),
       }]);
     } finally {
       setLoading(false);
-      inputRef.current?.focus();
     }
-  }, [input, loading, history]);
+  };
+
+  const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      send(input);
+    }
+  };
+
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    // Auto-resize
+    e.target.style.height = 'auto';
+    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+  };
+
+  const showSuggestions = messages.length <= 1;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', display: 'flex', flexDirection: 'column', fontFamily: 'var(--font-dm-sans)' }}>
+    <div className={styles.page} dir={isAr ? 'rtl' : 'ltr'}>
 
       {/* ── Header ── */}
-      <div style={{
-        padding: '0 clamp(1rem,4vw,2rem)',
-        borderBottom: '1px solid var(--vg-border)',
-        background: 'var(--vg-bg-surface)',
-        backdropFilter: 'blur(20px)',
-        position: 'sticky', top: 0, zIndex: 100,
-        height: '60px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        direction: 'ltr',
-      }}>
-        {/* Left: Back + Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <Link href={`/${locale}`} style={{
-            display: 'flex', alignItems: 'center', gap: '0.4rem',
-            textDecoration: 'none', color: 'var(--vg-text-3)',
-            fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro,
-            letterSpacing: '0.15em', transition: 'color 0.2s',
-          }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'var(--vg-gold)'}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--vg-text-3)'}
-          >
-            <ArrowLeft size={12} /> Back
-          </Link>
-
-          <div style={{ width: '1px', height: '20px', background: 'var(--vg-border)' }} />
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-            <div style={{ width: '36px', height: '36px', background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--vg-gold)' }}>
-              <Bot size={16} />
+      <div className={styles.chatHeader}>
+        <div className={styles.agentInfo}>
+          <div className={styles.agentAvatar}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M12 2a4 4 0 0 1 4 4v1h1a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-6a3 3 0 0 1 3-3h1V6a4 4 0 0 1 4-4z"/>
+              <circle cx="9" cy="13" r="1" fill="currentColor"/>
+              <circle cx="15" cy="13" r="1" fill="currentColor"/>
+            </svg>
+            <span className={styles.onlineDot} />
+          </div>
+          <div>
+            <div className={styles.agentName}>
+              Logy <span className={styles.agentAi}>AI</span>
             </div>
-            <div>
-              <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.15rem', fontWeight: 300, color: 'var(--vg-text)', lineHeight: 1 }}>
-                Logy <em style={{ color: 'var(--vg-gold)', fontStyle: 'italic' }}>AI</em>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.15rem' }}>
-                <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite' }} />
-                <span style={{ ...monoLabel, color: '#10b981', fontSize: '0.58rem' }}>Online</span>
-              </div>
+            <div className={styles.agentStatus}>
+              {isAr ? '● متاح الآن' : '● Online'}
             </div>
           </div>
-        </div>
-
-        {/* Right: Features */}
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }} className="header-features">
-          <style>{`@media(max-width:500px){.header-features{display:none!important}}`}</style>
-          {[
-            { icon: Globe, label: 'All Languages' },
-            { icon: Zap,   label: 'Instant' },
-          ].map(item => {
-            const Icon = item.icon;
-            return (
-              <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.3rem 0.7rem', border: '1px solid var(--vg-border)', background: 'var(--vg-bg-card)', borderRadius: '8px' }}>
-                <Icon size={11} color="var(--vg-gold)" />
-                <span style={{ ...monoLabel, color: 'var(--vg-text-3)', letterSpacing: '0.12em' }}>{item.label}</span>
-              </div>
-            );
-          })}
         </div>
       </div>
 
       {/* ── Messages ── */}
-      <div style={{
-        flex: 1, overflowY: 'auto', padding: '1.5rem 0',
-        display: 'flex', flexDirection: 'column', gap: '1.2rem',
-        maxWidth: '860px', width: '100%', margin: '0 auto', boxSizing: 'border-box',
-      }}>
+      <div className={styles.messages}>
         {messages.map((msg, i) => (
-          <MessageBubble key={i} msg={msg} locale={locale} />
+          <div
+            key={msg.id}
+            className={`${styles.msgRow} ${msg.role === 'user' ? styles.userRow : styles.botRow}`}
+            style={{ animationDelay: `${i * 40}ms` }}
+          >
+            {msg.role === 'assistant' && (
+              <div className={styles.botAvatar}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2a4 4 0 0 1 4 4v1h1a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-6a3 3 0 0 1 3-3h1V6a4 4 0 0 1 4-4z"/>
+                  <circle cx="9" cy="13" r="1" fill="currentColor"/>
+                  <circle cx="15" cy="13" r="1" fill="currentColor"/>
+                </svg>
+              </div>
+            )}
+            <div className={styles.msgContent}>
+              <div className={`${styles.bubble} ${msg.role === 'user' ? styles.userBubble : styles.botBubble}`}>
+                {msg.content.split('\n').map((line, j) => (
+                  <span key={j}>{line}{j < msg.content.split('\n').length - 1 && <br />}</span>
+                ))}
+              </div>
+              <div className={styles.msgTime}>{msg.time}</div>
+            </div>
+          </div>
         ))}
-        {loading && <TypingIndicator />}
-        <div ref={messagesEndRef} />
+
+        {/* Typing indicator */}
+        {loading && (
+          <div className={`${styles.msgRow} ${styles.botRow}`}>
+            <div className={styles.botAvatar}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2a4 4 0 0 1 4 4v1h1a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-6a3 3 0 0 1 3-3h1V6a4 4 0 0 1 4-4z"/>
+              </svg>
+            </div>
+            <div className={styles.msgContent}>
+              <div className={`${styles.bubble} ${styles.botBubble}`}>
+                <div className={styles.typing}>
+                  <span /><span /><span />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div ref={bottomRef} />
       </div>
 
-      {/* ── Quick Actions ── */}
-      {showQuick && messages.length <= 1 && (
-        <div style={{ maxWidth: '860px', width: '100%', margin: '0 auto', padding: '0 clamp(1rem,4vw,2rem) 0.75rem', boxSizing: 'border-box', direction: 'ltr' }}>
-          <div style={{ ...monoLabel, color: 'var(--vg-text-3)', marginBottom: '0.6rem', display: 'block' }}>Try asking:</div>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {QUICK_ACTIONS.map((action, i) => (
+      {/* ── Suggestions ── */}
+      {showSuggestions && (
+        <div className={styles.suggestions}>
+          <p className={`text-label muted ${styles.suggestLabel}`}>
+            {isAr ? 'جرب:' : 'Try asking:'}
+          </p>
+          <div className={styles.chips}>
+            {SUGGESTIONS.map(s => (
               <button
-                key={i}
-                onClick={() => sendMessage(action.text)}
-                style={{
-                  background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)',
-                  color: 'var(--vg-text-2)', padding: '0.55rem 0.9rem',
-                  cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small,
-                  display: 'flex', alignItems: 'center', gap: '0.4rem',
-                  transition: 'border-color 0.2s, color 0.2s, background 0.2s', flexShrink: 0,
-                  borderRadius: '20px',
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--vg-gold-border)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--vg-gold)'; (e.currentTarget as HTMLButtonElement).style.background = 'var(--vg-gold-dim)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--vg-border)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--vg-text-2)'; (e.currentTarget as HTMLButtonElement).style.background = 'var(--vg-bg-card)'; }}
+                key={s.text}
+                className={styles.chip}
+                onClick={() => send(s.text)}
               >
-                <span style={{ fontSize: '1rem', lineHeight: 1 }}>{action.emoji}</span>
-                {action.text}
+                <span>{s.flag}</span>
+                <span>{s.text}</span>
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* ── Input Bar — NO cheap footer, clean app-like ── */}
-      <div style={{
-        borderTop: '1px solid var(--vg-border)',
-        background: 'var(--vg-bg-surface)',
-        backdropFilter: 'blur(20px)',
-        padding: '0.85rem clamp(1rem,4vw,2rem)',
-        position: 'sticky', bottom: 0, zIndex: 50,
-        direction: 'ltr',
-      }}>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', maxWidth: '860px', margin: '0 auto' }}>
-          {/* Pi indicator — subtle, not cheap banner */}
-          <div style={{ width: '36px', height: '36px', flexShrink: 0, background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--vg-gold)', fontFamily: 'var(--font-space-mono)', fontSize: '1rem', fontWeight: 700 }}>
-            π
+      {/* ── Input ── */}
+      <div className={styles.inputArea}>
+        <div className={styles.inputWrap}>
+          <div className={styles.inputAvatar}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
           </div>
-          <input
+          <textarea
             ref={inputRef}
             value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-            placeholder="Ask anything in any language… 🌍"
-            style={{
-              flex: 1,
-              background: 'var(--vg-bg-card)',
-              border: '1px solid var(--vg-border)',
-              padding: '0.85rem 1rem',
-              color: 'var(--vg-text)',
-              fontFamily: 'var(--font-dm-sans)',
-              fontSize: VG.font.body,
-              outline: 'none',
-              transition: 'border-color 0.2s',
-              borderRadius: '24px',
-              direction: 'auto' as any,
-            }}
-            onFocus={e => e.target.style.borderColor = 'var(--vg-gold-border)'}
-            onBlur={e => e.target.style.borderColor = 'var(--vg-border)'}
+            onChange={handleInput}
+            onKeyDown={handleKey}
+            placeholder={isAr ? 'اسأل بأي لغة... 🌍' : 'Ask anything in any language... 🌍'}
+            className={styles.textarea}
+            rows={1}
+            disabled={loading}
           />
           <button
-            onClick={() => sendMessage()}
-            disabled={loading || !input.trim()}
-            style={{
-              width: '46px', height: '46px', flexShrink: 0,
-              background: loading || !input.trim() ? 'var(--vg-bg-card)' : 'var(--vg-gold)',
-              border: loading || !input.trim() ? '1px solid var(--vg-border)' : 'none',
-              cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: loading || !input.trim() ? 'var(--vg-text-3)' : '#fff',
-              transition: 'all 0.2s',
-              borderRadius: '50%',
-              boxShadow: (!loading && input.trim()) ? '0 4px 16px rgba(201,162,39,0.4)' : 'none',
-            }}
+            onClick={() => send(input)}
+            disabled={!input.trim() || loading}
+            className={styles.sendBtn}
             aria-label="Send"
           >
-            <Send size={16} />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/>
+            </svg>
           </button>
         </div>
       </div>
-
-      <style>{`
-        @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-6px); opacity: 1; } }
-        @keyframes pulse  { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-thumb { background: var(--vg-gold-border); }
-      `}</style>
     </div>
   );
 }
