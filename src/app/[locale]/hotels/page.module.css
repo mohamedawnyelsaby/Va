@@ -1,0 +1,315 @@
+/* ============================================================
+   PATH: app/[locale]/hotels/page.module.css
+   ============================================================ */
+
+.main {
+  min-height: 100dvh;
+  background: var(--bg);
+  padding-bottom: 80px;
+}
+
+/* ─── Page Header ─── */
+.pageHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: var(--space-6) var(--space-5) var(--space-4);
+}
+
+.pageTitle {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.mapBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1.5px solid var(--ink-border);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-smooth);
+  font-family: inherit;
+}
+
+.mapBtn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* ─── Search ─── */
+.searchWrap {
+  padding: 0 var(--space-5) var(--space-4);
+}
+
+.searchBox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1.5px solid var(--ink-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  transition: border-color var(--duration-fast) var(--ease-smooth),
+              box-shadow var(--duration-fast) var(--ease-smooth);
+}
+
+.searchBox:focus-within {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(196,147,42,0.10);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 16px;
+  color: var(--ink-faint);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+[dir="rtl"] .searchIcon { left: auto; right: 16px; }
+
+.searchInput {
+  width: 100%;
+  padding: 14px 16px 14px 46px;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+[dir="rtl"] .searchInput { padding: 14px 46px 14px 16px; }
+
+.searchInput::placeholder { color: var(--ink-faint); }
+
+/* ─── Filters ─── */
+.filtersRow {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-5) var(--space-4);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.filtersRow::-webkit-scrollbar { display: none; }
+
+.filterChip {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1.5px solid var(--ink-border);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-smooth);
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.filterChip:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.filterChip.filterActive {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #fff;
+}
+
+/* ─── Sort Row ─── */
+.sortRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-5) var(--space-4);
+}
+
+.sortBtns {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--ink-border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+}
+
+.sortBtn {
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-smooth);
+  font-family: inherit;
+}
+
+.sortBtn.sortActive {
+  background: var(--bg-card);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ─── Hotel List ─── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: 0 var(--space-5);
+}
+
+/* ─── Hotel Card ─── */
+.hotelCard {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--ink-border);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--duration-normal) var(--ease-smooth),
+              transform var(--duration-normal) var(--ease-smooth);
+  animation: fadeUp var(--duration-slow) var(--ease-smooth) both;
+}
+
+.hotelCard:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* Image */
+.hotelImg {
+  position: relative;
+  height: 160px;
+  background: linear-gradient(135deg, var(--bg-subtle), var(--ink-border));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.hotelEmoji {
+  font-size: 4rem;
+  opacity: 0.6;
+  filter: grayscale(30%);
+}
+
+.hotelTag {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--gold);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+[dir="rtl"] .hotelTag { left: auto; right: var(--space-3); }
+
+/* Info */
+.hotelInfo {
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.hotelTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.hotelName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.hotelLoc {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.hotelRating {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  background: var(--gold);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  min-width: 48px;
+}
+
+.ratingNum {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.ratingLabel {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+
+.hotelStars {
+  font-size: 0.75rem;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Footer */
+.hotelFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--ink-border);
+}
+
+.hotelPrice {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.priceNum {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.bookBtn {
+  padding: 10px 22px;
+  font-size: 0.82rem;
+}
