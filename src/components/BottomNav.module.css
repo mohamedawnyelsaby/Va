@@ -1,0 +1,117 @@
+/* ============================================================
+   PATH: components/BottomNav.module.css
+   ============================================================ */
+
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  background: var(--bg-card);
+  border-top: 1px solid var(--ink-border);
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+  box-shadow: 0 -4px 24px rgba(20, 16, 8, 0.08);
+}
+
+.inner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 8px 4px 6px;
+  gap: 4px;
+}
+
+/* Regular Nav Item */
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  text-decoration: none;
+  color: var(--ink-faint);
+  padding: 6px 4px;
+  border-radius: var(--radius-md);
+  transition: color var(--duration-fast) var(--ease-smooth);
+  min-width: 0;
+}
+
+.item:hover { color: var(--ink-muted); }
+
+.item.active {
+  color: var(--gold);
+}
+
+.iconWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dot {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+.label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 56px;
+  text-align: center;
+}
+
+/* AI Center Button */
+.aiLink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  text-decoration: none;
+  color: var(--gold);
+  padding: 0 4px 6px;
+  position: relative;
+  top: -12px;
+}
+
+.aiBubble {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: var(--shadow-gold), 0 2px 8px rgba(0,0,0,0.15);
+  transition: transform var(--duration-normal) var(--ease-spring),
+              box-shadow var(--duration-normal) var(--ease-smooth);
+}
+
+.aiLink:hover .aiBubble {
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(196,147,42,0.45), 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.aiLink:active .aiBubble {
+  transform: scale(0.96);
+}
+
+.aiLabel {
+  color: var(--gold);
+  font-weight: 700;
+}
