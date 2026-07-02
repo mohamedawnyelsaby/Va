@@ -1,10 +1,10 @@
 /* ============================================================
    PATH: src/app/globals.css
-   Va Travel — Design System v3.0 (REPLACES the old cream/editorial theme)
-   الأساس الجديد: تطبيق داكن ذهبي (Tajawal / Cormorant Garamond / DM Sans)
-   يحتوي على طبقة توافق (compat layer) تربط كل أسماء المتغيرات والكلاسات
-   القديمة (--gold, --ink, .btn, .card ...) بالتصميم الجديد، حتى لا تنكسر
-   الملفات التي لم يتم ترقيتها بعد للأسماء الجديدة مباشرة.
+   Va Travel — Design System v3.1 (Automatic OS-based theme)
+   الوضع الداكن هو الافتراضي (baseline)، والفاتح يُفعّل تلقائياً
+   عبر @media (prefers-color-scheme: light) — بدون أي JS أو
+   data-theme attribute. يحتفظ بطبقة التوافق الكاملة مع الأسماء
+   القديمة (--gold, --ink, .btn, .card ...).
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
@@ -12,9 +12,11 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 /* ══════════════════════════════════════════════════════════
-   ROOT TOKENS — New Gold Design (source of truth)
+   ROOT TOKENS — Dark is the default (source of truth)
    ══════════════════════════════════════════════════════════ */
 :root {
+  color-scheme: dark;
+
   --g: #C9A227;
   --gl: #F0C84A;
   --gd: #9A7A10;
@@ -45,9 +47,8 @@
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
   --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
   --space-12: 48px; --space-16: 64px;
-}
 
-[data-theme="dark"] {
+  /* Dark palette (default) */
   --bg: #060610;
   --s1: #0D0D1C;
   --s2: #141426;
@@ -63,33 +64,77 @@
   --sk1: #141426;
   --sk2: #1C1A32;
   --hero-grad: radial-gradient(ellipse 90% 70% at 60% 40%, rgba(201,162,39,.08) 0%, transparent 65%), radial-gradient(ellipse 50% 60% at 5% 80%, rgba(120,80,255,.05) 0%, transparent 60%);
+
+  /* shadcn/ui HSL bridge — dark (default) */
+  --radius: 0.75rem;
+  --background: 245 65% 4%;
+  --foreground: 245 60% 96%;
+  --card: 245 42% 9%;
+  --card-foreground: 245 60% 96%;
+  --popover: 245 42% 9%;
+  --popover-foreground: 245 60% 96%;
+  --primary: 45 70% 47%;
+  --primary-foreground: 245 65% 4%;
+  --secondary: 248 30% 15%;
+  --secondary-foreground: 245 60% 96%;
+  --muted: 248 30% 15%;
+  --muted-foreground: 240 20% 60%;
+  --accent: 45 70% 47%;
+  --accent-foreground: 245 65% 4%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 245 25% 18%;
+  --input: 245 25% 18%;
+  --ring: 45 70% 47%;
 }
 
-[data-theme="light"] {
-  --bg: #F0EFF8;
-  --s1: #FFFFFF;
-  --s2: #F4F3FB;
-  --s3: #ECEAF7;
-  --s4: #E0DEF0;
-  --bd: rgba(0,0,0,.055);
-  --bd2: rgba(0,0,0,.11);
-  --t: #14142A;
-  --td: #55557A;
-  --tm: #9090AA;
-  --sh: 0 4px 20px rgba(0,0,0,.08);
-  --shH: 0 20px 50px rgba(0,0,0,.14);
-  --sk1: #E8E7F5;
-  --sk2: #D8D6EE;
-  --hero-grad: radial-gradient(ellipse 90% 70% at 60% 40%, rgba(201,162,39,.06) 0%, transparent 65%);
-}
+/* ══════════════════════════════════════════════════════════
+   LIGHT OVERRIDE — activates automatically per OS preference
+   ══════════════════════════════════════════════════════════ */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
 
-:root:not([data-theme]) { color-scheme: dark; }
-html:not([data-theme="light"]) { --bg: #060610; --s1: #0D0D1C; --s2: #141426; --s3: #1C1A32; --s4: #24223E; --bd: rgba(255,255,255,.06); --bd2: rgba(255,255,255,.12); --t: #F0F0FF; --td: #8888AA; --tm: #505070; --sh: 0 8px 32px rgba(0,0,0,.6); --shH: 0 24px 60px rgba(0,0,0,.75); --sk1: #141426; --sk2: #1C1A32; }
+    --bg: #F0EFF8;
+    --s1: #FFFFFF;
+    --s2: #F4F3FB;
+    --s3: #ECEAF7;
+    --s4: #E0DEF0;
+    --bd: rgba(0,0,0,.055);
+    --bd2: rgba(0,0,0,.11);
+    --t: #14142A;
+    --td: #55557A;
+    --tm: #9090AA;
+    --sh: 0 4px 20px rgba(0,0,0,.08);
+    --shH: 0 20px 50px rgba(0,0,0,.14);
+    --sk1: #E8E7F5;
+    --sk2: #D8D6EE;
+    --hero-grad: radial-gradient(ellipse 90% 70% at 60% 40%, rgba(201,162,39,.06) 0%, transparent 65%);
+
+    /* shadcn/ui HSL bridge — light */
+    --background: 248 45% 96%;
+    --foreground: 245 45% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 245 45% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 245 45% 13%;
+    --secondary: 248 35% 92%;
+    --secondary-foreground: 245 45% 13%;
+    --muted: 248 35% 92%;
+    --muted-foreground: 245 20% 45%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 248 20% 89%;
+    --input: 248 20% 89%;
+    /* --primary / --accent / --ring / --primary-foreground / --accent-foreground
+       stay identical to dark — gold is the brand constant in both modes */
+  }
+}
 
 /* ══════════════════════════════════════════════════════════
    COMPATIBILITY LAYER — legacy variable names mapped to new tokens
    ══════════════════════════════════════════════════════════ */
-:root, [data-theme] {
+:root {
   --gold: var(--g);
   --gold-light: var(--gl);
   --gold-pale: var(--gdim);
@@ -127,60 +172,6 @@ html:not([data-theme="light"]) { --bg: #060610; --s1: #0D0D1C; --s2: #141426; --
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 400ms;
-}
-
-/* ══════════════════════════════════════════════════════════
-   shadcn/ui BRIDGE — raw HSL triplets required by tailwind.config.js
-   (theme.extend.colors.* maps to hsl(var(--NAME))). Without these, components
-   like Button/Input/Select/Toast render with undefined colors.
-   Values are derived from the gold/dark palette above.
-   ══════════════════════════════════════════════════════════ */
-:root {
-  --radius: 0.75rem; /* = var(--rM), 12px */
-}
-
-[data-theme="dark"], html:not([data-theme="light"]) {
-  --background: 245 65% 4%;         /* ≈ #060610 */
-  --foreground: 245 60% 96%;        /* ≈ #F0F0FF */
-  --card: 245 42% 9%;               /* ≈ #0D0D1C */
-  --card-foreground: 245 60% 96%;
-  --popover: 245 42% 9%;
-  --popover-foreground: 245 60% 96%;
-  --primary: 45 70% 47%;            /* ≈ #C9A227 gold */
-  --primary-foreground: 245 65% 4%;
-  --secondary: 248 30% 15%;         /* ≈ #1C1A32 */
-  --secondary-foreground: 245 60% 96%;
-  --muted: 248 30% 15%;
-  --muted-foreground: 240 20% 60%;  /* ≈ #8888AA */
-  --accent: 45 70% 47%;
-  --accent-foreground: 245 65% 4%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 245 25% 18%;
-  --input: 245 25% 18%;
-  --ring: 45 70% 47%;
-}
-
-[data-theme="light"] {
-  --background: 248 45% 96%;        /* ≈ #F0EFF8 */
-  --foreground: 245 45% 13%;        /* ≈ #14142A */
-  --card: 0 0% 100%;                /* ≈ #FFFFFF */
-  --card-foreground: 245 45% 13%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 245 45% 13%;
-  --primary: 45 70% 47%;
-  --primary-foreground: 245 65% 4%;
-  --secondary: 248 35% 92%;         /* ≈ #ECEAF7 */
-  --secondary-foreground: 245 45% 13%;
-  --muted: 248 35% 92%;
-  --muted-foreground: 245 20% 45%;  /* ≈ #55557A */
-  --accent: 45 70% 47%;
-  --accent-foreground: 245 65% 4%;
-  --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 248 20% 89%;
-  --input: 248 20% 89%;
-  --ring: 45 70% 47%;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -256,11 +247,15 @@ body {
 
 .pill { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; background: var(--s2); border: 1px solid var(--bd); border-radius: 99px; font-size: .7rem; font-weight: 600; cursor: pointer; color: var(--t); transition: .18s; user-select: none; font-family: inherit; }
 .pill:hover { background: var(--gdim); border-color: var(--gglow); color: var(--g); }
-.tgl { width: 40px; height: 22px; background: var(--s3); border-radius: 99px; position: relative; cursor: pointer; border: 1px solid var(--bd); flex-shrink: 0; }
-.tgl::after { content: ''; position: absolute; width: 16px; height: 16px; background: var(--g); border-radius: 50%; top: 2px; right: 2px; transition: .25s var(--ease); }
-[data-theme="light"][dir="rtl"] .tgl::after { transform: translateX(-18px); }
-[data-theme="dark"][dir="ltr"] .tgl::after { left: 2px; right: auto; }
-[data-theme="light"][dir="ltr"] .tgl::after { left: auto; right: 2px; transform: translateX(18px); }
+
+/* .tgl — legacy manual theme-switch control.
+   Theme is now 100% automatic (OS-driven), so this is kept purely as a
+   static visual (no JS ever flips it). If a component still renders a
+   theme-toggle button using this class, it is now inert by design —
+   consider repurposing it (e.g. currency toggle) or removing it. */
+.tgl { width: 40px; height: 22px; background: var(--s3); border-radius: 99px; position: relative; border: 1px solid var(--bd); flex-shrink: 0; opacity: .45; pointer-events: none; }
+.tgl::after { content: ''; position: absolute; width: 16px; height: 16px; background: var(--g); border-radius: 50%; top: 2px; inset-inline-end: 2px; }
+
 .ldot { display: inline-block; width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: pulse 1.6s infinite; flex-shrink: 0; }
 .rl-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; background: var(--s2); border: 1px solid var(--bd); border-radius: 99px; font-size: .6rem; color: var(--tm); font-family: var(--font-mono); }
 .rl-badge.warn { border-color: rgba(239,68,68,.3); color: var(--red); }
