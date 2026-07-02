@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: ['class'],
+  darkMode: 'media', // OS-driven only — no manual class toggling
   content: [
     './src/pages/**/*.{ts,tsx}',
     './src/components/**/*.{ts,tsx}',
@@ -25,21 +25,25 @@ module.exports = {
         accent:     { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
         popover:    { DEFAULT: 'hsl(var(--popover))', foreground: 'hsl(var(--popover-foreground))' },
         card:       { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+        // Aligned 1:1 with the CSS custom properties in globals.css
+        // (--g / --gl / --gd / --gdim / --gglow) so bg-gold-* and
+        // var(--g)-based components render pixel-identical colors.
         gold: {
-          DEFAULT: '#C9A227',
-          light:   '#E8C255',
-          bright:  '#F0D070',
-          dark:    '#8A6412',
-          dim:     'rgba(201,162,39,0.15)',
-          glow:    'rgba(201,162,39,0.06)',
+          DEFAULT: '#C9A227', // = var(--g)
+          light:   '#F0C84A', // = var(--gl)
+          bright:  '#F7DA82', // extra lighter tint, not in globals.css tokens
+          dark:    '#9A7A10', // = var(--gd)
+          dim:     'rgba(201,162,39,0.10)',  // = var(--gdim)
+          glow:    'rgba(201,162,39,0.28)',  // = var(--gglow)
         },
+        // Aligned 1:1 with (--bg / --s1 / --s2 / --s3)
         void: {
-          DEFAULT: '#03020A',
-          surface: '#09080F',
-          card:    '#0E0C18',
-          deep:    '#141220',
+          DEFAULT: '#060610', // = var(--bg)
+          surface: '#141426', // = var(--s2)
+          card:    '#0D0D1C', // = var(--s1), matches .card{background:var(--s1)}
+          deep:    '#1C1A32', // = var(--s3)
         },
-        pi: { DEFAULT: '#C9A227', dark: '#8A6412', light: '#E8C255' },
+        pi: { DEFAULT: '#C9A227', dark: '#9A7A10', light: '#F0C84A' },
         success: { DEFAULT: '#10b981', foreground: '#ffffff' },
         warning: { DEFAULT: '#f59e0b', foreground: '#ffffff' },
       },
