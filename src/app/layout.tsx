@@ -1,7 +1,6 @@
 // PATH: src/app/layout.tsx
-// FIXED: dir="ltr" on root html — prevents RTL bleed from ar locale into en
-// FIXED: viewport meta with proper initial-scale for all devices
-// FIXED: theme-color and mobile optimization
+// Theme is now fully automatic via CSS (prefers-color-scheme) — no inline
+// theme script, no localStorage, no manual .dark class toggling needed.
 import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, DM_Sans, Space_Mono, Cairo } from 'next/font/google';
 import Script from 'next/script';
@@ -46,7 +45,6 @@ export const metadata: Metadata = {
   },
 };
 
-// Separate viewport export (Next.js 14+)
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -54,7 +52,7 @@ export const viewport: Viewport = {
   userScalable: true,
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#C9A227' },
-    { media: '(prefers-color-scheme: dark)',  color: '#C9A227' },
+    { media: '(prefers-color-scheme: dark)', color: '#C9A227' },
   ],
 };
 
@@ -63,17 +61,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       dir="ltr"
-      className={`${cormorant.variable} ${dmSans.variable} ${spaceMono.variable} ${cairo.variable} dark`}
+      className={`${cormorant.variable} ${dmSans.variable} ${spaceMono.variable} ${cairo.variable}`}
       suppressHydrationWarning
     >
-      <head>
-        {/* Inline theme script — must run before paint to avoid flash */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('va-travel-theme');if(t==='light'){document.documentElement.classList.remove('dark');}else{document.documentElement.classList.add('dark');}}catch(e){document.documentElement.classList.add('dark');}})();`,
-          }}
-        />
-      </head>
       <body suppressHydrationWarning>
         <GoldenCursorTrail />
         <Providers>{children}</Providers>
