@@ -1,5 +1,9 @@
 /* ============================================================
    PATH: components/BottomNav.module.css
+   CHANGED: .nav box-shadow (was brownish rgba(20,16,8) leftover from
+   old cream theme → neutral black shadow). .aiBubble text color
+   (#fff → var(--bg) for contrast consistency). .aiLink:hover glow
+   color (old gold rgb(196,147,42) → current gold rgb(201,162,39)).
    ============================================================ */
 
 .nav {
@@ -11,7 +15,7 @@
   background: var(--bg-card);
   border-top: 1px solid var(--ink-border);
   padding-bottom: env(safe-area-inset-bottom, 8px);
-  box-shadow: 0 -4px 24px rgba(20, 16, 8, 0.08);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
 }
 
 .inner {
@@ -38,9 +42,7 @@
   transition: color var(--duration-fast) var(--ease-smooth);
   min-width: 0;
 }
-
 .item:hover { color: var(--ink-muted); }
-
 .item.active {
   color: var(--gold);
 }
@@ -51,7 +53,6 @@
   align-items: center;
   justify-content: center;
 }
-
 .dot {
   position: absolute;
   bottom: -4px;
@@ -62,7 +63,6 @@
   border-radius: 50%;
   background: var(--gold);
 }
-
 .label {
   font-size: 0.62rem;
   font-weight: 600;
@@ -87,7 +87,6 @@
   position: relative;
   top: -12px;
 }
-
 .aiBubble {
   width: 52px;
   height: 52px;
@@ -96,21 +95,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--bg); /* was #fff — dark text matches .btn-primary contrast convention */
   box-shadow: var(--shadow-gold), 0 2px 8px rgba(0,0,0,0.15);
   transition: transform var(--duration-normal) var(--ease-spring),
               box-shadow var(--duration-normal) var(--ease-smooth);
 }
-
 .aiLink:hover .aiBubble {
   transform: scale(1.08);
-  box-shadow: 0 6px 24px rgba(196,147,42,0.45), 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 24px rgba(201,162,39,0.45), 0 2px 8px rgba(0,0,0,0.15);
 }
-
 .aiLink:active .aiBubble {
   transform: scale(0.96);
 }
-
 .aiLabel {
   color: var(--gold);
   font-weight: 700;
