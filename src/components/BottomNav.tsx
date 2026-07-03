@@ -1,9 +1,8 @@
 /* ============================================================
    PATH: components/BottomNav.tsx
+   UNCHANGED — no hardcoded colors found. Included for completeness.
    ============================================================ */
-
 'use client';
-
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import styles from './BottomNav.module.css';
@@ -14,9 +13,7 @@ interface BottomNavProps {
 
 export default function BottomNav({ locale = 'en' }: BottomNavProps) {
   const pathname = usePathname();
-
   const isAr = locale === 'ar';
-
   const items = [
     {
       href: `/${locale}`,
@@ -80,7 +77,6 @@ export default function BottomNav({ locale = 'en' }: BottomNavProps) {
           const isActive = item.isAI
             ? pathname.includes('/ai')
             : pathname === item.href;
-
           if (item.isAI) {
             return (
               <Link key={item.href} href={item.href} className={styles.aiLink}>
@@ -91,7 +87,6 @@ export default function BottomNav({ locale = 'en' }: BottomNavProps) {
               </Link>
             );
           }
-
           return (
             <Link
               key={item.href}
