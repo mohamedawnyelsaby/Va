@@ -1,19 +1,12 @@
 /* ============================================================
    PATH: src/app/globals.css
    Va Travel — Design System v3.1 (Automatic OS-based theme)
-   الوضع الداكن هو الافتراضي (baseline)، والفاتح يُفعّل تلقائياً
-   عبر @media (prefers-color-scheme: light) — بدون أي JS أو
-   data-theme attribute. يحتفظ بطبقة التوافق الكاملة مع الأسماء
-   القديمة (--gold, --ink, .btn, .card ...).
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-/* ══════════════════════════════════════════════════════════
-   ROOT TOKENS — Dark is the default (source of truth)
-   ══════════════════════════════════════════════════════════ */
 :root {
   color-scheme: dark;
 
@@ -48,7 +41,6 @@
   --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
   --space-12: 48px; --space-16: 64px;
 
-  /* Dark palette (default) */
   --bg: #060610;
   --s1: #0D0D1C;
   --s2: #141426;
@@ -65,7 +57,6 @@
   --sk2: #1C1A32;
   --hero-grad: radial-gradient(ellipse 90% 70% at 60% 40%, rgba(201,162,39,.08) 0%, transparent 65%), radial-gradient(ellipse 50% 60% at 5% 80%, rgba(120,80,255,.05) 0%, transparent 60%);
 
-  /* shadcn/ui HSL bridge — dark (default) */
   --radius: 0.75rem;
   --background: 245 65% 4%;
   --foreground: 245 60% 96%;
@@ -86,11 +77,27 @@
   --border: 245 25% 18%;
   --input: 245 25% 18%;
   --ring: 45 70% 47%;
+
+  /* ══ VG TOKENS — used by Navbar, Footer, BottomNav, lib/tokens.ts ══ */
+  --vg-gold: #C9A227;
+  --vg-gold-2: #F0C84A;
+  --vg-gold-dim: rgba(201,162,39,0.10);
+  --vg-gold-border: rgba(201,162,39,0.32);
+  --vg-gold-text: #060610;
+
+  --vg-text: #FAF7F2;
+  --vg-text-2: rgba(250,247,242,0.62);
+  --vg-text-3: rgba(250,247,242,0.40);
+
+  --vg-bg-surface: #06050F;
+  --vg-bg-card: #0D0C1C;
+  --vg-border: rgba(250,247,242,0.08);
+  --vg-shadow-card: 0 8px 32px rgba(0,0,0,0.50);
+
+  --vg-nav-bg: rgba(13,12,28,0.85);
+  --vg-nav-border: rgba(250,247,242,0.08);
 }
 
-/* ══════════════════════════════════════════════════════════
-   LIGHT OVERRIDE — activates automatically per OS preference
-   ══════════════════════════════════════════════════════════ */
 @media (prefers-color-scheme: light) {
   :root {
     color-scheme: light;
@@ -111,7 +118,6 @@
     --sk2: #D8D6EE;
     --hero-grad: radial-gradient(ellipse 90% 70% at 60% 40%, rgba(201,162,39,.06) 0%, transparent 65%);
 
-    /* shadcn/ui HSL bridge — light */
     --background: 248 45% 96%;
     --foreground: 245 45% 13%;
     --card: 0 0% 100%;
@@ -126,14 +132,26 @@
     --destructive-foreground: 0 0% 100%;
     --border: 248 20% 89%;
     --input: 248 20% 89%;
-    /* --primary / --accent / --ring / --primary-foreground / --accent-foreground
-       stay identical to dark — gold is the brand constant in both modes */
   }
 }
 
-/* ══════════════════════════════════════════════════════════
-   COMPATIBILITY LAYER — legacy variable names mapped to new tokens
-   ══════════════════════════════════════════════════════════ */
+/* ══ VG TOKENS — light mode (keyed off next-themes' .dark class) ══ */
+:root:not(.dark) {
+  --vg-gold-text: #8A6412;
+
+  --vg-text: #150E07;
+  --vg-text-2: rgba(21,14,7,0.65);
+  --vg-text-3: rgba(21,14,7,0.45);
+
+  --vg-bg-surface: #F8F5F0;
+  --vg-bg-card: #FDFCF9;
+  --vg-border: rgba(21,14,7,0.10);
+  --vg-shadow-card: 0 8px 32px rgba(21,14,7,0.10);
+
+  --vg-nav-bg: rgba(253,252,249,0.85);
+  --vg-nav-border: rgba(21,14,7,0.10);
+}
+
 :root {
   --gold: var(--g);
   --gold-light: var(--gl);
@@ -174,9 +192,6 @@
   --duration-slow: 400ms;
 }
 
-/* ══════════════════════════════════════════════════════════
-   BASE
-   ══════════════════════════════════════════════════════════ */
 html { scroll-behavior: smooth; font-size: 16px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
 body {
@@ -248,11 +263,6 @@ body {
 .pill { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; background: var(--s2); border: 1px solid var(--bd); border-radius: 99px; font-size: .7rem; font-weight: 600; cursor: pointer; color: var(--t); transition: .18s; user-select: none; font-family: inherit; }
 .pill:hover { background: var(--gdim); border-color: var(--gglow); color: var(--g); }
 
-/* .tgl — legacy manual theme-switch control.
-   Theme is now 100% automatic (OS-driven), so this is kept purely as a
-   static visual (no JS ever flips it). If a component still renders a
-   theme-toggle button using this class, it is now inert by design —
-   consider repurposing it (e.g. currency toggle) or removing it. */
 .tgl { width: 40px; height: 22px; background: var(--s3); border-radius: 99px; position: relative; border: 1px solid var(--bd); flex-shrink: 0; opacity: .45; pointer-events: none; }
 .tgl::after { content: ''; position: absolute; width: 16px; height: 16px; background: var(--g); border-radius: 50%; top: 2px; inset-inline-end: 2px; }
 
@@ -332,4 +342,60 @@ body {
 
 @media (max-width: 600px) {
   .fgrid2 { grid-template-columns: 1fr; }
+}
+
+/* ══ VG BUTTONS/BADGE — used via className in Navbar.tsx, Footer.tsx ══ */
+.vg-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.6rem 1.3rem;
+  background: linear-gradient(135deg, var(--vg-gold-2), var(--vg-gold));
+  color: var(--vg-gold-text);
+  font-family: var(--font-space-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+.vg-btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+.vg-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.6rem 1.3rem;
+  background: transparent;
+  color: var(--vg-text);
+  font-family: var(--font-space-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 1px solid var(--vg-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.vg-btn-outline:hover { border-color: var(--vg-gold-border); color: var(--vg-gold); background: var(--vg-gold-dim); }
+
+.vg-badge-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--vg-gold-border);
+  border-radius: 99px;
+  font-family: var(--font-space-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--vg-gold);
+}
+.vg-badge-outline .dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--vg-gold);
+  display: inline-block;
 }
