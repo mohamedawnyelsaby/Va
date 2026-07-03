@@ -1,5 +1,8 @@
 /* ============================================================
    PATH: components/Header.module.css
+   CHANGED: .langActive text color from #fff to var(--bg) for
+   proper contrast against gold (matches .btn-primary/.sbtn convention).
+   Everything else unchanged.
    ============================================================ */
 
 .header {
@@ -143,7 +146,8 @@
 
 .langOption.langActive {
   background: var(--gold);
-  color: #fff;
+  color: var(--bg); /* was #fff — dark text matches .btn-primary contrast convention */
+  font-weight: 700;
 }
 
 /* ─── Full-screen Menu ─── */
