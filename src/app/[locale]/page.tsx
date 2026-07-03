@@ -1,7 +1,10 @@
 /* ============================================================
    PATH: app/[locale]/page.tsx
+   Va Travel — Homepage matching the reference app design exactly
    ============================================================ */
+'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 
@@ -11,154 +14,280 @@ interface Props {
 
 const isAr = (locale: string) => locale === 'ar';
 
-const FEATURES = (locale: string) => [
-  {
-    icon: '✦',
-    num: '01',
-    title: isAr(locale) ? 'سفر بالذكاء الاصطناعي' : 'AI-Powered Travel',
-    desc: isAr(locale)
-      ? 'توصيات مخصصة مدعومة بـ Claude AI، تتعلم تفضيلاتك في كل رحلة.'
-      : 'Personalized recommendations powered by Claude AI, learning your preferences with every trip.',
-  },
-  {
-    icon: '◎',
-    num: '02',
-    title: isAr(locale) ? 'وصول عالمي' : 'Global Access',
-    desc: isAr(locale)
-      ? 'أكثر من 180 دولة، 50,000+ عقار، وملايين التجارب في متناول يدك.'
-      : 'Over 180 countries, 50,000+ properties, and millions of experiences at your fingertips.',
-  },
-  {
-    icon: '▣',
-    num: '03',
-    title: isAr(locale) ? 'حجز سلس' : 'Seamless Booking',
-    desc: isAr(locale)
-      ? 'احجز الفنادق والجولات والمطاعم بسلاسة تامة — مدفوعات آمنة وفورية.'
-      : 'Book hotels, tours and restaurants effortlessly — secure and instant payments.',
-  },
-  {
-    icon: '◈',
-    num: '04',
-    title: isAr(locale) ? 'قوائم موثّقة' : 'Verified Listings',
-    desc: isAr(locale)
-      ? 'كل عقار ومعلم يُراجع يدوياً لضمان أعلى معايير الجودة.'
-      : 'Every property and landmark is manually reviewed to ensure the highest quality standards.',
-  },
+const TICKER_AR = [
+  '✈️ أرخص رحلة لطوكيو اليوم: <strong>$420</strong> من القاهرة',
+  '🏨 <strong>برج العرب</strong> دبي: خصم 35% هذا الأسبوع',
+  '🌡️ طقس المالديف الآن: <strong>29°C ☀️</strong>',
+  '🛂 تأشيرة تركيا مجانية لـ <strong>90 دولة</strong>',
+  '💰 بالي 7 أيام بـ <strong>$1,200</strong> — أفضل عرض الشهر',
+  '🌍 <strong>Va Travel</strong> متاح الآن في 180+ دولة',
+];
+const TICKER_EN = [
+  '✈️ Cheapest Tokyo flight today: <strong>$420</strong> from Cairo',
+  '🏨 <strong>Burj Al Arab</strong> Dubai: 35% off this week',
+  '🌡️ Maldives now: <strong>29°C ☀️</strong> — perfect travel time',
+  '🛂 Turkey visa-free for <strong>90 countries</strong> on arrival',
+  '💰 Best deal: Bali 7 days from <strong>$1,200</strong>',
+  '🌍 <strong>Va Travel</strong> now available in 180+ countries',
 ];
 
-const CATEGORIES = (locale: string) => [
-  { href: `/${locale}/hotels`,      emoji: '🏨', label: isAr(locale) ? 'الفنادق'   : 'Hotels'      },
-  { href: `/${locale}/landmarks`,   emoji: '🏛️', label: isAr(locale) ? 'المعالم'   : 'Landmarks'   },
-  { href: `/${locale}/restaurants`, emoji: '🍽️', label: isAr(locale) ? 'المطاعم'   : 'Restaurants' },
-  { href: `/${locale}/ai`,          emoji: '✨', label: isAr(locale) ? 'مساعد AI'  : 'AI Guide'    },
+const CATS_AR = ['🔥 الأكثر طلباً', '🏖️ شواطئ', '🏔️ جبال', '🏙️ مدن', '🌿 طبيعة', '🎭 ثقافة', '🍽️ مأكولات'];
+const CATS_EN = ['🔥 Trending', '🏖️ Beaches', '🏔️ Mountains', '🏙️ Cities', '🌿 Nature', '🎭 Culture', '🍽️ Culinary'];
+
+const FLASH = [
+  { destAr: 'دبي', destEn: 'Dubai', off: '35%', price: 546, orig: 840, flag: '🇦🇪' },
+  { destAr: 'بالي', destEn: 'Bali', off: '40%', price: 252, orig: 420, flag: '🇮🇩' },
+  { destAr: 'روما', destEn: 'Rome', off: '25%', price: 510, orig: 680, flag: '🇮🇹' },
+  { destAr: 'بانكوك', destEn: 'Bangkok', off: '50%', price: 180, orig: 360, flag: '🇹🇭' },
+  { destAr: 'سنغافورة', destEn: 'Singapore', off: '30%', price: 420, orig: 600, flag: '🇸🇬' },
 ];
+
+const DESTS = [
+  { id: 1, nameAr: 'دبي', nameEn: 'Dubai', countryAr: 'الإمارات', countryEn: 'UAE', price: 840, img: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600', weather: '☀️ 35°C', badge: '🔥' },
+  { id: 2, nameAr: 'طوكيو', nameEn: 'Tokyo', countryAr: 'اليابان', countryEn: 'Japan', price: 650, img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600', weather: '🌸 22°C', badge: '🌟' },
+  { id: 3, nameAr: 'باريس', nameEn: 'Paris', countryAr: 'فرنسا', countryEn: 'France', price: 720, img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600', weather: '⛅ 18°C', badge: '' },
+  { id: 4, nameAr: 'المالديف', nameEn: 'Maldives', countryAr: 'المالديف', countryEn: 'Maldives', price: 1200, img: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=600', weather: '🌊 29°C', badge: '💎' },
+  { id: 5, nameAr: 'بالي', nameEn: 'Bali', countryAr: 'إندونيسيا', countryEn: 'Indonesia', price: 420, img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600', weather: '🌴 27°C', badge: '' },
+  { id: 6, nameAr: 'سانتوريني', nameEn: 'Santorini', countryAr: 'اليونان', countryEn: 'Greece', price: 590, img: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600', weather: '🌞 24°C', badge: '' },
+];
+
+const HOTELS = [
+  { id: 1, name: 'Burj Al Arab', stars: 5, loc: 'Dubai, UAE', price: 840, orig: 980, score: 9.8, tags: ['Sea View', 'Butler', 'Pool'], priceDrop: true, img: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600' },
+  { id: 2, name: 'Four Seasons Bora Bora', stars: 5, loc: 'French Polynesia', price: 1200, score: 9.9, tags: ['Overwater', 'Snorkel', 'Spa'], priceDrop: false, img: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=600' },
+  { id: 3, name: 'The Peninsula Tokyo', stars: 5, loc: 'Tokyo, Japan', price: 650, orig: 750, score: 9.7, tags: ['City View', 'Fine Dining', 'Spa'], priceDrop: true, img: 'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=600' },
+  { id: 4, name: 'Hotel de Russie', stars: 5, loc: 'Rome, Italy', price: 680, score: 9.6, tags: ['Garden', 'Spa', 'Trattoria'], priceDrop: false, img: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600' },
+];
+
+const TABS = (ar: boolean) => [
+  { id: 'hotels', icon: '🏨', label: ar ? 'فنادق' : 'Hotels' },
+  { id: 'flights', icon: '✈️', label: ar ? 'رحلات' : 'Flights', soon: true },
+  { id: 'pkgs', icon: '🎁', label: ar ? 'باقات' : 'Packages' },
+  { id: 'visa', icon: '🛂', label: ar ? 'تأشيرة' : 'Visa' },
+];
+
+const FEATURES_AI = (ar: boolean) => [
+  { icon: '🧠', title: ar ? 'مستشار AI العاطفي' : 'Emotional AI Concierge', sub: ar ? 'أخبرني كيف تشعر — يجد لك Claude وجهتك المثالية المخفية.' : 'Tell me how you feel — Claude finds your perfect hidden destination.' },
+  { icon: '🛂', title: ar ? 'فاحص التأشيرة الذكي' : 'Smart Visa Checker', sub: ar ? 'اعرف متطلبات التأشيرة فورياً لأي جواز سفر ووجهة.' : 'Instantly know visa requirements for any passport & destination.' },
+  { icon: '📈', title: ar ? 'توقع الأسعار بـ AI' : 'Predictive Pricing AI', sub: ar ? 'توقع أسعار 90 يوماً مع نصيحة الحجز المثلى.' : '90-day price forecast with AI-generated booking advice.' },
+  { icon: '💰', title: ar ? 'مخطط الميزانية الذكي' : 'AI Budget Planner', sub: ar ? 'أدخل ميزانيتك — يوزعها Claude بذكاء.' : 'Enter your budget — Claude allocates it smartly.' },
+];
+
+function fp(price: number) {
+  return `$${Math.round(price)}`;
+}
 
 export default function HomePage({ params: { locale } }: Props) {
   const ar = isAr(locale);
+  const [tab, setTab] = useState('hotels');
+  const [activeCat, setActiveCat] = useState(0);
+  const [wishlist, setWishlist] = useState<number[]>([]);
+  const [query, setQuery] = useState('');
+
+  const toggleWish = (id: number) =>
+    setWishlist((w) => (w.includes(id) ? w.filter((x) => x !== id) : [...w, id]));
+
+  const ticker = ar ? TICKER_AR : TICKER_EN;
+  const cats = ar ? CATS_AR : CATS_EN;
 
   return (
     <main className={styles.main} dir={ar ? 'rtl' : 'ltr'}>
 
+      {/* ── Ticker ── */}
+      <div className={styles.ticker}>
+        <div className={styles.tickerInner}>
+          {[...ticker, ...ticker].map((item, i) => (
+            <span key={i} className={styles.tickerItem} dangerouslySetInnerHTML={{ __html: `•&nbsp;${item}` }} />
+          ))}
+        </div>
+      </div>
+
       {/* ── Hero ── */}
       <section className={styles.hero}>
-        <div className={styles.heroBg}>
-          <div className={styles.heroBgInner} />
-        </div>
+        <div className={styles.heroBg} />
+        <div className={styles.heroGrid} />
         <div className={styles.heroContent}>
-          <span className="badge badge-gold animate-fadeUp">
-            {ar ? '✦ مدعوم بـ Claude AI' : '✦ Powered by Claude AI'}
-          </span>
-          <h1 className={`${styles.heroTitle} animate-fadeUp delay-100`}>
-            {ar ? (
-              <><em>سافر</em> بذكاء.<br />اكتشف العالم.</>
-            ) : (
-              <><em>Travel</em> smarter.<br />Discover the world.</>
-            )}
+          <div className={styles.htag}>
+            <span>●</span> {ar ? 'ذكاء اصطناعي حقيقي · حجوزات حقيقية · 180+ دولة' : 'Real AI · Real Bookings · 180+ Countries'}
+          </div>
+          <h1 className={styles.heroTitle}>
+            {ar ? <>سافر <em>بذكاء.</em><br />عِش <em>بجرأة.</em></> : <><em>Travel</em> Smarter.<br /><em>Live</em> Bolder.</>}
           </h1>
-          <p className={`${styles.heroSub} animate-fadeUp delay-200`}>
+          <p className={styles.heroSub}>
             {ar
-              ? 'مساعدك الذكي للسفر — يخطط، يحجز، ويرشدك في كل خطوة.'
-              : 'Your intelligent travel companion — plans, books, and guides you every step of the way.'}
+              ? 'تخطيط مدعوم بالذكاء الاصطناعي، أسعار لحظية، حجز متكامل من البداية للنهاية — كل ما تحتاجه في منصة واحدة عالمية.'
+              : 'AI-powered planning, real-time prices, seamless end-to-end booking — the most complete travel platform in the world.'}
           </p>
-          <div className={`${styles.heroCtas} animate-fadeUp delay-300`}>
-            <Link href={`/${locale}/ai`} className="btn btn-primary">
-              {ar ? 'ابدأ الاستكشاف' : 'Start Exploring'}
-            </Link>
-            <Link href={`/${locale}/hotels`} className="btn btn-outline">
-              {ar ? 'تصفح الفنادق' : 'Browse Hotels'}
-            </Link>
+
+          <div className={styles.stats}>
+            <div><div className={styles.statNum}><span>180</span>+</div><div className={styles.statLabel}>{ar ? 'وجهة' : 'Destinations'}</div></div>
+            <div><div className={styles.statNum}><span>42</span>K</div><div className={styles.statLabel}>{ar ? 'فندق' : 'Hotels'}</div></div>
+            <div><div className={styles.statNum}><span>8</span>M</div><div className={styles.statLabel}>{ar ? 'مسافر' : 'Travelers'}</div></div>
+            <div><div className={styles.statNum}><span>6</span></div><div className={styles.statLabel}>{ar ? 'لغة' : 'Languages'}</div></div>
+          </div>
+
+          {/* Search widget */}
+          <div className={styles.sw}>
+            <div className={styles.stabs}>
+              {TABS(ar).map((t) => (
+                <button
+                  key={t.id}
+                  className={`${styles.stab} ${tab === t.id ? styles.on : ''}`}
+                  onClick={() => setTab(t.id)}
+                >
+                  {t.icon} {t.label}
+                  {t.soon && <span className={styles.soonBadge}>{ar ? 'قريباً' : 'Soon'}</span>}
+                </button>
+              ))}
+            </div>
+            <div className={styles.sbody}>
+              <div className={styles.sfield}>
+                <span>📍</span>
+                <div style={{ flex: 1 }}>
+                  <div className={styles.sfieldLbl}>{ar ? 'الوجهة' : 'Destination'}</div>
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder={ar ? 'إلى أين تريد السفر؟' : 'Where to?'}
+                  />
+                </div>
+              </div>
+              <div className={styles.sgrid2}>
+                <div className={styles.sfield}>
+                  <span>📅</span>
+                  <div>
+                    <div className={styles.sfieldLbl}>{ar ? 'تواريخ' : 'Dates'}</div>
+                    <div style={{ fontSize: '.85rem', color: 'var(--tm)' }}>{ar ? 'اختر التواريخ' : 'Select dates'}</div>
+                  </div>
+                </div>
+                <div className={styles.sfield}>
+                  <span>👥</span>
+                  <div>
+                    <div className={styles.sfieldLbl}>{ar ? 'ضيوف' : 'Guests'}</div>
+                    <div style={{ fontSize: '.85rem', color: 'var(--tm)' }}>{ar ? '2 بالغين · غرفة' : '2 Adults · 1 Room'}</div>
+                  </div>
+                </div>
+              </div>
+              <Link href={`/${locale}/hotels${query ? `?q=${encodeURIComponent(query)}` : ''}`} className={styles.sbtn}>
+                🔍 {ar ? 'بحث بالذكاء الاصطناعي' : 'Search with AI'}
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Stats Strip ── */}
-      <div className={styles.statsStrip}>
-        {[
-          { val: '180+', label: ar ? 'دولة' : 'Countries' },
-          { val: '50K+', label: ar ? 'عقار' : 'Properties' },
-          { val: '4.9★', label: ar ? 'تقييم' : 'Rating' },
-          { val: '2M+', label: ar ? 'مسافر' : 'Travelers' },
-        ].map(s => (
-          <div key={s.label} className={styles.stat}>
-            <span className={styles.statVal}>{s.val}</span>
-            <span className={styles.statLabel}>{s.label}</span>
+      {/* ── Flash Deals ── */}
+      <div className={styles.flash}>
+        <div className={styles.flLbl}>
+          <div className={styles.flFire}>🔥</div>
+          <div className={styles.flLabel}>{ar ? 'عروض فلاش' : 'Flash Deals'}</div>
+        </div>
+        <div className={styles.flDeals}>
+          {FLASH.map((d) => (
+            <div key={d.destEn} className={styles.fdeal}>
+              <div className={styles.fdest}>{d.flag} {ar ? d.destAr : d.destEn}</div>
+              <div className={styles.foff}>-{d.off}</div>
+              <div><span className={styles.fprice}>{fp(d.price)}</span><span className={styles.forig}>{fp(d.orig)}</span></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Categories ── */}
+      <div className={styles.cats}>
+        {cats.map((c, i) => (
+          <button key={c} className={`${styles.cat} ${i === activeCat ? styles.on : ''}`} onClick={() => setActiveCat(i)}>
+            {c}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Destinations ── */}
+      <div className={styles.sh}>
+        <div className={styles.st}>🌍 {ar ? 'الوجهات الأكثر شعبية' : 'Popular Destinations'}</div>
+        <Link href={`/${locale}/attractions`} className={styles.sl}>{ar ? 'عرض الكل ←' : 'View all →'}</Link>
+      </div>
+      <div className={styles.dg}>
+        {DESTS.map((d) => (
+          <Link key={d.id} href={`/${locale}/attractions`} className={styles.dc}>
+            {d.badge && <div className={styles.dBadge}>{d.badge}</div>}
+            <img src={d.img} alt={ar ? d.nameAr : d.nameEn} loading="lazy" />
+            <button
+              className={`${styles.wbtn} ${wishlist.includes(d.id) ? styles.on : ''}`}
+              onClick={(e) => { e.preventDefault(); toggleWish(d.id); }}
+            >
+              {wishlist.includes(d.id) ? '❤️' : '🤍'}
+            </button>
+            <div className={styles.di}>
+              <div className={styles.dn}>{ar ? d.nameAr : d.nameEn}</div>
+              <div className={styles.dc2}>{ar ? d.countryAr : d.countryEn} · {d.weather}</div>
+              <div className={styles.dp}>{ar ? 'من ' : 'From '}{fp(d.price)}{ar ? '/ليلة' : '/night'}</div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* ── Hotels ── */}
+      <div className={styles.sh}>
+        <div className={styles.st}>🏆 {ar ? 'أفضل الفنادق تقييماً' : 'Top Rated Hotels'}</div>
+        <Link href={`/${locale}/hotels`} className={styles.sl}>{ar ? 'عرض الكل ←' : 'View all →'}</Link>
+      </div>
+      <div className={styles.hs}>
+        {HOTELS.map((h) => (
+          <div key={h.id} className={styles.hc}>
+            {h.priceDrop && <div className={styles.pdrop}>📉 {ar ? 'انخفض السعر' : 'Price Drop'}</div>}
+            <img className={styles.hcImg} src={h.img} alt={h.name} loading="lazy" />
+            <div className={styles.hbody}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div className={styles.hname}>{h.name}</div>
+                  <div className={styles.hstars}>{'★'.repeat(h.stars)}</div>
+                  <div className={styles.hloc}>📍 {h.loc}</div>
+                </div>
+                <div style={{ textAlign: 'end' }}>
+                  <div className={styles.hprice}>{fp(h.price)}<span style={{ fontSize: '.53rem' }}>/night</span></div>
+                  {h.orig && <div className={styles.horig}>{fp(h.orig)}</div>}
+                </div>
+              </div>
+              <div className={styles.brow}>
+                <span className={`${styles.b} ${styles.bg}`}>✓ {ar ? 'إلغاء مجاني' : 'Free cancel'}</span>
+                <span className={`${styles.b} ${styles.bb}`}>✓ {ar ? 'تأكيد فوري' : 'Instant confirm'}</span>
+                <span className={`${styles.b} ${styles.ba}`}>🏆</span>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, margin: '5px 0' }}>
+                {h.tags.map((t) => (
+                  <span key={t} className={styles.b} style={{ background: 'var(--s2)', color: 'var(--td)' }}>{t}</span>
+                ))}
+              </div>
+              <div className={styles.hf}>
+                <div className={styles.hscore}>⭐ {h.score}</div>
+                <Link href={`/${locale}/hotels`} className={styles.bookBtn}>{ar ? 'احجز →' : 'Book →'}</Link>
+              </div>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* ── Quick Categories ── */}
-      <section className={styles.section}>
-        <h2 className={`text-label muted ${styles.sectionLabel}`}>
-          {ar ? 'استكشف' : 'Explore'}
-        </h2>
-        <div className={styles.categories}>
-          {CATEGORIES(locale).map(cat => (
-            <Link key={cat.href} href={cat.href} className={styles.catCard}>
-              <span className={styles.catEmoji}>{cat.emoji}</span>
-              <span className={styles.catLabel}>{cat.label}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Features ── */}
-      <section className={styles.section}>
-        <h2 className={`text-label muted ${styles.sectionLabel}`}>
-          {ar ? 'لماذا Va Travel' : 'Why Va Travel'}
-        </h2>
-
-        <div className={styles.features}>
-          {FEATURES(locale).map((f, i) => (
-            <div key={f.num} className={`${styles.featureCard} card`}>
-              <div className={styles.featureTop}>
-                <span className={styles.featureIcon}>{f.icon}</span>
-                <span className={styles.featureNum}>{f.num}</span>
-              </div>
-              <h3 className={styles.featureTitle}>{f.title}</h3>
-              <p className={`text-body muted ${styles.featureDesc}`}>{f.desc}</p>
+      {/* ── AI Features ── */}
+      <div className={styles.sh}>
+        <div className={styles.st}>🚀 {ar ? 'مميزات الذكاء الاصطناعي الحصرية' : 'Exclusive AI Features'}</div>
+        <Link href={`/${locale}/ai`} className={styles.sl}>{ar ? 'جرّب الآن ←' : 'Try now →'}</Link>
+      </div>
+      <div className={styles.fcGrid}>
+        {FEATURES_AI(ar).map((f) => (
+          <Link key={f.title} href={`/${locale}/ai`} className={styles.fc} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div className={styles.fcHead}>
+              <div className={styles.fcTitle}>{f.icon} {f.title}</div>
+              <span className="rl-badge" style={{ fontSize: '.57rem' }}>Claude AI</span>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── CTA Banner ── */}
-      <section className={styles.ctaBanner}>
-        <div className={styles.ctaInner}>
-          <h2 className={`${styles.ctaTitle}`}>
-            {ar ? 'جاهز لرحلتك القادمة؟' : 'Ready for your next adventure?'}
-          </h2>
-          <p className={`text-body ${styles.ctaSub}`}>
-            {ar
-              ? 'دعنا نخطط لها معاً — مجاناً وبذكاء.'
-              : 'Let\'s plan it together — free and intelligent.'}
-          </p>
-          <Link href={`/${locale}/ai`} className="btn btn-primary">
-            {ar ? 'تحدث مع Logy AI ✨' : 'Chat with Logy AI ✨'}
+            <div className={styles.fcSub}>{f.sub}</div>
           </Link>
-        </div>
-      </section>
+        ))}
+      </div>
 
-      {/* Bottom padding for nav */}
+      <div className={styles.footer}>
+        © 2026 Va Travel · {ar ? 'مدعوم بـ Claude AI' : 'Powered by Claude AI'} · 🌐 {ar ? 'لغات متعددة' : 'Multiple Languages'} · {ar ? 'حقوق محفوظة' : 'All rights reserved'}
+      </div>
+
       <div style={{ height: '80px' }} />
     </main>
   );
