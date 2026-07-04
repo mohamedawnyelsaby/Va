@@ -679,3 +679,131 @@ html:not([data-lang="ar"]) .logo-text{font-family:var(--font-en);font-size:1rem}
   .dg{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
   .fc-grid{grid-template-columns:repeat(2,1fr)}
 }
+/* ══════════════════════════════════════════════════════════
+   VG TOKENS — the actual custom-property system used across
+   ~35 files (Navbar, Footer, BottomNav, and nearly every page
+   in src/app/[locale]/*). These names were referenced everywhere
+   but never defined anywhere in the codebase, so every property
+   using them was silently dropped by the browser — this affected
+   most of the site, not just the navbar.
+   ══════════════════════════════════════════════════════════ */
+:root {
+  --vg-gold: #C9A227;
+  --vg-gold-2: #F0C84A;
+  --vg-gold-4: #F5CC74;
+  --vg-gold-dim: rgba(201,162,39,0.10);
+  --vg-gold-dim2: rgba(212,168,83,0.12);
+  --vg-gold-border: rgba(201,162,39,0.32);
+  --vg-gold-text: #060610;
+  --vg-star: #C9A227;
+
+  --vg-bg: #06050F;
+  --vg-bg-surface: #06050F;
+  --vg-bg-card: #0D0C1C;
+  --vg-text: #FAF7F2;
+  --vg-text-2: rgba(250,247,242,0.62);
+  --vg-text-3: rgba(250,247,242,0.40);
+  --vg-border: rgba(250,247,242,0.08);
+  --vg-border-2: rgba(250,247,242,0.18);
+
+  --vg-shadow-card: 0 8px 32px rgba(0,0,0,0.50);
+  --vg-shadow-md: 0 4px 24px rgba(0,0,0,0.35);
+  --vg-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --vg-nav-bg: rgba(13,12,28,0.85);
+  --vg-nav-border: rgba(250,247,242,0.08);
+
+  --vg-skel-bg: var(--vg-bg-card);
+  --vg-skel-shine: rgba(201,162,39,0.08);
+
+  --vg-hero-filter: brightness(0.55) saturate(0.65);
+  --vg-thumb-filter: brightness(0.60) saturate(0.65);
+}
+
+:root:not(.dark) {
+  --vg-gold-text: #8A6412;
+  --vg-gold-dim2: rgba(139,92,10,0.08);
+
+  --vg-bg: #F8F5F0;
+  --vg-bg-surface: #F8F5F0;
+  --vg-bg-card: #FDFCF9;
+  --vg-text: #150E07;
+  --vg-text-2: rgba(21,14,7,0.65);
+  --vg-text-3: rgba(21,14,7,0.45);
+  --vg-border: rgba(21,14,7,0.10);
+  --vg-border-2: rgba(21,14,7,0.20);
+
+  --vg-shadow-card: 0 8px 32px rgba(21,14,7,0.10);
+  --vg-shadow-md: 0 4px 24px rgba(21,14,7,0.10);
+
+  --vg-nav-bg: rgba(253,252,249,0.85);
+  --vg-nav-border: rgba(21,14,7,0.10);
+
+  --vg-skel-shine: rgba(139,92,10,0.06);
+
+  --vg-hero-filter: brightness(0.85) saturate(0.85);
+  --vg-thumb-filter: brightness(0.90) saturate(0.85);
+}
+
+.vg-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.6rem 1.3rem;
+  background: linear-gradient(135deg, var(--vg-gold-2), var(--vg-gold));
+  color: var(--vg-gold-text);
+  font-family: var(--font-space-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+.vg-btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+.vg-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.6rem 1.3rem;
+  background: transparent;
+  color: var(--vg-text);
+  font-family: var(--font-space-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 1px solid var(--vg-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.vg-btn-outline:hover { border-color: var(--vg-gold-border); color: var(--vg-gold); background: var(--vg-gold-dim); }
+
+.vg-badge-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--vg-gold-border);
+  border-radius: 99px;
+  font-family: var(--font-space-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--vg-gold);
+}
+.vg-badge-outline .dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--vg-gold);
+  display: inline-block;
+}
+
+/* .vg-desktop-footer wraps <Footer> in layout.tsx — had zero CSS,
+   meaning the full desktop footer was likely showing on mobile
+   too, stacked awkwardly above BottomNav. */
+.vg-desktop-footer { display: none; }
+@media (min-width: 768px) {
+  .vg-desktop-footer { display: block; }
+}
