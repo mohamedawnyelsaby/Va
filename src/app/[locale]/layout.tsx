@@ -27,6 +27,7 @@ export default async function LocaleLayout({
       style={{
         minHeight: '100vh',
         textAlign: isRTL ? 'right' : 'left',
+        fontFamily: isRTL ? 'var(--font-ar)' : 'var(--font-en)',
       }}
     >
       <Navbar locale={locale} isRTL={isRTL} />
