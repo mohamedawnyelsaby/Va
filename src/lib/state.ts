@@ -1,15 +1,9 @@
-'use client';
-
-/* ══════════════════════════════════════════
-   STATE — كل المتغيرات المشتركة بين الملفات
-══════════════════════════════════════════ */
-
 export let lang: 'ar' | 'en' = 'ar';
 export let currency: 'USD' | 'PI' = 'USD';
 export let wishlist: string[] = [];
 export let carIdx: Record<string, number> = {};
 
-export const PI_RATE = 0.4; // 1 π ≈ $0.4 (placeholder — عدّلها لما توصل API حقيقي لسعر Pi)
+export const PI_RATE = 0.4;
 
 export let bkStep = 1;
 export let bkHotel: string | null = null;
@@ -35,15 +29,12 @@ export let lastItinDest = '';
 
 export let guestData: Record<string, any> = {};
 
-// Pi Network state
 export let piUser: any = null;
 export let piAuthenticated = false;
 export let piSDKReady = false;
 
 export let onbStep_idx = 0;
 export let deferredInstall: any = null;
-
-/* ══ LOCALSTORAGE PERSISTENCE ══ */
 
 export function savePrefs() {
   if (typeof window === 'undefined') return;
@@ -89,8 +80,6 @@ export function loadCache(k: string, mx = 3600000) {
   } catch (e) {}
   return null;
 }
-
-/* ══ RATE LIMITER (حماية استخدام الـ AI) ══ */
 
 export const RL = (() => {
   const MAX = 10;
