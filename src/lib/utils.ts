@@ -1,14 +1,22 @@
-'use client';
-
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { currency, PI_RATE, savePrefs } from './state';
 
-/* ══════════════════════════════════════════
-   دالة أساسية لازمة لعمل shadcn/ui - متمسّش
-══════════════════════════════════════════ */
+/* دالة أساسية لازمة لعمل shadcn/ui */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+/* تنسيق العملة - مستخدمة في صفحات كتير بالمشروع */
+export function formatCurrency(amount: number, currencyCode: string = 'USD'): string {
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyCode,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch (e) {
+    return `$${Math.round(amount)}`;
+  }
 }
 
 /* ══════════════════════════════════════════
@@ -30,11 +38,12 @@ export function esc(s: unknown): string {
   }[m] as string));
 }
 
-export function fp(p: number): string {
-  return currency === 'USD' ? `$${Math.round(p)}` : `${(p / PI_RATE).toFixed(2)} π`;
+export function fp(p: number, currency: 'USD' | 'PI' = 'USD', piRate: number = 0.4): string {
+  return currency === 'USD' ? `$${Math.round(p)}` : `${(p / piRate).toFixed(2)} π`;
 }
 
 export function toast(msg: string, type = '') {
+  if (typeof document === 'undefined') return;
   const t = $('toastEl') as (HTMLElement & { _t?: ReturnType<typeof setTimeout> }) | null;
   if (!t) return;
   t.textContent = msg;
@@ -48,7 +57,6 @@ export function toggleTheme() {
   if (typeof document === 'undefined') return;
   const d = document.documentElement.getAttribute('data-theme') === 'dark';
   document.documentElement.setAttribute('data-theme', d ? 'light' : 'dark');
-  savePrefs();
 }
 
 export function counterAnim(el: HTMLElement, target: number) {
