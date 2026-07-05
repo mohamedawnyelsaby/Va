@@ -119,5 +119,24 @@
 [dir="ltr"] .fcTitle { font-family: var(--font-serif); font-weight: 700; font-size: 1.1rem; }
 .fcSub { font-size: .76rem; color: var(--td); line-height: 1.7; margin-bottom: 8px; }
 
+/* Exchange rates */
+.ratesRow { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 18px 20px; max-width: 1100px; margin: 0 auto; }
+.ratePill { display: flex; align-items: center; gap: 5px; background: var(--s2); border: 1px solid var(--bd); border-radius: 99px; padding: 5px 11px; font-size: .68rem; font-family: var(--font-mono); }
+.rateUp { color: var(--green); }
+.rateDown { color: var(--red); }
+
+/* Traveler reviews */
+.reviewsScroll { display: flex; gap: 14px; overflow-x: auto; padding: 0 18px 22px; scroll-snap-type: x mandatory; scrollbar-width: none; max-width: 1100px; margin: 0 auto; }
+.reviewsScroll::-webkit-scrollbar { display: none; }
+.reviewCard { flex: 0 0 270px; background: var(--s1); border: 1px solid var(--bd); border-radius: 16px; padding: 16px; scroll-snap-align: start; transition: .2s; position: relative; }
+.reviewCard:hover { border-color: var(--gglow); transform: translateY(-2px); box-shadow: var(--sh); }
+.reviewStars { color: var(--g); font-size: .75rem; letter-spacing: 1px; margin-bottom: 7px; }
+.reviewText { font-size: .78rem; color: var(--td); line-height: 1.65; margin-bottom: 10px; font-style: italic; }
+.reviewAuthor { display: flex; align-items: center; gap: 8px; }
+.reviewAva { width: 30px; height: 30px; border-radius: 50%; background: var(--gdim); border: 1px solid var(--gglow); display: flex; align-items: center; justify-content: center; font-size: .88rem; flex-shrink: 0; }
+.reviewName { font-size: .76rem; font-weight: 700; }
+.reviewDest { font-size: .62rem; color: var(--tm); }
+.reviewQuote { position: absolute; top: 12px; inset-inline-end: 14px; font-size: 2rem; color: var(--gdim); font-family: var(--font-serif); line-height: 1; }
+
 /* Footer */
 .footer { text-align: center; padding: 22px; font-size: .65rem; color: var(--tm); border-top: 1px solid var(--bd); margin-top: 8px; line-height: 2; }
