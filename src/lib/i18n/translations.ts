@@ -15,6 +15,27 @@ export interface Translations {
     dashboard: string;
     signOut: string;
   };
+  // Header (logo subtitle, Pi Network pill, notification panel, live ticker)
+  header: {
+    subtitle: string;
+    piNetwork: string;
+    piConnected: string;
+    notifTitle: string;
+    notifMarkAllRead: string;
+    notifEmpty: string;
+  };
+  // Live ticker items shown under the header. Use **text** for the
+  // highlighted (gold) segment, e.g. "Cheapest Tokyo flight today: **$420**".
+  ticker: string[];
+  // Bottom mobile navigation (6 tabs)
+  bottomNav: {
+    home: string;
+    explore: string;
+    plan: string;
+    ai: string;
+    saved: string;
+    me: string;
+  };
   // Hero
   hero: {
     tag: string;
@@ -141,6 +162,30 @@ const en: Translations = {
     signUp: 'Sign Up',
     dashboard: 'Dashboard',
     signOut: 'Sign Out',
+  },
+  header: {
+    subtitle: 'World-Class Travel Platform',
+    piNetwork: 'Pi Network',
+    piConnected: 'Connected',
+    notifTitle: 'Notifications',
+    notifMarkAllRead: 'Mark all as read',
+    notifEmpty: 'No new notifications',
+  },
+  ticker: [
+    '✈️ Cheapest Tokyo flight today: **$420** from Cairo',
+    '🏨 **Burj Al Arab** Dubai: 35% off this week',
+    '🌡️ Maldives now: **29°C ☀️** — perfect travel time',
+    '🛂 Turkey visa-free for **90 countries** on arrival',
+    '💰 Best deal: Bali 7 days from **$1,200**',
+    '🌍 **Va Travel** now available in 180+ countries',
+  ],
+  bottomNav: {
+    home: 'Home',
+    explore: 'Explore',
+    plan: 'Plan',
+    ai: 'AI',
+    saved: 'Saved',
+    me: 'Me',
   },
   hero: {
     tag: 'Pi-Powered · AI-First · Global',
@@ -283,6 +328,30 @@ const ar: Translations = {
     dashboard: 'لوحة التحكم',
     signOut: 'تسجيل الخروج',
   },
+  header: {
+    subtitle: 'المنصة العالمية للسفر',
+    piNetwork: 'شبكة Pi',
+    piConnected: 'متصل',
+    notifTitle: 'الإشعارات',
+    notifMarkAllRead: 'تحديد الكل كمقروء',
+    notifEmpty: 'لا توجد إشعارات جديدة',
+  },
+  ticker: [
+    '✈️ أرخص رحلة لطوكيو اليوم: **$420** من القاهرة',
+    '🏨 **فندق برج العرب** دبي: خصم 35% هذا الأسبوع',
+    '🌡️ طقس المالديف الآن: **29°C ☀️**',
+    '🛂 تأشيرة تركيا مجانية لـ **90 دولة**',
+    '💰 بالي 7 أيام بـ **$1,200** — أفضل عرض الشهر',
+    '🌍 **Va Travel** متاح الآن في 180+ دولة',
+  ],
+  bottomNav: {
+    home: 'الرئيسية',
+    explore: 'استكشف',
+    plan: 'خطط',
+    ai: 'AI',
+    saved: 'محفوظ',
+    me: 'أنا',
+  },
   hero: {
     tag: 'مدعوم بـ Pi · الذكاء الاصطناعي أولاً · عالمي',
     heading1: 'العالم',
@@ -423,6 +492,30 @@ const fr: Translations = {
     signUp: 'S\'inscrire',
     dashboard: 'Tableau de bord',
     signOut: 'Déconnexion',
+  },
+  header: {
+    subtitle: 'Plateforme de voyage mondiale',
+    piNetwork: 'Réseau Pi',
+    piConnected: 'Connecté',
+    notifTitle: 'Notifications',
+    notifMarkAllRead: 'Tout marquer comme lu',
+    notifEmpty: 'Aucune nouvelle notification',
+  },
+  ticker: [
+    '✈️ Vol Tokyo le moins cher aujourd\'hui : **420 $** depuis Le Caire',
+    '🏨 **Burj Al Arab** Dubaï : 35% de réduction cette semaine',
+    '🌡️ Météo aux Maldives : **29°C ☀️**',
+    '🛂 Visa gratuit pour la Turquie pour **90 pays**',
+    '💰 Bali 7 jours à partir de **1 200 $**',
+    '🌍 **Va Travel** disponible dans 180+ pays',
+  ],
+  bottomNav: {
+    home: 'Accueil',
+    explore: 'Explorer',
+    plan: 'Planifier',
+    ai: 'IA',
+    saved: 'Favoris',
+    me: 'Moi',
   },
   hero: {
     tag: 'Propulsé par Pi · IA en premier · Mondial',
@@ -565,6 +658,30 @@ const es: Translations = {
     dashboard: 'Panel',
     signOut: 'Cerrar Sesión',
   },
+  header: {
+    subtitle: 'Plataforma de viajes global',
+    piNetwork: 'Red Pi',
+    piConnected: 'Conectado',
+    notifTitle: 'Notificaciones',
+    notifMarkAllRead: 'Marcar todo como leído',
+    notifEmpty: 'No hay notificaciones nuevas',
+  },
+  ticker: [
+    '✈️ Vuelo más barato a Tokio hoy: **$420** desde El Cairo',
+    '🏨 **Burj Al Arab** Dubái: 35% de descuento esta semana',
+    '🌡️ Clima en Maldivas: **29°C ☀️**',
+    '🛂 Visa gratis para Turquía en **90 países**',
+    '💰 Bali 7 días desde **$1,200**',
+    '🌍 **Va Travel** ya disponible en más de 180 países',
+  ],
+  bottomNav: {
+    home: 'Inicio',
+    explore: 'Explorar',
+    plan: 'Planear',
+    ai: 'IA',
+    saved: 'Guardados',
+    me: 'Yo',
+  },
   hero: {
     tag: 'Impulsado por Pi · IA Primero · Global',
     heading1: 'El Mundo',
@@ -705,6 +822,30 @@ const de: Translations = {
     signUp: 'Registrieren',
     dashboard: 'Dashboard',
     signOut: 'Abmelden',
+  },
+  header: {
+    subtitle: 'Weltweite Reiseplattform',
+    piNetwork: 'Pi-Netzwerk',
+    piConnected: 'Verbunden',
+    notifTitle: 'Benachrichtigungen',
+    notifMarkAllRead: 'Alle als gelesen markieren',
+    notifEmpty: 'Keine neuen Benachrichtigungen',
+  },
+  ticker: [
+    '✈️ Günstigster Tokio-Flug heute: **420 $** ab Kairo',
+    '🏨 **Burj Al Arab** Dubai: 35% Rabatt diese Woche',
+    '🌡️ Wetter auf den Malediven: **29°C ☀️**',
+    '🛂 Visumfrei für die Türkei aus **90 Ländern**',
+    '💰 Bali 7 Tage ab **1.200 $**',
+    '🌍 **Va Travel** jetzt in über 180 Ländern verfügbar',
+  ],
+  bottomNav: {
+    home: 'Start',
+    explore: 'Entdecken',
+    plan: 'Planen',
+    ai: 'KI',
+    saved: 'Gespeichert',
+    me: 'Ich',
   },
   hero: {
     tag: 'Pi-Powered · KI-First · Global',
@@ -847,6 +988,30 @@ const zh: Translations = {
     dashboard: '控制台',
     signOut: '退出',
   },
+  header: {
+    subtitle: '世界级旅行平台',
+    piNetwork: 'Pi 网络',
+    piConnected: '已连接',
+    notifTitle: '通知',
+    notifMarkAllRead: '全部标为已读',
+    notifEmpty: '暂无新通知',
+  },
+  ticker: [
+    '✈️ 今日东京最便宜航班：从开罗出发 **$420**',
+    '🏨 迪拜**帆船酒店**：本周8折优惠',
+    '🌡️ 马尔代夫天气：**29°C ☀️**',
+    '🛂 土耳其对**90个国家**免签',
+    '💰 巴厘岛7天起价 **$1,200**',
+    '🌍 **Va Travel** 已覆盖180多个国家',
+  ],
+  bottomNav: {
+    home: '首页',
+    explore: '探索',
+    plan: '计划',
+    ai: 'AI',
+    saved: '收藏',
+    me: '我的',
+  },
   hero: {
     tag: 'Pi驱动 · AI优先 · 全球',
     heading1: '世界',
@@ -988,6 +1153,30 @@ const ja: Translations = {
     dashboard: 'ダッシュボード',
     signOut: 'ログアウト',
   },
+  header: {
+    subtitle: '世界水準の旅行プラットフォーム',
+    piNetwork: 'Piネットワーク',
+    piConnected: '接続済み',
+    notifTitle: '通知',
+    notifMarkAllRead: 'すべて既読にする',
+    notifEmpty: '新しい通知はありません',
+  },
+  ticker: [
+    '✈️ 本日の東京行き最安値：カイロから**$420**',
+    '🏨 ドバイの**バージ・アル・アラブ**：今週35%オフ',
+    '🌡️ モルディブの天気：**29°C ☀️**',
+    '🛂 トルコは**90カ国**にビザ免除',
+    '💰 バリ島7日間 **$1,200**から',
+    '🌍 **Va Travel** は180カ国以上で利用可能',
+  ],
+  bottomNav: {
+    home: 'ホーム',
+    explore: '探索',
+    plan: 'プラン',
+    ai: 'AI',
+    saved: '保存済み',
+    me: 'マイページ',
+  },
   hero: {
     tag: 'Pi搭載 · AI優先 · グローバル',
     heading1: '世界が',
@@ -1128,6 +1317,30 @@ const ru: Translations = {
     signUp: 'Регистрация',
     dashboard: 'Панель',
     signOut: 'Выйти',
+  },
+  header: {
+    subtitle: 'Мировая платформа для путешествий',
+    piNetwork: 'Сеть Pi',
+    piConnected: 'Подключено',
+    notifTitle: 'Уведомления',
+    notifMarkAllRead: 'Отметить все как прочитанные',
+    notifEmpty: 'Нет новых уведомлений',
+  },
+  ticker: [
+    '✈️ Самый дешёвый рейс в Токио сегодня: **$420** из Каира',
+    '🏨 **Burj Al Arab** Дубай: скидка 35% на этой неделе',
+    '🌡️ Погода на Мальдивах: **29°C ☀️**',
+    '🛂 Безвизовый въезд в Турцию для **90 стран**',
+    '💰 Бали 7 дней от **$1 200**',
+    '🌍 **Va Travel** уже доступен в 180+ странах',
+  ],
+  bottomNav: {
+    home: 'Главная',
+    explore: 'Исследовать',
+    plan: 'План',
+    ai: 'ИИ',
+    saved: 'Избранное',
+    me: 'Я',
   },
   hero: {
     tag: 'На Pi · ИИ Прежде всего · Глобально',
