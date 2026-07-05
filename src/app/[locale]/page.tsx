@@ -65,6 +65,39 @@ const TABS = (ar: boolean) => [
   { id: 'visa', icon: '🛂', label: ar ? 'تأشيرة' : 'Visa' },
 ];
 
+const RATES = [
+  { flag: '💵→π', from: '1 USD', to: 'π', value: '2.52', unit: 'π', up: true },
+  { flag: '🇪🇬→π', from: '1 π', to: 'EGP', value: '19.48', unit: 'EGP', up: false },
+  { flag: '💵→🇪🇬', from: '1 USD', to: 'EGP', value: '48.81', unit: 'EGP', up: true },
+];
+
+const REVIEWS = [
+  {
+    stars: 5,
+    textAr: '"خدمة لا تصدق! حجزت فندق في دبي في دقائق والذكاء الاصطناعي اقترح لي ترقية مجانية."',
+    textEn: '"Incredible service! Booked in Dubai in minutes, the AI suggested a free upgrade."',
+    name: 'Ahmed Al-Saeed', destAr: 'دبي 🇦🇪', destEn: 'Dubai 🇦🇪', ava: '🧑‍💼',
+  },
+  {
+    stars: 5,
+    textAr: '"Logy خطط لي رحلة يابان كاملة في ثوانٍ. أفضل تطبيق سفر جربته."',
+    textEn: '"Logy planned my entire Japan trip in seconds. Best travel app I\'ve ever used."',
+    name: 'Sarah Al-Mahdi', destAr: 'طوكيو 🇯🇵', destEn: 'Tokyo 🇯🇵', ava: '👩‍💻',
+  },
+  {
+    stars: 5,
+    textAr: '"فحص التأشيرة وفّر عليّ ساعات من البحث. واضح ودقيق."',
+    textEn: '"The visa checker saved me hours of research. Clear and accurate."',
+    name: 'Karim Boulaaras', destAr: 'باريس 🇫🇷', destEn: 'Paris 🇫🇷', ava: '👨‍🎨',
+  },
+  {
+    stars: 5,
+    textAr: '"أسعار الصرف اللحظية والتوقعات ساعدتني أوفر 30% على رحلتي."',
+    textEn: '"Live exchange rates and predictions helped me save 30% on my trip."',
+    name: 'Layla Nasr', destAr: 'المالديف 🇲🇻', destEn: 'Maldives 🇲🇻', ava: '👩‍🦱',
+  },
+];
+
 const FEATURES_AI = (ar: boolean) => [
   { icon: '🧠', title: ar ? 'مستشار AI العاطفي' : 'Emotional AI Concierge', sub: ar ? 'أخبرني كيف تشعر — يجد لك Claude وجهتك المثالية المخفية.' : 'Tell me how you feel — Claude finds your perfect hidden destination.' },
   { icon: '🛂', title: ar ? 'فاحص التأشيرة الذكي' : 'Smart Visa Checker', sub: ar ? 'اعرف متطلبات التأشيرة فورياً لأي جواز سفر ووجهة.' : 'Instantly know visa requirements for any passport & destination.' },
@@ -201,6 +234,18 @@ export default function HomePage({ params: { locale } }: Props) {
         ))}
       </div>
 
+      {/* ── Live Exchange Rates ── */}
+      <div className={styles.sh}>
+        <div className={styles.st}>💱 {ar ? 'أسعار الصرف اللحظية' : 'Live Exchange Rates'}</div>
+      </div>
+      <div className={styles.ratesRow}>
+        {RATES.map((r) => (
+          <div key={r.from + r.to} className={styles.ratePill}>
+            {r.flag} {r.from} = <span className={r.up ? styles.rateUp : styles.rateDown}>{r.value} {r.unit} {r.up ? '↑' : '↓'}</span>
+          </div>
+        ))}
+      </div>
+
       {/* ── Destinations ── */}
       <div className={styles.sh}>
         <div className={styles.st}>🌍 {ar ? 'الوجهات الأكثر شعبية' : 'Popular Destinations'}</div>
@@ -261,6 +306,28 @@ export default function HomePage({ params: { locale } }: Props) {
               <div className={styles.hf}>
                 <div className={styles.hscore}>⭐ {h.score}</div>
                 <Link href={`/${locale}/hotels`} className={styles.bookBtn}>{ar ? 'احجز →' : 'Book →'}</Link>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Traveler Reviews ── */}
+      <div className={styles.sh}>
+        <div className={styles.st}>⭐ {ar ? 'آراء المسافرين' : 'Traveler Reviews'}</div>
+        <span className={styles.sl}>{ar ? 'المزيد ←' : 'More →'}</span>
+      </div>
+      <div className={styles.reviewsScroll}>
+        {REVIEWS.map((r) => (
+          <div key={r.name} className={styles.reviewCard}>
+            <div className={styles.reviewQuote}>&rdquo;</div>
+            <div className={styles.reviewStars}>{'★'.repeat(r.stars)}</div>
+            <div className={styles.reviewText}>{ar ? r.textAr : r.textEn}</div>
+            <div className={styles.reviewAuthor}>
+              <div className={styles.reviewAva}>{r.ava}</div>
+              <div>
+                <div className={styles.reviewName}>{r.name}</div>
+                <div className={styles.reviewDest}>{ar ? r.destAr : r.destEn}</div>
               </div>
             </div>
           </div>
