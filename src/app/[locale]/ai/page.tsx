@@ -66,10 +66,12 @@ export default function AIPage({ params }: { params: { locale: string } }) {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/ai/chat', {
+      const history = messages.map(m => ({ role: m.role, content: m.content }));
+
+      const res = await fetch('/api/ai/travel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text.trim(), locale }),
+        body: JSON.stringify({ message: text.trim(), history }),
       });
 
       const data = await res.json();
@@ -77,7 +79,7 @@ export default function AIPage({ params }: { params: { locale: string } }) {
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.reply || (isAr ? 'حدث خطأ ما. حاول مرة أخرى.' : 'Something went wrong. Please try again.'),
+        content: data.message || (isAr ? 'حدث خطأ ما. حاول مرة أخرى.' : 'Something went wrong. Please try again.'),
         time: formatTime(new Date()),
       }]);
     } catch {
