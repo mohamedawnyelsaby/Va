@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { AIFeatureCards } from '@/components/sections/ai-feature-cards';
 
 interface Props {
   params: { locale: string };
@@ -96,13 +97,6 @@ const REVIEWS = [
     textEn: '"Live exchange rates and predictions helped me save 30% on my trip."',
     name: 'Layla Nasr', destAr: 'المالديف 🇲🇻', destEn: 'Maldives 🇲🇻', ava: '👩‍🦱',
   },
-];
-
-const FEATURES_AI = (ar: boolean) => [
-  { icon: '🧠', title: ar ? 'مستشار AI العاطفي' : 'Emotional AI Concierge', sub: ar ? 'أخبرني كيف تشعر — يجد لك Claude وجهتك المثالية المخفية.' : 'Tell me how you feel — Claude finds your perfect hidden destination.' },
-  { icon: '🛂', title: ar ? 'فاحص التأشيرة الذكي' : 'Smart Visa Checker', sub: ar ? 'اعرف متطلبات التأشيرة فورياً لأي جواز سفر ووجهة.' : 'Instantly know visa requirements for any passport & destination.' },
-  { icon: '📈', title: ar ? 'توقع الأسعار بـ AI' : 'Predictive Pricing AI', sub: ar ? 'توقع أسعار 90 يوماً مع نصيحة الحجز المثلى.' : '90-day price forecast with AI-generated booking advice.' },
-  { icon: '💰', title: ar ? 'مخطط الميزانية الذكي' : 'AI Budget Planner', sub: ar ? 'أدخل ميزانيتك — يوزعها Claude بذكاء.' : 'Enter your budget — Claude allocates it smartly.' },
 ];
 
 function fp(price: number) {
@@ -337,19 +331,8 @@ export default function HomePage({ params: { locale } }: Props) {
       {/* ── AI Features ── */}
       <div className={styles.sh}>
         <div className={styles.st}>🚀 {ar ? 'مميزات الذكاء الاصطناعي الحصرية' : 'Exclusive AI Features'}</div>
-        <Link href={`/${locale}/ai`} className={styles.sl}>{ar ? 'جرّب الآن ←' : 'Try now →'}</Link>
       </div>
-      <div className={styles.fcGrid}>
-        {FEATURES_AI(ar).map((f) => (
-          <Link key={f.title} href={`/${locale}/ai`} className={styles.fc} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div className={styles.fcHead}>
-              <div className={styles.fcTitle}>{f.icon} {f.title}</div>
-              <span className="rl-badge" style={{ fontSize: '.57rem' }}>Claude AI</span>
-            </div>
-            <div className={styles.fcSub}>{f.sub}</div>
-          </Link>
-        ))}
-      </div>
+      <AIFeatureCards locale={locale} />
 
       <div className={styles.footer}>
         © 2026 Va Travel · {ar ? 'مدعوم بـ Claude AI' : 'Powered by Claude AI'} · 🌐 {ar ? 'لغات متعددة' : 'Multiple Languages'} · {ar ? 'حقوق محفوظة' : 'All rights reserved'}
