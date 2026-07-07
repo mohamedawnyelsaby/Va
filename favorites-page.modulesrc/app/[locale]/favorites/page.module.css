@@ -1,0 +1,23 @@
+.main { min-height: 100dvh; background: var(--bg); padding-top: 76px; padding-bottom: 40px; }
+
+.sh { display: flex; justify-content: space-between; align-items: baseline; padding: 22px 18px 12px; max-width: 1100px; margin: 0 auto; }
+.st { font-family: var(--font-serif); font-size: 1.45rem; font-weight: 700; }
+.st:lang(ar) { font-family: var(--font-ar); font-size: 1.3rem; font-weight: 900; }
+
+.dg { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 14px; padding: 0 18px 20px; max-width: 1100px; margin: 0 auto; }
+.dc { border-radius: 16px; overflow: hidden; background: var(--s1); box-shadow: var(--sh); cursor: pointer; transition: .22s var(--ease); position: relative; border: none; text-align: start; padding: 0; color: inherit; font-family: inherit; }
+.dc:hover { transform: translateY(-5px); box-shadow: var(--shH); }
+.dc img { width: 100%; aspect-ratio: 4/3; object-fit: cover; transition: .35s; display: block; }
+.dc:hover img { transform: scale(1.06); }
+.wbtn { position: absolute; top: 9px; inset-inline-end: 9px; width: 30px; height: 30px; background: rgba(239,68,68,.75); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .85rem; cursor: pointer; border: none; backdrop-filter: blur(6px); z-index: 2; }
+.di { padding: 11px; }
+.dn { font-weight: 700; font-size: .92rem; }
+.dc2 { font-size: .67rem; color: var(--tm); margin-top: 1px; }
+.dp { color: var(--g); font-weight: 700; font-size: .79rem; margin-top: 4px; }
+
+.emptyState { grid-column: 1/-1; text-align: center; padding: 55px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.emptyIco { font-size: 3rem; margin-bottom: 4px; }
+.emptyTitle { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; }
+.emptyTitle:lang(ar) { font-family: var(--font-ar); }
+.emptySub { font-size: .8rem; color: var(--td); line-height: 1.6; max-width: 260px; }
+.emptyBtn { margin-top: 6px; padding: 10px 20px; background: var(--g); color: #060610; border: none; border-radius: 99px; font-weight: 700; font-size: .82rem; cursor: pointer; text-decoration: none; display: inline-block; }
