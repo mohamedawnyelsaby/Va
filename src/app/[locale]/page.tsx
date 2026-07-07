@@ -8,6 +8,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import { AIFeatureCards } from '@/components/sections/ai-feature-cards';
+import { useWishlist, DESTINATIONS } from '@/lib/wishlist';
 
 interface Props {
   params: { locale: string };
@@ -41,15 +42,6 @@ const FLASH = [
   { destAr: 'روما', destEn: 'Rome', off: '25%', price: 510, orig: 680, flag: '🇮🇹' },
   { destAr: 'بانكوك', destEn: 'Bangkok', off: '50%', price: 180, orig: 360, flag: '🇹🇭' },
   { destAr: 'سنغافورة', destEn: 'Singapore', off: '30%', price: 420, orig: 600, flag: '🇸🇬' },
-];
-
-const DESTS = [
-  { id: 1, nameAr: 'دبي', nameEn: 'Dubai', countryAr: 'الإمارات', countryEn: 'UAE', price: 840, img: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600', weather: '☀️ 35°C', badge: '🔥' },
-  { id: 2, nameAr: 'طوكيو', nameEn: 'Tokyo', countryAr: 'اليابان', countryEn: 'Japan', price: 650, img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600', weather: '🌸 22°C', badge: '🌟' },
-  { id: 3, nameAr: 'باريس', nameEn: 'Paris', countryAr: 'فرنسا', countryEn: 'France', price: 720, img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600', weather: '⛅ 18°C', badge: '' },
-  { id: 4, nameAr: 'المالديف', nameEn: 'Maldives', countryAr: 'المالديف', countryEn: 'Maldives', price: 1200, img: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=600', weather: '🌊 29°C', badge: '💎' },
-  { id: 5, nameAr: 'بالي', nameEn: 'Bali', countryAr: 'إندونيسيا', countryEn: 'Indonesia', price: 420, img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600', weather: '🌴 27°C', badge: '' },
-  { id: 6, nameAr: 'سانتوريني', nameEn: 'Santorini', countryAr: 'اليونان', countryEn: 'Greece', price: 590, img: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600', weather: '🌞 24°C', badge: '' },
 ];
 
 const HOTELS = [
@@ -107,11 +99,8 @@ export default function HomePage({ params: { locale } }: Props) {
   const ar = isAr(locale);
   const [tab, setTab] = useState('hotels');
   const [activeCat, setActiveCat] = useState(0);
-  const [wishlist, setWishlist] = useState<number[]>([]);
+  const { ids: wishlist, toggle: toggleWish } = useWishlist();
   const [query, setQuery] = useState('');
-
-  const toggleWish = (id: number) =>
-    setWishlist((w) => (w.includes(id) ? w.filter((x) => x !== id) : [...w, id]));
 
   const ticker = ar ? TICKER_AR : TICKER_EN;
   const cats = ar ? CATS_AR : CATS_EN;
@@ -246,7 +235,7 @@ export default function HomePage({ params: { locale } }: Props) {
         <Link href={`/${locale}/attractions`} className={styles.sl}>{ar ? 'عرض الكل ←' : 'View all →'}</Link>
       </div>
       <div className={styles.dg}>
-        {DESTS.map((d) => (
+        {DESTINATIONS.map((d) => (
           <Link key={d.id} href={`/${locale}/attractions`} className={styles.dc}>
             {d.badge && <div className={styles.dBadge}>{d.badge}</div>}
             <img src={d.img} alt={ar ? d.nameAr : d.nameEn} loading="lazy" />
