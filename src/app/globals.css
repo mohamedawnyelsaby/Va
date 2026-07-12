@@ -99,7 +99,7 @@
    Verified by grepping the whole src/ tree: 22 distinct
    --vg-* variable names are referenced across ~41 files
    (hero.tsx, footer.tsx, PaymentFlow.tsx, vg-skeleton.tsx,
-   src/lib/tokens.ts, and most src/app/[locale]/*/page.tsx
+   src/lib/tokens.ts, and most src/app/[locale]/.../page.tsx
    files). None of them were defined anywhere after the
    token consolidation, so every one of those elements was
    silently rendering with no color/border/background/shadow —
