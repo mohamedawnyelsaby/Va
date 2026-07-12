@@ -1,0 +1,5 @@
+.main { min-height: 100dvh; background: var(--bg); padding-top: 76px; padding-bottom: 40px; }
+
+.sh { display: flex; justify-content: space-between; align-items: baseline; padding: 22px 18px 12px; max-width: 640px; margin: 0 auto; }
+.st { font-family: var(--font-serif); font-size: 1.45rem; font-weight: 700; }
+.st:lang(ar) { font-family: var(--font-ar); font-size: 1.3rem; font-weight: 900; }
