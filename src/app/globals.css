@@ -34,6 +34,11 @@
   --sh:0 8px 32px rgba(0,0,0,.6);--shH:0 24px 60px rgba(0,0,0,.75);
   --sk1:#141426;--sk2:#1C1A32;
   --hero-grad:radial-gradient(ellipse 90% 70% at 60% 40%,rgba(201,162,39,.08) 0%,transparent 65%),radial-gradient(ellipse 50% 60% at 5% 80%,rgba(120,80,255,.05) 0%,transparent 60%);
+  /* Dark-mode image filters (used by hotels/[id] gallery/hero/thumb images).
+     These already have inline CSS fallbacks (var(--vg-hero-filter, brightness(0.55) saturate(0.65))),
+     so defining them here is optional but keeps behavior explicit and themeable. */
+  --vg-hero-filter:brightness(0.55) saturate(0.65);
+  --vg-thumb-filter:brightness(0.60) saturate(0.65);
 
   /* shadcn/Tailwind bridge — same brand colors, expressed as HSL triples */
   --background:240 45% 4%;
@@ -63,6 +68,9 @@
   --sh:0 4px 20px rgba(0,0,0,.08);--shH:0 20px 50px rgba(0,0,0,.14);
   --sk1:#E8E7F5;--sk2:#D8D6EE;
   --hero-grad:radial-gradient(ellipse 90% 70% at 60% 40%,rgba(201,162,39,.06) 0%,transparent 65%);
+  /* Light-mode image filters — lighter than dark mode so photos don't look washed out */
+  --vg-hero-filter:brightness(0.92) saturate(0.92);
+  --vg-thumb-filter:brightness(0.94) saturate(0.92);
 
   --background:247 39% 95%;
   --foreground:240 35% 12%;
@@ -84,6 +92,49 @@
   --input:248 50% 97%;
   --ring:46 68% 47%;
 }
+
+/* ══════════════════════════════════════════════
+   BACKWARD-COMPAT BRIDGE — --vg-* aliases
+   ------------------------------------------------
+   Verified by grepping the whole src/ tree: 22 distinct
+   --vg-* variable names are referenced across ~41 files
+   (hero.tsx, footer.tsx, PaymentFlow.tsx, vg-skeleton.tsx,
+   src/lib/tokens.ts, and most src/app/[locale]/*/page.tsx
+   files). None of them were defined anywhere after the
+   token consolidation, so every one of those elements was
+   silently rendering with no color/border/background/shadow —
+   this is the actual root cause of the visual mismatch vs.
+   the HTML reference. This block re-points every old name at
+   its equivalent new token so theming stays correct in both
+   light and dark mode without touching all 41 files at once.
+   (--vg-hero-filter / --vg-thumb-filter are defined per-theme
+   above instead, since those already had inline CSS fallbacks.)
+   Once files are migrated to use the new names directly, this
+   block can be deleted.
+   ══════════════════════════════════════════════ */
+:root{
+  --vg-gold:var(--g);
+  --vg-gold-2:var(--gl);
+  --vg-gold-4:var(--gd);
+  --vg-gold-border:var(--gglow);
+  --vg-gold-dim:var(--gdim);
+  --vg-gold-dim2:rgba(201,162,39,.16);
+  --vg-star:var(--g);
+  --vg-border:var(--bd);
+  --vg-border-2:var(--bd2);
+  --vg-bg:var(--bg);
+  --vg-bg-card:var(--s2);
+  --vg-bg-surface:var(--s1);
+  --vg-text:var(--t);
+  --vg-text-2:var(--td);
+  --vg-text-3:var(--tm);
+  --vg-skel-bg:var(--sk1);
+  --vg-skel-shine:var(--sk2);
+  --vg-shadow-card:var(--sh);
+  --vg-shadow-md:var(--sh);
+  --vg-ease:var(--ease);
+}
+
 html{scroll-behavior:smooth}
 body{font-family:var(--font-ar);background:var(--bg);color:var(--t);padding-bottom:var(--bnavH);overflow-x:hidden;transition:background .3s,color .3s}
 /* Per-locale font switching happens explicitly on the locale wrapper in
