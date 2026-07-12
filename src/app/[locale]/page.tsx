@@ -8,6 +8,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import { AIFeatureCards } from '@/components/sections/ai-feature-cards';
+import { Phase2Features } from '@/components/sections/phase2-features';
 import { useWishlist, DESTINATIONS } from '@/lib/wishlist';
 
 interface Props {
@@ -322,6 +323,13 @@ export default function HomePage({ params: { locale } }: Props) {
         <div className={styles.st}>🚀 {ar ? 'مميزات الذكاء الاصطناعي الحصرية' : 'Exclusive AI Features'}</div>
       </div>
       <AIFeatureCards locale={locale} />
+
+      {/* ── Phase 2 Features ── */}
+      <div className={styles.sh}>
+        <div className={styles.st}>🆕 {ar ? 'ميزات المرحلة الثانية' : 'Phase 2 Features'}</div>
+        <span className={styles.sl}>{ar ? 'حصرياً في Va Travel' : 'Exclusive to Va Travel'}</span>
+      </div>
+      <Phase2Features locale={locale} />
 
       <div className={styles.footer}>
         © 2026 Va Travel · {ar ? 'مدعوم بـ Claude AI' : 'Powered by Claude AI'} · 🌐 {ar ? 'لغات متعددة' : 'Multiple Languages'} · {ar ? 'حقوق محفوظة' : 'All rights reserved'}
