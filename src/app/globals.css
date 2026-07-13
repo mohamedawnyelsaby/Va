@@ -30,7 +30,7 @@
 [data-theme="dark"]{
   --bg:#060610;--s1:#0D0D1C;--s2:#141426;--s3:#1C1A32;--s4:#24223E;
   --bd:rgba(255,255,255,.06);--bd2:rgba(255,255,255,.12);
-  --t:#F0F0FF;--td:#8888AA;--tm:#505070;
+  --t:#F0F0FF;--td:#8888AA;--tm:#75759E;/* was #505070 → 2.6:1. Now 4.6:1 */
   --sh:0 8px 32px rgba(0,0,0,.6);--shH:0 24px 60px rgba(0,0,0,.75);
   --sk1:#141426;--sk2:#1C1A32;
   --hero-grad:radial-gradient(ellipse 90% 70% at 60% 40%,rgba(201,162,39,.08) 0%,transparent 65%),radial-gradient(ellipse 50% 60% at 5% 80%,rgba(120,80,255,.05) 0%,transparent 60%);
@@ -64,13 +64,34 @@
 [data-theme="light"]{
   --bg:#F0EFF8;--s1:#FFFFFF;--s2:#F4F3FB;--s3:#ECEAF7;--s4:#E0DEF0;
   --bd:rgba(0,0,0,.055);--bd2:rgba(0,0,0,.11);
-  --t:#14142A;--td:#55557A;--tm:#9090AA;
+  --t:#14142A;--td:#55557A;--tm:#666685;
   --sh:0 4px 20px rgba(0,0,0,.08);--shH:0 20px 50px rgba(0,0,0,.14);
   --sk1:#E8E7F5;--sk2:#D8D6EE;
   --hero-grad:radial-gradient(ellipse 90% 70% at 60% 40%,rgba(201,162,39,.06) 0%,transparent 65%);
   /* Light-mode image filters — lighter than dark mode so photos don't look washed out */
   --vg-hero-filter:brightness(0.92) saturate(0.92);
   --vg-thumb-filter:brightness(0.94) saturate(0.92);
+
+  /* ══════════════════════════════════════════════
+     LIGHT-MODE ACCESSIBLE COLOR OVERRIDES (2026-07-14)
+     ------------------------------------------------
+     --g, --gd, --red, --green, --blue, --purple are defined
+     once in :root and were tuned to sit on the near-black dark
+     background (#060610). Measured against the light background
+     (#F0EFF8) and white cards (#FFFFFF), every one of them failed
+     WCAG AA (4.5:1) for text — --g measured 2.1:1, --green 2.0:1,
+     --blue 2.2:1, --purple 2.4:1. These are darkened, same-hue
+     overrides scoped to light mode only, each verified >=4.5:1 on
+     both the page background and white cards. Dark mode is
+     untouched — --g etc. keep their original bright values there,
+     where they already pass comfortably (8.3:1+).
+     ══════════════════════════════════════════════ */
+  --g:#816819;      /* was #C9A227 → 2.1:1 on light bg. Now 4.7:1 / 5.3:1 on white */
+  --gd:#84690E;      /* was #9A7A10 → 3.6:1. Now 4.6:1 / 5.2:1 on white */
+  --red:#D71212;     /* was #ef4444 → 3.3:1. Now 4.6:1 / 5.3:1 on white */
+  --green:#167E3C;   /* was #22c55e → 2.0:1. Now 4.5:1 / 5.1:1 on white */
+  --blue:#0767DD;    /* was #60a5fa → 2.2:1. Now 4.6:1 / 5.3:1 on white */
+  --purple:#7448F7;  /* was #a78bfa → 2.4:1. Now 4.6:1 / 5.2:1 on white */
 
   --background:247 39% 95%;
   --foreground:240 35% 12%;
