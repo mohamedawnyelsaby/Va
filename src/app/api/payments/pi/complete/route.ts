@@ -1,6 +1,20 @@
 // src/app/api/payments/pi/complete/route.ts
+// SECURITY FIX (2026-07-13):
+// 1) No ownership check existed before completing a payment — anyone who
+//    knew a paymentId/piPaymentId + txid (both visible during a normal Pi
+//    payment flow) could complete someone else's payment and trigger their
+//    cashback. Now requires a real session that matches payment.userId.
+// 2) The sandbox fallback used to auto-succeed on ANY network error while
+//    calling Pi's API ("if (IS_SANDBOX) piCompleteSuccess = true" inside the
+//    catch block). That meant a dropped connection — not just a real
+//    sandbox-specific response from Pi — was enough to mark a payment
+//    completed. That auto-success now only applies to real, documented
+//    sandbox response codes (400/409) coming back FROM Pi, never to network
+//    failures where we got no response at all.
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/options';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
 
@@ -13,11 +27,17 @@ const CASHBACK_RATE = 0.02;
 
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  const clientIp = request.headers.get('x-forwarded-for') || 'unknown';
 
   console.log(`[${requestId}] 📥 Payment completion request received`);
 
   try {
+    // ✅ FIX: require a real, verified session before touching any payment.
+    const session = await getServerSession(authOptions);
+    const sessionUserId = session?.user?.id;
+    if (!sessionUserId) {
+      return NextResponse.json({ error: 'Unauthorized', requestId }, { status: 401 });
+    }
+
     const body = await request.json();
     const { paymentId, piPaymentId, txid } = body;
 
@@ -53,6 +73,11 @@ export async function POST(request: NextRequest) {
         { error: 'Payment not found', requestId },
         { status: 404 }
       );
+    }
+
+    // ✅ FIX: ownership check — only the payment's own user can complete it.
+    if (payment.userId !== sessionUserId) {
+      return NextResponse.json({ error: 'Forbidden', requestId }, { status: 403 });
     }
 
     console.log(`[${requestId}] ✅ Payment found: ${payment.id}, status: ${payment.status}`);
@@ -115,14 +140,17 @@ export async function POST(request: NextRequest) {
           piCompleteSuccess = true;
         } else {
           piCompleteError = `Pi API ${piRes.status}: ${piResText}`;
+          // Only known sandbox-specific response codes FROM Pi count as success.
+          // This branch only runs when we actually got a response back.
           if (IS_SANDBOX && (piRes.status === 400 || piRes.status === 409)) {
             piCompleteSuccess = true;
           }
         }
       } catch (err) {
+        // ✅ FIX: a network error means we got NO response from Pi at all —
+        // this must never be treated as success, sandbox or not.
         piCompleteError = err instanceof Error ? err.message : 'Network error';
         console.error(`[${requestId}] ❌ Pi Platform error: ${piCompleteError}`);
-        if (IS_SANDBOX) piCompleteSuccess = true;
       }
     } else {
       if (IS_SANDBOX) {
@@ -215,7 +243,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    service: 'Payment Completion v4',
+    service: 'Payment Completion v5',
     status: 'operational',
     sandbox: IS_SANDBOX,
     piApiKeySet: !!PI_API_KEY,
