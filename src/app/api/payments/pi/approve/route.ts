@@ -1,7 +1,17 @@
 // src/app/api/payments/pi/approve/route.ts
-// v7 — Handle both paymentId and piPaymentId, Pi API call guaranteed
+// SECURITY FIX (2026-07-13):
+// 1) No session/ownership check existed — anyone who knew a paymentId or
+//    piPaymentId could trigger an "approve" call against Pi's API and flip
+//    the payment/booking into 'approved'/'processing' state for a payment
+//    that wasn't theirs. Now requires a session whose userId matches the
+//    payment's owner before calling Pi at all.
+// 2) The GET diagnostic endpoint returned the first 8 characters of the
+//    real PI_API_KEY to any visitor (`piApiKeyPrefix`). Removed entirely —
+//    a health check never needs to expose part of a real secret.
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/options';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
 
@@ -19,16 +29,13 @@ async function updateDbBackground(
   try {
     if (!internalPaymentId && !piPaymentId) return;
 
-    // Use shorter timeout for DB connection
     const payment = await prisma.payment.findFirst({
       where: internalPaymentId
         ? { id: internalPaymentId }
         : { piPaymentId },
-      // If not found by internal ID, try piPaymentId as fallback
     });
 
     if (!payment && internalPaymentId) {
-      // Maybe internalPaymentId is actually a piPaymentId
       const p2 = await prisma.payment.findFirst({ where: { piPaymentId: internalPaymentId } });
       if (!p2) { console.error(`[${requestId}] DB: payment not found`); return; }
       await prisma.payment.update({
@@ -65,7 +72,14 @@ async function updateDbBackground(
 
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  console.log(`[${requestId}] 📥 v7 ${new Date().toISOString()} sandbox=${IS_SANDBOX} apiKey=${!!PI_API_KEY}`);
+  console.log(`[${requestId}] 📥 v8 ${new Date().toISOString()} sandbox=${IS_SANDBOX} apiKey=${!!PI_API_KEY}`);
+
+  // ✅ FIX: require a real, verified session before doing anything.
+  const session = await getServerSession(authOptions);
+  const sessionUserId = session?.user?.id;
+  if (!sessionUserId) {
+    return NextResponse.json({ error: 'Unauthorized', requestId }, { status: 401 });
+  }
 
   let paymentId: string | undefined;
   let piPaymentId: string | undefined;
@@ -80,13 +94,31 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, requestId, warning: 'parse error' });
   }
 
-  // KEY FIX: In Pi SDK, onReadyForServerApproval receives paymentId = Pi payment ID
+  if (!paymentId && !piPaymentId) {
+    return NextResponse.json({ error: 'paymentId or piPaymentId is required', requestId }, { status: 400 });
+  }
+
+  // ✅ FIX: ownership check — look the payment up and confirm it belongs
+  // to the current session before ever calling Pi's API.
+  const existingPayment = await prisma.payment.findFirst({
+    where: paymentId ? { id: paymentId } : { piPaymentId },
+  });
+
+  if (!existingPayment) {
+    return NextResponse.json({ error: 'Payment not found', requestId }, { status: 404 });
+  }
+
+  if (existingPayment.userId !== sessionUserId) {
+    return NextResponse.json({ error: 'Forbidden', requestId }, { status: 403 });
+  }
+
+  // KEY: In Pi SDK, onReadyForServerApproval receives paymentId = Pi payment ID
   // So if piPaymentId not sent, use paymentId as the Pi payment ID
   const piIdToApprove = piPaymentId || paymentId;
 
   console.log(`[${requestId}] will call Pi API with: ${piIdToApprove}`);
 
-  // ✅ Call Pi Platform SYNCHRONOUSLY — this is what Pi wallet waits for
+  // Call Pi Platform SYNCHRONOUSLY — this is what Pi wallet waits for
   if (piIdToApprove && PI_API_KEY) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 7000);
@@ -132,11 +164,11 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    service: 'Payment Approval v7',
+    service: 'Payment Approval v8',
     status: 'operational',
     sandbox: IS_SANDBOX,
     piApiKeySet: !!PI_API_KEY,
-    piApiKeyPrefix: PI_API_KEY ? PI_API_KEY.substring(0, 8) + '...' : 'NOT SET',
-    note: 'v7: piId = piPaymentId || paymentId, Pi API always called',
+    // ✅ FIX: no longer exposes any part of the real API key.
+    note: 'v8: ownership-checked, piId = piPaymentId || paymentId',
   });
 }
