@@ -1,3 +1,12 @@
+// src/app/api/pi/auth/route.ts
+// SECURITY FIX (2026-07-13): previously, if verifyPiUser() failed for any
+// reason (including a transient network error), the code logged a warning
+// and kept going — creating/updating a user account using the client-
+// supplied `uid` with no real confirmation from Pi Network. Anyone could
+// send someone else's uid with any accessToken and, if the verification
+// call happened to fail, get authenticated as that user.
+// Now: any verification failure rejects the request outright.
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyPiUser } from '@/lib/pi-network/platform-api';
@@ -9,7 +18,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing credentials' }, { status: 400 });
     }
 
-    let piUsername = uid;
+    let piUsername: string;
     try {
       const piUser = await verifyPiUser(accessToken);
       if (piUser.uid !== uid) {
@@ -17,7 +26,13 @@ export async function POST(request: NextRequest) {
       }
       piUsername = piUser.username;
     } catch (e) {
-      console.log('Pi API verify failed, trusting SDK auth');
+      // ✅ FIX: no more silent "trust the client-supplied uid" fallback.
+      // If we can't confirm identity with Pi Network, we don't authenticate.
+      console.error('Pi API verify failed — rejecting request:', e instanceof Error ? e.message : e);
+      return NextResponse.json(
+        { error: 'Could not verify identity with Pi Network. Please try again.' },
+        { status: 503 }
+      );
     }
 
     let user = await prisma.user.findFirst({ where: { piWalletId: uid } });
