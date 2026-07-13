@@ -46,18 +46,18 @@
 .sbtn:hover { filter: brightness(1.08); transform: translateY(-1px); }
 
 /* Flash Deals */
-.flash { background: linear-gradient(135deg, #0D0800, #1C1200, #0D0800); border: 1px solid rgba(201,162,39,.2); margin: 16px 18px; border-radius: var(--rL); padding: 14px 16px; display: flex; align-items: center; gap: 14px; overflow-x: auto; scrollbar-width: none; }
+.flash { background: linear-gradient(135deg, #0D0800, #1C1200, #0D0800); border: 1px solid rgba(201,162,39,.2); margin: 16px 18px; border-radius: var(--rL); padding: 14px 16px; display: flex; align-items: center; gap: 14px; overflow-x: auto; scrollbar-width: none; color: #F5EFE0; }
 .flash::-webkit-scrollbar { display: none; }
 .flLbl { flex-shrink: 0; text-align: center; }
 .flFire { font-size: 1.4rem; }
-.flLabel { font-size: .57rem; font-weight: 700; color: var(--g); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+.flLabel { font-size: .57rem; font-weight: 700; color: #F0C84A; text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
 .flDeals { display: flex; gap: 9px; }
 .fdeal { background: rgba(255,255,255,.04); border: 1px solid rgba(201,162,39,.14); border-radius: var(--rM); padding: 9px 13px; flex-shrink: 0; cursor: pointer; transition: .2s; min-width: 140px; }
 .fdeal:hover { border-color: var(--gglow); transform: translateY(-2px); }
-.fdest { font-size: .76rem; font-weight: 700; }
-.foff { display: inline-block; background: rgba(239,68,68,.16); color: var(--red); border-radius: 99px; font-size: .57rem; font-weight: 700; padding: 2px 7px; margin: 3px 0; }
-.fprice { font-size: .95rem; font-weight: 700; color: var(--g); }
-.forig { font-size: .6rem; color: var(--tm); text-decoration: line-through; margin-inline-start: 3px; }
+.fdest { font-size: .76rem; font-weight: 700; color: #F5EFE0; }
+.foff { display: inline-block; background: rgba(239,68,68,.16); color: #ef4444; border-radius: 99px; font-size: .57rem; font-weight: 700; padding: 2px 7px; margin: 3px 0; }
+.fprice { font-size: .95rem; font-weight: 700; color: #F0C84A; }
+.forig { font-size: .6rem; color: #A8A296; text-decoration: line-through; margin-inline-start: 3px; }
 
 /* Categories */
 .cats { display: flex; gap: 8px; overflow-x: auto; padding: 4px 18px 12px; scrollbar-width: none; }
