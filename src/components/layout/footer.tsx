@@ -24,8 +24,8 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
   const LINK_LABELS: Record<string, string[]> = {
     Explore: [tr.nav.hotels, tr.nav.attractions, tr.nav.restaurants, 'Cities', tr.nav.aiAssistant],
     Account: [tr.nav.dashboard, tr.pages.bookings.title, 'Favorites', tr.pages.wallet.title, 'Profile'],
-    Company: ['About', 'Blog', 'Careers', 'Press', 'Contact'],
-    Legal:   ['Privacy', 'Terms', 'Cookies', 'Trust & Safety', 'Help Center'],
+    Company: tr.footer.companyLinks,
+    Legal:   tr.footer.legalLinks,
   };
 
   return (
@@ -34,7 +34,7 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
         background:  'var(--vg-bg-surface)',
         borderTop:   '1px solid var(--vg-border)',
         padding:     'clamp(3rem,6vw,5rem) clamp(1.5rem,7vw,5rem) 2rem',
-        direction:   'ltr',
+        direction:   isRTL ? 'rtl' : 'ltr',
         position:    'relative',
         overflow:    'hidden',
       }}
