@@ -105,6 +105,8 @@ export interface Translations {
       company: string;
       legal: string;
     };
+    companyLinks: string[];
+    legalLinks: string[];
     newsletter: {
       tag: string;
       desc: string;
@@ -272,6 +274,8 @@ const en: Translations = {
   footer: {
     description: 'AI-powered global travel platform built on the Pi Network. Book, explore, and earn Pi rewards.',
     sections: { explore: 'Explore', account: 'Account', company: 'Company', legal: 'Legal' },
+    companyLinks: ['About', 'Blog', 'Careers', 'Press', 'Contact'],
+    legalLinks: ['Privacy', 'Terms', 'Cookies', 'Trust & Safety', 'Help Center'],
     newsletter: {
       tag: 'Travel Updates',
       desc: 'Get exclusive Pi rewards and destination news.',
@@ -437,6 +441,8 @@ const ar: Translations = {
   footer: {
     description: 'منصة سفر عالمية مدعومة بالذكاء الاصطناعي مبنية على شبكة Pi. احجز واستكشف واكسب مكافآت Pi.',
     sections: { explore: 'استكشف', account: 'الحساب', company: 'الشركة', legal: 'قانوني' },
+    companyLinks: ['من نحن', 'المدونة', 'الوظائف', 'الصحافة', 'تواصل معنا'],
+    legalLinks: ['الخصوصية', 'الشروط', 'ملفات تعريف الارتباط', 'الثقة والأمان', 'مركز المساعدة'],
     newsletter: {
       tag: 'تحديثات السفر',
       desc: 'احصل على مكافآت Pi حصرية وأخبار الوجهات.',
@@ -602,6 +608,8 @@ const fr: Translations = {
   footer: {
     description: 'Plateforme de voyage mondiale propulsée par l\'IA sur Pi Network. Réservez, explorez et gagnez.',
     sections: { explore: 'Explorer', account: 'Compte', company: 'Entreprise', legal: 'Légal' },
+    companyLinks: ['À propos', 'Blog', 'Carrières', 'Presse', 'Contact'],
+    legalLinks: ['Confidentialité', 'Conditions', 'Cookies', 'Confiance et sécurité', "Centre d'aide"],
     newsletter: {
       tag: 'Actualités Voyages',
       desc: 'Obtenez des récompenses Pi exclusives et des actualités de destinations.',
@@ -767,6 +775,8 @@ const es: Translations = {
   footer: {
     description: 'Plataforma de viajes global con IA construida sobre Pi Network. Reserva, explora y gana.',
     sections: { explore: 'Explorar', account: 'Cuenta', company: 'Empresa', legal: 'Legal' },
+    companyLinks: ['Sobre nosotros', 'Blog', 'Empleo', 'Prensa', 'Contacto'],
+    legalLinks: ['Privacidad', 'Términos', 'Cookies', 'Confianza y seguridad', 'Centro de ayuda'],
     newsletter: {
       tag: 'Actualizaciones de Viaje',
       desc: 'Obtén recompensas Pi exclusivas y noticias de destinos.',
@@ -932,6 +942,8 @@ const de: Translations = {
   footer: {
     description: 'KI-gestützte globale Reiseplattform auf Pi Network. Buchen, entdecken und verdienen.',
     sections: { explore: 'Entdecken', account: 'Konto', company: 'Unternehmen', legal: 'Rechtliches' },
+    companyLinks: ['Über uns', 'Blog', 'Karriere', 'Presse', 'Kontakt'],
+    legalLinks: ['Datenschutz', 'Nutzungsbedingungen', 'Cookies', 'Vertrauen & Sicherheit', 'Hilfecenter'],
     newsletter: {
       tag: 'Reise-Updates',
       desc: 'Erhalten Sie exklusive Pi-Prämien und Reiseziel-News.',
@@ -1097,6 +1109,8 @@ const zh: Translations = {
   footer: {
     description: '基于Pi Network的AI驱动全球旅行平台。预订、探索并赚取Pi奖励。',
     sections: { explore: '探索', account: '账户', company: '公司', legal: '法律' },
+    companyLinks: ['关于我们', '博客', '招聘', '媒体', '联系我们'],
+    legalLinks: ['隐私政策', '服务条款', 'Cookie 政策', '信任与安全', '帮助中心'],
     newsletter: {
       tag: '旅行资讯',
       desc: '获取专属Pi奖励和目的地新闻。',
@@ -1262,6 +1276,8 @@ const ja: Translations = {
   footer: {
     description: 'Pi Networkに構築されたAI搭載グローバル旅行プラットフォーム。予約、探索、Piリワード獲得。',
     sections: { explore: '探索', account: 'アカウント', company: '会社', legal: '法律' },
+    companyLinks: ['会社概要', 'ブログ', '採用情報', 'プレス', 'お問い合わせ'],
+    legalLinks: ['プライバシー', '利用規約', 'クッキー', '信頼と安全', 'ヘルプセンター'],
     newsletter: {
       tag: '旅行アップデート',
       desc: '限定Piリワードと目的地ニュースを取得。',
@@ -1427,6 +1443,8 @@ const ru: Translations = {
   footer: {
     description: 'Глобальная туристическая платформа на базе ИИ, построенная на Pi Network.',
     sections: { explore: 'Исследовать', account: 'Аккаунт', company: 'Компания', legal: 'Правовая информация' },
+    companyLinks: ['О нас', 'Блог', 'Карьера', 'Пресса', 'Контакты'],
+    legalLinks: ['Конфиденциальность', 'Условия', 'Файлы cookie', 'Доверие и безопасность', 'Центр помощи'],
     newsletter: {
       tag: 'Обновления о путешествиях',
       desc: 'Получайте эксклюзивные Pi-награды и новости о направлениях.',
