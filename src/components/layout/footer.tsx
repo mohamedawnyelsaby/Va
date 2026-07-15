@@ -55,6 +55,7 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
           gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
           gap:                 '2.5rem',
           marginBottom:        '3rem',
+          alignItems:          'start',
         }}>
 
           {/* Brand Column */}
