@@ -330,12 +330,6 @@ export default function HomePage({ params: { locale } }: Props) {
         <span className={styles.sl}>{ar ? 'حصرياً في Va Travel' : 'Exclusive to Va Travel'}</span>
       </div>
       <Phase2Features locale={locale} />
-
-      <div className={styles.footer}>
-        © 2026 Va Travel · {ar ? 'مدعوم بـ Claude AI' : 'Powered by Claude AI'} · 🌐 {ar ? 'لغات متعددة' : 'Multiple Languages'} · {ar ? 'حقوق محفوظة' : 'All rights reserved'}
-      </div>
-
-      <div style={{ height: '80px' }} />
     </main>
   );
 }
