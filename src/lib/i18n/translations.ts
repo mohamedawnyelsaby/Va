@@ -9,6 +9,9 @@ export interface Translations {
     hotels: string;
     attractions: string;
     restaurants: string;
+    cities: string;
+    favorites: string;
+    profile: string;
     aiAssistant: string;
     signIn: string;
     signUp: string;
@@ -159,6 +162,9 @@ const en: Translations = {
     hotels: 'Hotels',
     attractions: 'Attractions',
     restaurants: 'Restaurants',
+    cities: 'Cities',
+    favorites: 'Favorites',
+    profile: 'Profile',
     aiAssistant: 'AI Assistant',
     signIn: 'Sign In',
     signUp: 'Sign Up',
@@ -326,6 +332,9 @@ const ar: Translations = {
     hotels: 'الفنادق',
     attractions: 'المعالم',
     restaurants: 'المطاعم',
+    cities: 'المدن',
+    favorites: 'المفضلة',
+    profile: 'الملف الشخصي',
     aiAssistant: 'مساعد الذكاء الاصطناعي',
     signIn: 'تسجيل الدخول',
     signUp: 'إنشاء حساب',
@@ -493,6 +502,9 @@ const fr: Translations = {
     hotels: 'Hôtels',
     attractions: 'Attractions',
     restaurants: 'Restaurants',
+    cities: 'Villes',
+    favorites: 'Favoris',
+    profile: 'Profil',
     aiAssistant: 'Assistant IA',
     signIn: 'Connexion',
     signUp: 'S\'inscrire',
@@ -660,6 +672,9 @@ const es: Translations = {
     hotels: 'Hoteles',
     attractions: 'Atracciones',
     restaurants: 'Restaurantes',
+    cities: 'Ciudades',
+    favorites: 'Favoritos',
+    profile: 'Perfil',
     aiAssistant: 'Asistente IA',
     signIn: 'Iniciar Sesión',
     signUp: 'Registrarse',
@@ -827,6 +842,9 @@ const de: Translations = {
     hotels: 'Hotels',
     attractions: 'Attraktionen',
     restaurants: 'Restaurants',
+    cities: 'Städte',
+    favorites: 'Favoriten',
+    profile: 'Profil',
     aiAssistant: 'KI-Assistent',
     signIn: 'Anmelden',
     signUp: 'Registrieren',
@@ -994,6 +1012,9 @@ const zh: Translations = {
     hotels: '酒店',
     attractions: '景点',
     restaurants: '餐厅',
+    cities: '城市',
+    favorites: '收藏',
+    profile: '个人资料',
     aiAssistant: 'AI助手',
     signIn: '登录',
     signUp: '注册',
@@ -1161,6 +1182,9 @@ const ja: Translations = {
     hotels: 'ホテル',
     attractions: '観光地',
     restaurants: 'レストラン',
+    cities: '都市',
+    favorites: 'お気に入り',
+    profile: 'プロフィール',
     aiAssistant: 'AIアシスタント',
     signIn: 'ログイン',
     signUp: '新規登録',
@@ -1328,6 +1352,9 @@ const ru: Translations = {
     hotels: 'Отели',
     attractions: 'Достопримечательности',
     restaurants: 'Рестораны',
+    cities: 'Города',
+    favorites: 'Избранное',
+    profile: 'Профиль',
     aiAssistant: 'ИИ-Ассистент',
     signIn: 'Войти',
     signUp: 'Регистрация',
