@@ -139,4 +139,3 @@
 .reviewQuote { position: absolute; top: 12px; inset-inline-end: 14px; font-size: 2rem; color: var(--gdim); font-family: var(--font-serif); line-height: 1; }
 
 /* Footer */
-.footer { text-align: center; padding: 22px; font-size: .65rem; color: var(--tm); border-top: 1px solid var(--bd); margin-top: 8px; line-height: 2; }
