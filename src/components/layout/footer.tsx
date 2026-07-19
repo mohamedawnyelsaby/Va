@@ -22,8 +22,8 @@ export function Footer({ locale, isRTL = false }: { locale: string; isRTL?: bool
   };
 
   const LINK_LABELS: Record<string, string[]> = {
-    Explore: [tr.nav.hotels, tr.nav.attractions, tr.nav.restaurants, 'Cities', tr.nav.aiAssistant],
-    Account: [tr.nav.dashboard, tr.pages.bookings.title, 'Favorites', tr.pages.wallet.title, 'Profile'],
+    Explore: [tr.nav.hotels, tr.nav.attractions, tr.nav.restaurants, tr.nav.cities, tr.nav.aiAssistant],
+    Account: [tr.nav.dashboard, tr.pages.bookings.title, tr.nav.favorites, tr.pages.wallet.title, tr.nav.profile],
     Company: tr.footer.companyLinks,
     Legal:   tr.footer.legalLinks,
   };
