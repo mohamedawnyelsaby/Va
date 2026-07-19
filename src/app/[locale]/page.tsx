@@ -10,6 +10,7 @@ import styles from './page.module.css';
 import { AIFeatureCards } from '@/components/sections/ai-feature-cards';
 import { Phase2Features } from '@/components/sections/phase2-features';
 import { useWishlist, DESTINATIONS } from '@/lib/wishlist';
+import { t } from '@/lib/i18n/translations';
 
 interface Props {
   params: { locale: string };
@@ -17,26 +18,8 @@ interface Props {
 
 const isAr = (locale: string) => locale === 'ar';
 
-const TICKER_AR = [
-  '✈️ أرخص رحلة لطوكيو اليوم: <strong>$420</strong> من القاهرة',
-  '🏨 <strong>برج العرب</strong> دبي: خصم 35% هذا الأسبوع',
-  '🌡️ طقس المالديف الآن: <strong>29°C ☀️</strong>',
-  '🛂 تأشيرة تركيا مجانية لـ <strong>90 دولة</strong>',
-  '💰 بالي 7 أيام بـ <strong>$1,200</strong> — أفضل عرض الشهر',
-  '🌍 <strong>Va Travel</strong> متاح الآن في 180+ دولة',
-];
-const TICKER_EN = [
-  '✈️ Cheapest Tokyo flight today: <strong>$420</strong> from Cairo',
-  '🏨 <strong>Burj Al Arab</strong> Dubai: 35% off this week',
-  '🌡️ Maldives now: <strong>29°C ☀️</strong> — perfect travel time',
-  '🛂 Turkey visa-free for <strong>90 countries</strong> on arrival',
-  '💰 Best deal: Bali 7 days from <strong>$1,200</strong>',
-  '🌍 <strong>Va Travel</strong> now available in 180+ countries',
-];
-
-const CATS_AR = ['🔥 الأكثر طلباً', '🏖️ شواطئ', '🏔️ جبال', '🏙️ مدن', '🌿 طبيعة', '🎭 ثقافة', '🍽️ مأكولات'];
-const CATS_EN = ['🔥 Trending', '🏖️ Beaches', '🏔️ Mountains', '🏙️ Cities', '🌿 Nature', '🎭 Culture', '🍽️ Culinary'];
-
+// Flash deal destination names and review content are still bilingual
+// (ar/en) pending full 8-language translation in a follow-up pass.
 const FLASH = [
   { destAr: 'دبي', destEn: 'Dubai', off: '35%', price: 546, orig: 840, flag: '🇦🇪' },
   { destAr: 'بالي', destEn: 'Bali', off: '40%', price: 252, orig: 420, flag: '🇮🇩' },
@@ -50,13 +33,6 @@ const HOTELS = [
   { id: 2, name: 'Four Seasons Bora Bora', stars: 5, loc: 'French Polynesia', price: 1200, score: 9.9, tags: ['Overwater', 'Snorkel', 'Spa'], priceDrop: false, img: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=600' },
   { id: 3, name: 'The Peninsula Tokyo', stars: 5, loc: 'Tokyo, Japan', price: 650, orig: 750, score: 9.7, tags: ['City View', 'Fine Dining', 'Spa'], priceDrop: true, img: 'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=600' },
   { id: 4, name: 'Hotel de Russie', stars: 5, loc: 'Rome, Italy', price: 680, score: 9.6, tags: ['Garden', 'Spa', 'Trattoria'], priceDrop: false, img: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600' },
-];
-
-const TABS = (ar: boolean) => [
-  { id: 'hotels', icon: '🏨', label: ar ? 'فنادق' : 'Hotels' },
-  { id: 'flights', icon: '✈️', label: ar ? 'رحلات' : 'Flights', soon: true },
-  { id: 'pkgs', icon: '🎁', label: ar ? 'باقات' : 'Packages' },
-  { id: 'visa', icon: '🛂', label: ar ? 'تأشيرة' : 'Visa' },
 ];
 
 const RATES = [
@@ -98,13 +74,19 @@ function fp(price: number) {
 
 export default function HomePage({ params: { locale } }: Props) {
   const ar = isAr(locale);
+  const tr = t(locale);
+  const h = tr.home;
   const [tab, setTab] = useState('hotels');
   const [activeCat, setActiveCat] = useState(0);
   const { ids: wishlist, toggle: toggleWish } = useWishlist();
   const [query, setQuery] = useState('');
 
-  const ticker = ar ? TICKER_AR : TICKER_EN;
-  const cats = ar ? CATS_AR : CATS_EN;
+  const TABS = [
+    { id: 'hotels', icon: '🏨', label: h.tabHotels },
+    { id: 'flights', icon: '✈️', label: h.tabFlights, soon: true },
+    { id: 'pkgs', icon: '🎁', label: h.tabPackages },
+    { id: 'visa', icon: '🛂', label: h.tabVisa },
+  ];
 
   return (
     <main className={styles.main} dir={ar ? 'rtl' : 'ltr'}>
@@ -112,7 +94,7 @@ export default function HomePage({ params: { locale } }: Props) {
       {/* ── Ticker ── */}
       <div className={styles.ticker}>
         <div className={styles.tickerInner}>
-          {[...ticker, ...ticker].map((item, i) => (
+          {[...h.ticker, ...h.ticker].map((item, i) => (
             <span key={i} className={styles.tickerItem} dangerouslySetInnerHTML={{ __html: `•&nbsp;${item}` }} />
           ))}
         </div>
@@ -124,35 +106,34 @@ export default function HomePage({ params: { locale } }: Props) {
         <div className={styles.heroGrid} />
         <div className={styles.heroContent}>
           <div className={styles.htag}>
-            <span>●</span> {ar ? 'ذكاء اصطناعي حقيقي · حجوزات حقيقية · 180+ دولة' : 'Real AI · Real Bookings · 180+ Countries'}
+            <span>●</span> {h.badge}
           </div>
           <h1 className={styles.heroTitle}>
-            {ar ? <>سافر <em>بذكاء.</em><br />عِش <em>بجرأة.</em></> : <><em>Travel</em> Smarter.<br /><em>Live</em> Bolder.</>}
+            {h.heroPart1Em ? <em>{h.heroPart1}</em> : h.heroPart1} {h.heroPart2Em ? <em>{h.heroPart2}</em> : h.heroPart2}<br />
+            {h.heroPart3Em ? <em>{h.heroPart3}</em> : h.heroPart3} {h.heroPart4Em ? <em>{h.heroPart4}</em> : h.heroPart4}
           </h1>
           <p className={styles.heroSub}>
-            {ar
-              ? 'تخطيط مدعوم بالذكاء الاصطناعي، أسعار لحظية، حجز متكامل من البداية للنهاية — كل ما تحتاجه في منصة واحدة عالمية.'
-              : 'AI-powered planning, real-time prices, seamless end-to-end booking — the most complete travel platform in the world.'}
+            {h.subtitle}
           </p>
 
           <div className={styles.stats}>
-            <div><div className={styles.statNum}><span>180</span>+</div><div className={styles.statLabel}>{ar ? 'وجهة' : 'Destinations'}</div></div>
-            <div><div className={styles.statNum}><span>42</span>K</div><div className={styles.statLabel}>{ar ? 'فندق' : 'Hotels'}</div></div>
-            <div><div className={styles.statNum}><span>8</span>M</div><div className={styles.statLabel}>{ar ? 'مسافر' : 'Travelers'}</div></div>
-            <div><div className={styles.statNum}><span>6</span></div><div className={styles.statLabel}>{ar ? 'لغة' : 'Languages'}</div></div>
+            <div><div className={styles.statNum}><span>180</span>+</div><div className={styles.statLabel}>{h.statDestinations}</div></div>
+            <div><div className={styles.statNum}><span>42</span>K</div><div className={styles.statLabel}>{h.statHotels}</div></div>
+            <div><div className={styles.statNum}><span>8</span>M</div><div className={styles.statLabel}>{h.statTravelers}</div></div>
+            <div><div className={styles.statNum}><span>6</span></div><div className={styles.statLabel}>{h.statLanguages}</div></div>
           </div>
 
           {/* Search widget */}
           <div className={styles.sw}>
             <div className={styles.stabs}>
-              {TABS(ar).map((t) => (
+              {TABS.map((tItem) => (
                 <button
-                  key={t.id}
-                  className={`${styles.stab} ${tab === t.id ? styles.on : ''}`}
-                  onClick={() => setTab(t.id)}
+                  key={tItem.id}
+                  className={`${styles.stab} ${tab === tItem.id ? styles.on : ''}`}
+                  onClick={() => setTab(tItem.id)}
                 >
-                  {t.icon} {t.label}
-                  {t.soon && <span className={styles.soonBadge}>{ar ? 'قريباً' : 'Soon'}</span>}
+                  {tItem.icon} {tItem.label}
+                  {tItem.soon && <span className={styles.soonBadge}>{h.soon}</span>}
                 </button>
               ))}
             </div>
@@ -160,11 +141,11 @@ export default function HomePage({ params: { locale } }: Props) {
               <div className={styles.sfield}>
                 <span>📍</span>
                 <div style={{ flex: 1 }}>
-                  <div className={styles.sfieldLbl}>{ar ? 'الوجهة' : 'Destination'}</div>
+                  <div className={styles.sfieldLbl}>{h.destinationLabel}</div>
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder={ar ? 'إلى أين تريد السفر؟' : 'Where to?'}
+                    placeholder={h.destinationPlaceholder}
                   />
                 </div>
               </div>
@@ -172,20 +153,20 @@ export default function HomePage({ params: { locale } }: Props) {
                 <div className={styles.sfield}>
                   <span>📅</span>
                   <div>
-                    <div className={styles.sfieldLbl}>{ar ? 'تواريخ' : 'Dates'}</div>
-                    <div style={{ fontSize: '.85rem', color: 'var(--tm)' }}>{ar ? 'اختر التواريخ' : 'Select dates'}</div>
+                    <div className={styles.sfieldLbl}>{h.datesLabel}</div>
+                    <div style={{ fontSize: '.85rem', color: 'var(--tm)' }}>{h.selectDates}</div>
                   </div>
                 </div>
                 <div className={styles.sfield}>
                   <span>👥</span>
                   <div>
-                    <div className={styles.sfieldLbl}>{ar ? 'ضيوف' : 'Guests'}</div>
-                    <div style={{ fontSize: '.85rem', color: 'var(--tm)' }}>{ar ? '2 بالغين · غرفة' : '2 Adults · 1 Room'}</div>
+                    <div className={styles.sfieldLbl}>{h.guestsLabel}</div>
+                    <div style={{ fontSize: '.85rem', color: 'var(--tm)' }}>{h.guestsValue}</div>
                   </div>
                 </div>
               </div>
               <Link href={`/${locale}/hotels${query ? `?q=${encodeURIComponent(query)}` : ''}`} className={styles.sbtn}>
-                🔍 {ar ? 'بحث بالذكاء الاصطناعي' : 'Search with AI'}
+                🔍 {h.searchBtn}
               </Link>
             </div>
           </div>
@@ -196,7 +177,7 @@ export default function HomePage({ params: { locale } }: Props) {
       <div className={styles.flash}>
         <div className={styles.flLbl}>
           <div className={styles.flFire}>🔥</div>
-          <div className={styles.flLabel}>{ar ? 'عروض فلاش' : 'Flash Deals'}</div>
+          <div className={styles.flLabel}>{h.flashDeals}</div>
         </div>
         <div className={styles.flDeals}>
           {FLASH.map((d) => (
@@ -211,7 +192,7 @@ export default function HomePage({ params: { locale } }: Props) {
 
       {/* ── Categories ── */}
       <div className={styles.cats}>
-        {cats.map((c, i) => (
+        {h.categories.map((c, i) => (
           <button key={c} className={`${styles.cat} ${i === activeCat ? styles.on : ''}`} onClick={() => setActiveCat(i)}>
             {c}
           </button>
@@ -220,7 +201,7 @@ export default function HomePage({ params: { locale } }: Props) {
 
       {/* ── Live Exchange Rates ── */}
       <div className={styles.sh}>
-        <div className={styles.st}>💱 {ar ? 'أسعار الصرف اللحظية' : 'Live Exchange Rates'}</div>
+        <div className={styles.st}>💱 {h.exchangeRates}</div>
       </div>
       <div className={styles.ratesRow}>
         {RATES.map((r) => (
@@ -232,8 +213,8 @@ export default function HomePage({ params: { locale } }: Props) {
 
       {/* ── Destinations ── */}
       <div className={styles.sh}>
-        <div className={styles.st}>🌍 {ar ? 'الوجهات الأكثر شعبية' : 'Popular Destinations'}</div>
-        <Link href={`/${locale}/attractions`} className={styles.sl}>{ar ? 'عرض الكل ←' : 'View all →'}</Link>
+        <div className={styles.st}>🌍 {h.popularDestinations}</div>
+        <Link href={`/${locale}/attractions`} className={styles.sl}>{h.viewAll}</Link>
       </div>
       <div className={styles.dg}>
         {DESTINATIONS.map((d) => (
@@ -249,7 +230,7 @@ export default function HomePage({ params: { locale } }: Props) {
             <div className={styles.di}>
               <div className={styles.dn}>{ar ? d.nameAr : d.nameEn}</div>
               <div className={styles.dc2}>{ar ? d.countryAr : d.countryEn} · {d.weather}</div>
-              <div className={styles.dp}>{ar ? 'من ' : 'From '}{fp(d.price)}{ar ? '/ليلة' : '/night'}</div>
+              <div className={styles.dp}>{h.fromPrefix}{fp(d.price)}{h.perNight}</div>
             </div>
           </Link>
         ))}
@@ -257,39 +238,39 @@ export default function HomePage({ params: { locale } }: Props) {
 
       {/* ── Hotels ── */}
       <div className={styles.sh}>
-        <div className={styles.st}>🏆 {ar ? 'أفضل الفنادق تقييماً' : 'Top Rated Hotels'}</div>
-        <Link href={`/${locale}/hotels`} className={styles.sl}>{ar ? 'عرض الكل ←' : 'View all →'}</Link>
+        <div className={styles.st}>🏆 {h.topHotels}</div>
+        <Link href={`/${locale}/hotels`} className={styles.sl}>{h.viewAll}</Link>
       </div>
       <div className={styles.hs}>
-        {HOTELS.map((h) => (
-          <div key={h.id} className={styles.hc}>
-            {h.priceDrop && <div className={styles.pdrop}>📉 {ar ? 'انخفض السعر' : 'Price Drop'}</div>}
-            <img className={styles.hcImg} src={h.img} alt={h.name} loading="lazy" />
+        {HOTELS.map((hotel) => (
+          <div key={hotel.id} className={styles.hc}>
+            {hotel.priceDrop && <div className={styles.pdrop}>📉 {h.priceDrop}</div>}
+            <img className={styles.hcImg} src={hotel.img} alt={hotel.name} loading="lazy" />
             <div className={styles.hbody}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <div className={styles.hname}>{h.name}</div>
-                  <div className={styles.hstars}>{'★'.repeat(h.stars)}</div>
-                  <div className={styles.hloc}>📍 {h.loc}</div>
+                  <div className={styles.hname}>{hotel.name}</div>
+                  <div className={styles.hstars}>{'★'.repeat(hotel.stars)}</div>
+                  <div className={styles.hloc}>📍 {hotel.loc}</div>
                 </div>
                 <div style={{ textAlign: 'end' }}>
-                  <div className={styles.hprice}>{fp(h.price)}<span style={{ fontSize: '.53rem' }}>/night</span></div>
-                  {h.orig && <div className={styles.horig}>{fp(h.orig)}</div>}
+                  <div className={styles.hprice}>{fp(hotel.price)}<span style={{ fontSize: '.53rem' }}>{h.perNight}</span></div>
+                  {hotel.orig && <div className={styles.horig}>{fp(hotel.orig)}</div>}
                 </div>
               </div>
               <div className={styles.brow}>
-                <span className={`${styles.b} ${styles.bg}`}>✓ {ar ? 'إلغاء مجاني' : 'Free cancel'}</span>
-                <span className={`${styles.b} ${styles.bb}`}>✓ {ar ? 'تأكيد فوري' : 'Instant confirm'}</span>
+                <span className={`${styles.b} ${styles.bg}`}>✓ {h.freeCancel}</span>
+                <span className={`${styles.b} ${styles.bb}`}>✓ {h.instantConfirm}</span>
                 <span className={`${styles.b} ${styles.ba}`}>🏆</span>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, margin: '5px 0' }}>
-                {h.tags.map((t) => (
-                  <span key={t} className={styles.b} style={{ background: 'var(--s2)', color: 'var(--td)' }}>{t}</span>
+                {hotel.tags.map((tag) => (
+                  <span key={tag} className={styles.b} style={{ background: 'var(--s2)', color: 'var(--td)' }}>{tag}</span>
                 ))}
               </div>
               <div className={styles.hf}>
-                <div className={styles.hscore}>⭐ {h.score}</div>
-                <Link href={`/${locale}/hotels`} className={styles.bookBtn}>{ar ? 'احجز →' : 'Book →'}</Link>
+                <div className={styles.hscore}>⭐ {hotel.score}</div>
+                <Link href={`/${locale}/hotels`} className={styles.bookBtn}>{h.bookNow}</Link>
               </div>
             </div>
           </div>
@@ -298,8 +279,8 @@ export default function HomePage({ params: { locale } }: Props) {
 
       {/* ── Traveler Reviews ── */}
       <div className={styles.sh}>
-        <div className={styles.st}>⭐ {ar ? 'آراء المسافرين' : 'Traveler Reviews'}</div>
-        <span className={styles.sl}>{ar ? 'المزيد ←' : 'More →'}</span>
+        <div className={styles.st}>⭐ {h.travelerReviews}</div>
+        <span className={styles.sl}>{h.more}</span>
       </div>
       <div className={styles.reviewsScroll}>
         {REVIEWS.map((r) => (
@@ -320,14 +301,14 @@ export default function HomePage({ params: { locale } }: Props) {
 
       {/* ── AI Features ── */}
       <div className={styles.sh}>
-        <div className={styles.st}>🚀 {ar ? 'مميزات الذكاء الاصطناعي الحصرية' : 'Exclusive AI Features'}</div>
+        <div className={styles.st}>🚀 {h.aiFeatures}</div>
       </div>
       <AIFeatureCards locale={locale} />
 
       {/* ── Phase 2 Features ── */}
       <div className={styles.sh}>
-        <div className={styles.st}>🆕 {ar ? 'ميزات المرحلة الثانية' : 'Phase 2 Features'}</div>
-        <span className={styles.sl}>{ar ? 'حصرياً في Va Travel' : 'Exclusive to Va Travel'}</span>
+        <div className={styles.st}>🆕 {h.phase2Features}</div>
+        <span className={styles.sl}>{h.exclusiveToVa}</span>
       </div>
       <Phase2Features locale={locale} />
     </main>
