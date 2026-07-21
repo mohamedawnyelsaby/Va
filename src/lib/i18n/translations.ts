@@ -163,6 +163,30 @@ export interface Translations {
     ticker: string[];
     categories: string[];
   };
+  // Profile page
+  profile: {
+    title: string;
+    menuBookings: string;
+    menuPayments: string;
+    menuSettings: string;
+    menuSaved: string;
+    guestName: string;
+    welcomeBack: string;
+    signInPrompt: string;
+    signOut: string;
+    signInRegister: string;
+    loyalty: string;
+    goldMember: string;
+    points: string;
+    earnPoints: string;
+  };
+  // Favorites page
+  favorites: {
+    emptyTitle: string;
+    emptySub: string;
+    emptyBtn: string;
+    removeSaved: string;
+  };
   // Common
   common: {
     bookNow: string;
@@ -334,6 +358,28 @@ const en: Translations = {
     copyright: 'Va Travel. All rights reserved.',
     poweredBy: 'Powered by π Pi Network',
     aiPowered: 'AI-Powered',
+  },
+  profile: {
+    title: 'Profile',
+    menuBookings: 'My Bookings',
+    menuPayments: 'Payments & Wallet',
+    menuSettings: 'Settings',
+    menuSaved: 'Saved Places',
+    guestName: 'Guest Traveler',
+    welcomeBack: 'Welcome back',
+    signInPrompt: 'Sign in to unlock all features',
+    signOut: 'Sign Out',
+    signInRegister: 'Sign In / Register',
+    loyalty: 'Loyalty',
+    goldMember: 'Gold Member',
+    points: 'points',
+    earnPoints: 'Book to start earning points',
+  },
+  favorites: {
+    emptyTitle: 'No saved places yet',
+    emptySub: 'Tap ❤️ on any destination on the home page to save it here',
+    emptyBtn: 'Explore destinations',
+    removeSaved: 'Remove from saved',
   },
   home: {
     badge: 'Real AI · Real Bookings · 180+ Countries',
@@ -554,6 +600,28 @@ const ar: Translations = {
     poweredBy: 'مدعوم من π شبكة Pi',
     aiPowered: 'مدعوم بالذكاء الاصطناعي',
   },
+  profile: {
+    title: 'الملف الشخصي',
+    menuBookings: 'حجوزاتي',
+    menuPayments: 'وسائل الدفع والمحفظة',
+    menuSettings: 'الإعدادات',
+    menuSaved: 'الأماكن المحفوظة',
+    guestName: 'مسافر ضيف',
+    welcomeBack: 'مرحباً بعودتك',
+    signInPrompt: 'سجّل دخولك لتفعيل كل المميزات',
+    signOut: 'تسجيل الخروج',
+    signInRegister: 'تسجيل الدخول / إنشاء حساب',
+    loyalty: 'الولاء',
+    goldMember: 'عضو ذهبي',
+    points: 'نقطة',
+    earnPoints: 'ابدأ الحجز لكسب النقاط',
+  },
+  favorites: {
+    emptyTitle: 'لا توجد أماكن محفوظة بعد',
+    emptySub: 'اضغط ❤️ على أي وجهة في الصفحة الرئيسية لحفظها هنا',
+    emptyBtn: 'استكشف الوجهات',
+    removeSaved: 'إزالة من المحفوظات',
+  },
   home: {
     badge: 'ذكاء اصطناعي حقيقي · حجوزات حقيقية · 180+ دولة',
     heroPart1: 'سافر', heroPart1Em: false,
@@ -772,6 +840,28 @@ const fr: Translations = {
     copyright: 'Va Travel. Tous droits réservés.',
     poweredBy: 'Propulsé par π Pi Network',
     aiPowered: 'Propulsé par IA',
+  },
+  profile: {
+    title: 'Profil',
+    menuBookings: 'Mes Réservations',
+    menuPayments: 'Paiements et Portefeuille',
+    menuSettings: 'Paramètres',
+    menuSaved: 'Lieux Enregistrés',
+    guestName: 'Voyageur Invité',
+    welcomeBack: 'Bon retour',
+    signInPrompt: "Connectez-vous pour débloquer toutes les fonctionnalités",
+    signOut: 'Déconnexion',
+    signInRegister: "Se connecter / S'inscrire",
+    loyalty: 'Fidélité',
+    goldMember: 'Membre Or',
+    points: 'points',
+    earnPoints: 'Réservez pour commencer à gagner des points',
+  },
+  favorites: {
+    emptyTitle: 'Aucun lieu enregistré pour le moment',
+    emptySub: "Appuyez sur ❤️ sur n'importe quelle destination sur la page d'accueil pour l'enregistrer ici",
+    emptyBtn: 'Explorer les destinations',
+    removeSaved: 'Retirer des favoris',
   },
   home: {
     badge: 'IA Réelle · Réservations Réelles · 180+ Pays',
@@ -992,6 +1082,28 @@ const es: Translations = {
     poweredBy: 'Impulsado por π Pi Network',
     aiPowered: 'Con IA',
   },
+  profile: {
+    title: 'Perfil',
+    menuBookings: 'Mis Reservas',
+    menuPayments: 'Pagos y Billetera',
+    menuSettings: 'Configuración',
+    menuSaved: 'Lugares Guardados',
+    guestName: 'Viajero Invitado',
+    welcomeBack: 'Bienvenido de nuevo',
+    signInPrompt: 'Inicia sesión para desbloquear todas las funciones',
+    signOut: 'Cerrar Sesión',
+    signInRegister: 'Iniciar Sesión / Registrarse',
+    loyalty: 'Fidelidad',
+    goldMember: 'Miembro Oro',
+    points: 'puntos',
+    earnPoints: 'Reserva para empezar a ganar puntos',
+  },
+  favorites: {
+    emptyTitle: 'Aún no hay lugares guardados',
+    emptySub: 'Toca ❤️ en cualquier destino de la página principal para guardarlo aquí',
+    emptyBtn: 'Explorar destinos',
+    removeSaved: 'Quitar de guardados',
+  },
   home: {
     badge: 'IA Real · Reservas Reales · 180+ Países',
     heroPart1: 'Viaja', heroPart1Em: true,
@@ -1210,6 +1322,28 @@ const de: Translations = {
     copyright: 'Va Travel. Alle Rechte vorbehalten.',
     poweredBy: 'Powered by π Pi Network',
     aiPowered: 'KI-Gestützt',
+  },
+  profile: {
+    title: 'Profil',
+    menuBookings: 'Meine Buchungen',
+    menuPayments: 'Zahlungen & Wallet',
+    menuSettings: 'Einstellungen',
+    menuSaved: 'Gespeicherte Orte',
+    guestName: 'Gastreisender',
+    welcomeBack: 'Willkommen zurück',
+    signInPrompt: 'Melde dich an, um alle Funktionen freizuschalten',
+    signOut: 'Abmelden',
+    signInRegister: 'Anmelden / Registrieren',
+    loyalty: 'Treueprogramm',
+    goldMember: 'Gold-Mitglied',
+    points: 'Punkte',
+    earnPoints: 'Buche jetzt, um Punkte zu sammeln',
+  },
+  favorites: {
+    emptyTitle: 'Noch keine gespeicherten Orte',
+    emptySub: 'Tippe auf ❤️ bei einem Reiseziel auf der Startseite, um es hier zu speichern',
+    emptyBtn: 'Reiseziele entdecken',
+    removeSaved: 'Aus Favoriten entfernen',
   },
   home: {
     badge: 'Echte KI · Echte Buchungen · 180+ Länder',
@@ -1430,6 +1564,28 @@ const zh: Translations = {
     poweredBy: '由 π Pi Network 驱动',
     aiPowered: 'AI驱动',
   },
+  profile: {
+    title: '个人资料',
+    menuBookings: '我的预订',
+    menuPayments: '支付与钱包',
+    menuSettings: '设置',
+    menuSaved: '收藏的地点',
+    guestName: '访客旅行者',
+    welcomeBack: '欢迎回来',
+    signInPrompt: '登录以解锁所有功能',
+    signOut: '退出登录',
+    signInRegister: '登录 / 注册',
+    loyalty: '会员权益',
+    goldMember: '黄金会员',
+    points: '积分',
+    earnPoints: '预订即可开始赚取积分',
+  },
+  favorites: {
+    emptyTitle: '暂无收藏地点',
+    emptySub: '在首页任意目的地上点击 ❤️ 即可保存到这里',
+    emptyBtn: '探索目的地',
+    removeSaved: '从收藏中移除',
+  },
   home: {
     badge: '真实AI · 真实预订 · 180+国家',
     heroPart1: '智慧', heroPart1Em: true,
@@ -1649,6 +1805,28 @@ const ja: Translations = {
     poweredBy: 'π Pi Network搭載',
     aiPowered: 'AI搭載',
   },
+  profile: {
+    title: 'プロフィール',
+    menuBookings: 'マイ予約',
+    menuPayments: '支払いとウォレット',
+    menuSettings: '設定',
+    menuSaved: '保存した場所',
+    guestName: 'ゲスト旅行者',
+    welcomeBack: 'おかえりなさい',
+    signInPrompt: 'ログインしてすべての機能を利用',
+    signOut: 'ログアウト',
+    signInRegister: 'ログイン / 新規登録',
+    loyalty: 'ロイヤルティ',
+    goldMember: 'ゴールド会員',
+    points: 'ポイント',
+    earnPoints: '予約してポイントを貯めよう',
+  },
+  favorites: {
+    emptyTitle: 'まだ保存した場所はありません',
+    emptySub: 'ホーム画面の目的地で ❤️ をタップすると、ここに保存されます',
+    emptyBtn: '目的地を探す',
+    removeSaved: '保存済みから削除',
+  },
   home: {
     badge: '本物のAI · 本物の予約 · 180以上の国',
     heroPart1: 'スマートに', heroPart1Em: true,
@@ -1867,6 +2045,28 @@ const ru: Translations = {
     copyright: 'Va Travel. Все права защищены.',
     poweredBy: 'Работает на π Pi Network',
     aiPowered: 'На базе ИИ',
+  },
+  profile: {
+    title: 'Профиль',
+    menuBookings: 'Мои бронирования',
+    menuPayments: 'Платежи и кошелёк',
+    menuSettings: 'Настройки',
+    menuSaved: 'Сохранённые места',
+    guestName: 'Гость-путешественник',
+    welcomeBack: 'С возвращением',
+    signInPrompt: 'Войдите, чтобы разблокировать все функции',
+    signOut: 'Выйти',
+    signInRegister: 'Войти / Зарегистрироваться',
+    loyalty: 'Программа лояльности',
+    goldMember: 'Золотой участник',
+    points: 'баллов',
+    earnPoints: 'Забронируйте, чтобы начать копить баллы',
+  },
+  favorites: {
+    emptyTitle: 'Пока нет сохранённых мест',
+    emptySub: 'Нажмите ❤️ на любом направлении на главной странице, чтобы сохранить его здесь',
+    emptyBtn: 'Исследовать направления',
+    removeSaved: 'Удалить из сохранённых',
   },
   home: {
     badge: 'Настоящий ИИ · Реальные бронирования · 180+ стран',
