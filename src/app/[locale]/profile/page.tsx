@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import styles from './page.module.css';
+import { t } from '@/lib/i18n/translations';
 
 interface Props {
   params: { locale: string };
@@ -13,31 +14,31 @@ const isAr = (locale: string) => locale === 'ar';
 
 export default function ProfilePage({ params: { locale } }: Props) {
   const ar = isAr(locale);
+  const tr = t(locale);
+  const p = tr.profile;
   const { data: session, status } = useSession();
   const authenticated = status === 'authenticated' && !!session?.user;
 
   const menu = [
-    { icon: '🗓️', label: ar ? 'حجوزاتي' : 'My Bookings', href: `/${locale}/bookings` },
-    { icon: '💳', label: ar ? 'وسائل الدفع والمحفظة' : 'Payments & Wallet', href: `/${locale}/wallet` },
-    { icon: '⚙️', label: ar ? 'الإعدادات' : 'Settings', href: `/${locale}/settings` },
-    { icon: '❤️', label: ar ? 'الأماكن المحفوظة' : 'Saved Places', href: `/${locale}/favorites` },
+    { icon: '🗓️', label: p.menuBookings, href: `/${locale}/bookings` },
+    { icon: '💳', label: p.menuPayments, href: `/${locale}/wallet` },
+    { icon: '⚙️', label: p.menuSettings, href: `/${locale}/settings` },
+    { icon: '❤️', label: p.menuSaved, href: `/${locale}/favorites` },
   ];
 
   return (
     <main className={styles.main} dir={ar ? 'rtl' : 'ltr'}>
       <div className={styles.sh}>
-        <div className={styles.st}>👤 {ar ? 'الملف الشخصي' : 'Profile'}</div>
+        <div className={styles.st}>👤 {p.title}</div>
       </div>
 
       <div className="prof-card">
         <div className="prof-ava">{authenticated ? '🧑' : '👤'}</div>
         <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.15rem', fontWeight: 700 }}>
-          {authenticated ? (session?.user?.name || session?.user?.email) : (ar ? 'مسافر ضيف' : 'Guest Traveler')}
+          {authenticated ? (session?.user?.name || session?.user?.email) : p.guestName}
         </div>
         <div style={{ fontSize: '.78rem', color: 'var(--tm)', marginTop: 2 }}>
-          {authenticated
-            ? (ar ? 'مرحباً بعودتك' : 'Welcome back')
-            : (ar ? 'سجّل دخولك لتفعيل كل المميزات' : 'Sign in to unlock all features')}
+          {authenticated ? p.welcomeBack : p.signInPrompt}
         </div>
         {authenticated ? (
           <button
@@ -45,12 +46,12 @@ export default function ProfilePage({ params: { locale } }: Props) {
             style={{ marginTop: 14, padding: 12 }}
             onClick={() => signOut({ callbackUrl: `/${locale}` })}
           >
-            <span className="sbtn-txt">{ar ? 'تسجيل الخروج' : 'Sign Out'}</span>
+            <span className="sbtn-txt">{p.signOut}</span>
           </button>
         ) : (
           <Link href={`/${locale}/auth/signin`} style={{ textDecoration: 'none' }}>
             <button className="sbtn" style={{ marginTop: 14, padding: 12, width: '100%' }}>
-              <span className="sbtn-txt">{ar ? 'تسجيل الدخول / إنشاء حساب' : 'Sign In / Register'}</span>
+              <span className="sbtn-txt">{p.signInRegister}</span>
             </button>
           </Link>
         )}
@@ -59,17 +60,17 @@ export default function ProfilePage({ params: { locale } }: Props) {
       {authenticated && (
         <div className="loy-card">
           <div style={{ fontSize: '.68rem', fontWeight: 700, color: 'rgba(201,162,39,.7)', letterSpacing: '.09em', textTransform: 'uppercase' }}>
-            Va Travel · {ar ? 'الولاء' : 'Loyalty'}
+            Va Travel · {p.loyalty}
           </div>
           <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--g)', margin: '3px 0' }}>
-            ✦ {ar ? 'عضو ذهبي' : 'Gold Member'}
+            ✦ {p.goldMember}
           </div>
           <div className="loy-pts">
-            0 <span style={{ fontSize: '.78rem', fontWeight: 400, color: 'var(--td)' }}>{ar ? 'نقطة' : 'points'}</span>
+            0 <span style={{ fontSize: '.78rem', fontWeight: 400, color: 'var(--td)' }}>{p.points}</span>
           </div>
           <div className="loy-bar-t"><div className="loy-bar-f" style={{ width: '0%' }} /></div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.61rem', color: 'var(--tm)' }}>
-            <span>{ar ? 'ابدأ الحجز لكسب النقاط' : 'Book to start earning points'}</span>
+            <span>{p.earnPoints}</span>
           </div>
         </div>
       )}
