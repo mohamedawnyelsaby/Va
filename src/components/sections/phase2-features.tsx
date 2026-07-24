@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import styles from '@/app/[locale]/page.module.css';
+import { t as getTranslations } from '@/lib/i18n/translations';
 
 interface Props {
   locale: string;
@@ -43,15 +44,11 @@ function monthPrice(base: number, day: number, month: number) {
 
 export function Phase2Features({ locale }: Props) {
   const ar = isAr(locale);
-  const t = (a: string, e: string) => (ar ? a : e);
+  const tr = getTranslations(locale);
+  const ph = tr.phase2;
 
   /* ── 1. AI Packing List ── */
-  const STYLES = [
-    { key: 'beach', ar: '🏖️ شاطئ', en: '🏖️ Beach' },
-    { key: 'city', ar: '🏙️ مدينة', en: '🏙️ City' },
-    { key: 'mountain', ar: '🏔️ جبال', en: '🏔️ Mountain' },
-    { key: 'business', ar: '💼 أعمال', en: '💼 Business' },
-  ];
+  const STYLE_KEYS = ['beach', 'city', 'mountain', 'business'];
   const [packDest, setPackDest] = useState('');
   const [packDays, setPackDays] = useState(7);
   const [packStyle, setPackStyle] = useState('beach');
@@ -61,9 +58,9 @@ export function Phase2Features({ locale }: Props) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
 
   async function generatePacking() {
-    const dest = packDest.trim() || (ar ? 'بالي' : 'Bali');
+    const dest = packDest.trim() || 'Bali';
     setPackLoading(true);
-    setPackResp(t('يولّد الذكاء الاصطناعي قائمتك…', 'Generating your list…'));
+    setPackResp(ph.packGenerating);
     setPackList(null);
     try {
       const prompt = `Create a packing list for a ${packDays}-day ${packStyle} trip to ${dest}. ` +
@@ -74,9 +71,9 @@ export function Phase2Features({ locale }: Props) {
       const parsed = JSON.parse(clean);
       setPackList(parsed);
       setChecked(new Set());
-      setPackResp(t(`✓ قائمة جاهزة لرحلة ${packDays} أيام في ${dest}`, `✓ List ready for your ${packDays}-day trip to ${dest}`));
+      setPackResp(ph.packReadyTemplate.replace('{days}', String(packDays)).replace('{dest}', dest));
     } catch {
-      setPackResp(t('تعذر توليد القائمة الآن. حاول مرة أخرى.', 'Could not generate the list right now. Please try again.'));
+      setPackResp(ph.packError);
     } finally {
       setPackLoading(false);
     }
@@ -102,30 +99,30 @@ export function Phase2Features({ locale }: Props) {
     if (cmp1 === cmp2) return;
     setShowTable(true);
     setCmpLoading(true);
-    setCmpResp(t('يحلل الذكاء الاصطناعي الوجهتين…', 'Analyzing both destinations…'));
+    setCmpResp(ph.cmpAnalyzing);
     try {
       const d1 = DEST_DATA[cmp1], d2 = DEST_DATA[cmp2];
       const prompt = `Compare ${cmp1} ($${d1.price}/night) vs ${cmp2} ($${d2.price}/night) for a typical tourist. Which offers better value? Max 2 sentences.`;
       setCmpResp(await askAI(prompt));
     } catch {
       const winner = DEST_DATA[cmp1].price < DEST_DATA[cmp2].price ? cmp1 : cmp2;
-      setCmpResp(t(`🏆 ${winner} أفضل قيمة بشكل عام بناءً على السعر.`, `🏆 ${winner} offers better overall value based on price.`));
+      setCmpResp(ph.cmpWinnerTemplate.replace('{winner}', winner));
     } finally {
       setCmpLoading(false);
     }
   }
 
   const compareRows: Array<[string, string, string, 'price' | 'num' | null]> = showTable ? [
-    [t('💰 السعر/ليلة', '💰 Price/night'), `$${DEST_DATA[cmp1].price}`, `$${DEST_DATA[cmp2].price}`, 'price'],
-    [t('🌡️ الطقس', '🌡️ Weather'), DEST_DATA[cmp1].temp, DEST_DATA[cmp2].temp, null],
-    [t('🍽️ المطبخ', '🍽️ Food'), `${DEST_DATA[cmp1].food}/10`, `${DEST_DATA[cmp2].food}/10`, 'num'],
-    [t('🏖️ الشواطئ', '🏖️ Beaches'), `${DEST_DATA[cmp1].beaches}/10`, `${DEST_DATA[cmp2].beaches}/10`, 'num'],
-    [t('🏛️ الثقافة', '🏛️ Culture'), `${DEST_DATA[cmp1].culture}/10`, `${DEST_DATA[cmp2].culture}/10`, 'num'],
-    [t('🛡️ الأمان', '🛡️ Safety'), `${DEST_DATA[cmp1].safety}/10`, `${DEST_DATA[cmp2].safety}/10`, 'num'],
+    [ph.cmpPrice, `$${DEST_DATA[cmp1].price}`, `$${DEST_DATA[cmp2].price}`, 'price'],
+    [ph.cmpWeather, DEST_DATA[cmp1].temp, DEST_DATA[cmp2].temp, null],
+    [ph.cmpFood, `${DEST_DATA[cmp1].food}/10`, `${DEST_DATA[cmp2].food}/10`, 'num'],
+    [ph.cmpBeaches, `${DEST_DATA[cmp1].beaches}/10`, `${DEST_DATA[cmp2].beaches}/10`, 'num'],
+    [ph.cmpCulture, `${DEST_DATA[cmp1].culture}/10`, `${DEST_DATA[cmp2].culture}/10`, 'num'],
+    [ph.cmpSafety, `${DEST_DATA[cmp1].safety}/10`, `${DEST_DATA[cmp2].safety}/10`, 'num'],
   ] : [];
 
   /* ── 3. Group Trip Planner ── */
-  const [members, setMembers] = useState<string[]>([ar ? 'أحمد' : 'Ahmed', ar ? 'سارة' : 'Sarah']);
+  const [members, setMembers] = useState<string[]>([...ph.defaultMembers]);
   const [memberInput, setMemberInput] = useState('');
   const [groupDest, setGroupDest] = useState('');
   const [groupBudget, setGroupBudget] = useState('');
@@ -143,18 +140,18 @@ export function Phase2Features({ locale }: Props) {
   }
 
   const groupBudgetNum = parseFloat(groupBudget) || 0;
-  const perPerson = members.length > 0 ? Math.round(groupBudgetNum / members.length) : 0;
+  const perPersonAmount = members.length > 0 ? Math.round(groupBudgetNum / members.length) : 0;
 
   async function planGroupTrip() {
     if (members.length < 2) return;
     setGroupLoading(true);
-    setGroupResp(t('يخطط الذكاء الاصطناعي رحلتكم…', 'Planning your group trip…'));
+    setGroupResp(ph.groupPlanning);
     try {
-      const dest = groupDest.trim() || (ar ? 'بالي' : 'Bali');
+      const dest = groupDest.trim() || 'Bali';
       const prompt = `Group of ${members.length} (${members.join(', ')}) traveling to ${dest} with $${groupBudgetNum || members.length * 500} budget. Give 2 practical tips for a successful group trip. Max 2 sentences.`;
       setGroupResp(await askAI(prompt));
     } catch {
-      setGroupResp(t(`✓ تقسيم التكلفة: ${perPerson}$ للشخص.`, `✓ Cost split: $${perPerson}/person.`));
+      setGroupResp(ph.costSplitTemplate.replace('{amount}', String(perPersonAmount)));
     } finally {
       setGroupLoading(false);
     }
@@ -167,9 +164,7 @@ export function Phase2Features({ locale }: Props) {
   const [calOpen, setCalOpen] = useState(false);
   const [selDay, setSelDay] = useState<number | null>(null);
 
-  const monthNamesAr = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-  const monthNamesEn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const monthNames = ar ? monthNamesAr : monthNamesEn;
+  const monthNames = ph.monthNames;
 
   function navMonth(dir: number) {
     let m = calMonth + dir, y = calYear;
@@ -190,24 +185,24 @@ export function Phase2Features({ locale }: Props) {
       {/* Packing List */}
       <div className={styles.fc}>
         <div className={styles.fcHead}>
-          <div className={styles.fcTitle}>🧳 {t('مولّد قائمة الحقيبة', 'AI Packing List')}</div>
+          <div className={styles.fcTitle}>🧳 {ph.packTitle}</div>
         </div>
-        <div className={styles.fcSub}>{t('أخبر الذكاء الاصطناعي بوجهتك — يولّد قائمة حزم مخصصة.', 'Tell AI your destination — it generates a personalized packing list.')}</div>
+        <div className={styles.fcSub}>{ph.packSub}</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 9 }}>
-          <input className="finput" style={{ flex: 1, fontSize: '.81rem' }} placeholder={t('الوجهة (مثال: بالي)', 'Destination (e.g. Bali)')} value={packDest} onChange={e => setPackDest(e.target.value)} />
+          <input className="finput" style={{ flex: 1, fontSize: '.81rem' }} placeholder={ph.packDestPlaceholder} value={packDest} onChange={e => setPackDest(e.target.value)} />
           <select className="finput" style={{ maxWidth: 82, fontSize: '.78rem' }} value={packDays} onChange={e => setPackDays(Number(e.target.value))}>
-            {[3, 5, 7, 10, 14].map(d => <option key={d} value={d}>{d} {t('أيام', 'days')}</option>)}
+            {[3, 5, 7, 10, 14].map(d => <option key={d} value={d}>{d} {ph.days}</option>)}
           </select>
         </div>
         <div className="pack-cats">
-          {STYLES.map(s => (
-            <div key={s.key} className={`pack-cat${packStyle === s.key ? ' on' : ''}`} onClick={() => setPackStyle(s.key)}>
-              {ar ? s.ar : s.en}
+          {STYLE_KEYS.map((key, i) => (
+            <div key={key} className={`pack-cat${packStyle === key ? ' on' : ''}`} onClick={() => setPackStyle(key)}>
+              {ph.packStyles[i]}
             </div>
           ))}
         </div>
         <button className="btn btn-g" style={{ width: '100%', padding: 10, borderRadius: 'var(--rM)', fontSize: '.8rem' }} onClick={generatePacking} disabled={packLoading}>
-          ✨ {t('توليد قائمة الحقيبة', 'Generate Packing List')}
+          ✨ {ph.packGenerate}
         </button>
         {packList && (
           <div className="pack-results" style={{ display: 'flex' }}>
@@ -235,9 +230,9 @@ export function Phase2Features({ locale }: Props) {
       {/* Destination Compare */}
       <div className={styles.fc}>
         <div className={styles.fcHead}>
-          <div className={styles.fcTitle}>⚖️ {t('مقارنة الوجهات', 'Destination Compare')}</div>
+          <div className={styles.fcTitle}>⚖️ {ph.cmpTitle}</div>
         </div>
-        <div className={styles.fcSub}>{t('قارن بين وجهتين جنباً إلى جنب.', 'Compare two destinations side by side.')}</div>
+        <div className={styles.fcSub}>{ph.cmpSub}</div>
         <div className="compare-grid">
           <select className="compare-sel" value={cmp1} onChange={e => setCmp1(e.target.value)}>
             {DEST_KEYS.map(d => <option key={d} value={d}>{DEST_DATA[d].flag} {d}</option>)}
@@ -247,12 +242,12 @@ export function Phase2Features({ locale }: Props) {
           </select>
         </div>
         <button className="btn btn-g" style={{ width: '100%', padding: 10, borderRadius: 'var(--rM)', fontSize: '.8rem' }} onClick={compareTrips} disabled={cmpLoading}>
-          ⚖️ {t('قارن الآن', 'Compare Now')}
+          ⚖️ {ph.cmpNow}
         </button>
         {showTable && (
           <table className="compare-table">
             <thead>
-              <tr><th>{t('المعيار', 'Criteria')}</th><th>{DEST_DATA[cmp1].flag} {cmp1}</th><th>{DEST_DATA[cmp2].flag} {cmp2}</th></tr>
+              <tr><th>{ph.cmpCriteria}</th><th>{DEST_DATA[cmp1].flag} {cmp1}</th><th>{DEST_DATA[cmp2].flag} {cmp2}</th></tr>
             </thead>
             <tbody>
               {compareRows.map(([label, v1, v2]) => (
@@ -267,18 +262,18 @@ export function Phase2Features({ locale }: Props) {
       {/* Group Trip Planner */}
       <div className={styles.fc}>
         <div className={styles.fcHead}>
-          <div className={styles.fcTitle}>👨‍👩‍👧 {t('مخطط الرحلات الجماعية', 'Group Trip Planner')}</div>
+          <div className={styles.fcTitle}>👨‍👩‍👧 {ph.groupTitle}</div>
         </div>
-        <div className={styles.fcSub}>{t('أضف أعضاء المجموعة — وزّع التكاليف بعدالة.', 'Add group members — split costs fairly.')}</div>
+        <div className={styles.fcSub}>{ph.groupSub}</div>
         <div className="group-add">
           <input
             className="finput" style={{ flex: 1, fontSize: '.8rem' }}
-            placeholder={t('اسم العضو', 'Member name')}
+            placeholder={ph.memberName}
             value={memberInput}
             onChange={e => setMemberInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') addMember(); }}
           />
-          <button className="group-add-btn" onClick={addMember}>+ {t('إضافة', 'Add')}</button>
+          <button className="group-add-btn" onClick={addMember}>+ {ph.add}</button>
         </div>
         <div className="group-members">
           {members.map((m, i) => (
@@ -286,15 +281,15 @@ export function Phase2Features({ locale }: Props) {
           ))}
         </div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 9 }}>
-          <input className="finput" style={{ flex: 1, fontSize: '.8rem' }} placeholder={t('الوجهة', 'Destination')} value={groupDest} onChange={e => setGroupDest(e.target.value)} />
-          <input type="number" className="finput" style={{ flex: 1, fontSize: '.8rem' }} placeholder={t('إجمالي الميزانية $', 'Total budget $')} value={groupBudget} onChange={e => setGroupBudget(e.target.value)} />
+          <input className="finput" style={{ flex: 1, fontSize: '.8rem' }} placeholder={ph.destination} value={groupDest} onChange={e => setGroupDest(e.target.value)} />
+          <input type="number" className="finput" style={{ flex: 1, fontSize: '.8rem' }} placeholder={ph.totalBudget} value={groupBudget} onChange={e => setGroupBudget(e.target.value)} />
         </div>
         <button className="btn btn-g" style={{ width: '100%', padding: 10, borderRadius: 'var(--rM)', fontSize: '.8rem' }} onClick={planGroupTrip} disabled={groupLoading}>
-          ✨ {t('خطط الرحلة الجماعية', 'Plan Group Trip')}
+          ✨ {ph.planGroupTrip}
         </button>
         {groupBudgetNum > 0 && members.length > 0 && (
           <div style={{ marginTop: 9 }}>
-            <div className="split-row"><div className="split-name">{t('لكل شخص', 'Per person')}</div><div className="split-amt">${perPerson}</div></div>
+            <div className="split-row"><div className="split-name">{ph.perPerson}</div><div className="split-amt">${perPersonAmount}</div></div>
           </div>
         )}
         {groupResp && <div className={`ai-resp${groupLoading ? ' loading' : ''}`} style={{ marginTop: 8 }}>{groupResp}</div>}
@@ -303,15 +298,15 @@ export function Phase2Features({ locale }: Props) {
       {/* Smart Price Calendar */}
       <div className={styles.fc}>
         <div className={styles.fcHead}>
-          <div className={styles.fcTitle}>📅 {t('تقويم الأسعار الذكي', 'Smart Price Calendar')}</div>
+          <div className={styles.fcTitle}>📅 {ph.calTitle}</div>
         </div>
-        <div className={styles.fcSub}>{t('اعرف أرخص التواريخ في التقويم.', 'See the cheapest dates on the calendar.')}</div>
+        <div className={styles.fcSub}>{ph.calSub}</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
           <select className="finput" style={{ flex: 1, fontSize: '.79rem' }} value={calDest} onChange={e => setCalDest(e.target.value)}>
             {DEST_KEYS.map(d => <option key={d} value={d}>{DEST_DATA[d].flag} {d}</option>)}
           </select>
           <button className="btn btn-g" style={{ padding: '8px 14px', borderRadius: 'var(--rM)', fontSize: '.78rem' }} onClick={() => setCalOpen(true)}>
-            📅 {t('فتح التقويم', 'Open Calendar')}
+            📅 {ph.openCalendar}
           </button>
         </div>
         {selDay && (
@@ -330,7 +325,7 @@ export function Phase2Features({ locale }: Props) {
               <button className="cal-nb" onClick={() => navMonth(1)}>›</button>
             </div>
             <div className="cal-grid">
-              {(ar ? ['أح','إث','ثل','أر','خم','جم','سب'] : ['Su','Mo','Tu','We','Th','Fr','Sa']).map(d => (
+              {ph.weekdayAbbrev.map(d => (
                 <div key={d} className="cal-dn">{d}</div>
               ))}
               {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
@@ -350,9 +345,9 @@ export function Phase2Features({ locale }: Props) {
               })}
             </div>
             <div className="cal-legend">
-              <div className="cal-li"><div className="cal-ld" style={{ background: 'var(--green)' }} />{t('رخيص', 'Cheap')}</div>
-              <div className="cal-li"><div className="cal-ld" style={{ background: 'var(--g)' }} />{t('متوسط', 'Mid')}</div>
-              <div className="cal-li"><div className="cal-ld" style={{ background: 'var(--red)' }} />{t('مرتفع', 'High')}</div>
+              <div className="cal-li"><div className="cal-ld" style={{ background: 'var(--green)' }} />{ph.cheap}</div>
+              <div className="cal-li"><div className="cal-ld" style={{ background: 'var(--g)' }} />{ph.mid}</div>
+              <div className="cal-li"><div className="cal-ld" style={{ background: 'var(--red)' }} />{ph.high}</div>
             </div>
           </div>
         </div>
