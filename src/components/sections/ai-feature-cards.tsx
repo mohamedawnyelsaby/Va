@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import styles from '@/app/[locale]/page.module.css';
+import { t as getTranslations } from '@/lib/i18n/translations';
 
 interface Props {
   locale: string;
@@ -96,7 +97,9 @@ function hashDistance(from: string, to: string): number {
 
 export function AIFeatureCards({ locale }: Props) {
   const ar = isAr(locale);
-  const t = (a: string, e: string) => (ar ? a : e);
+  const tr = getTranslations(locale);
+  const ac = tr.aiCards;
+  const lang = ac.langName; // English name of the current locale, used to instruct the AI which language to reply in
 
   /* ── 1. Mood Concierge ── */
   const MOODS = [
@@ -114,14 +117,12 @@ export function AIFeatureCards({ locale }: Props) {
     const chosen = moodText.trim() || mood;
     if (!chosen) return;
     setMoodLoading(true);
-    setMoodResp(t('يبحث الذكاء الاصطناعي عن وجهتك المثالية…', 'Finding your perfect destination…'));
+    setMoodResp(ac.moodFinding);
     try {
-      const prompt = ar
-        ? `المسافر يشعر بـ "${chosen}". أوصِ بوجهة سفر واحدة مناسبة، مع سبب مختصر. أجب بالعربية في 3 جمل كحد أقصى.`
-        : `Traveler feels: "${chosen}". Recommend ONE travel destination with a brief reason. Max 3 sentences.`;
+      const prompt = `Traveler feels: "${chosen}". Recommend ONE travel destination with a brief reason. Answer in ${lang}, max 3 sentences.`;
       setMoodResp(await askAI(prompt));
     } catch {
-      setMoodResp(t('تعذر الاتصال بالخدمة الآن. حاول مرة أخرى.', 'Could not reach the AI service. Please try again.'));
+      setMoodResp(ac.moodError);
     } finally {
       setMoodLoading(false);
     }
@@ -135,14 +136,12 @@ export function AIFeatureCards({ locale }: Props) {
 
   async function runVisa() {
     setVisaLoading(true);
-    setVisaResp(t('جاري التحقق من متطلبات التأشيرة…', 'Checking visa requirements…'));
+    setVisaResp(ac.visaChecking);
     try {
-      const prompt = ar
-        ? `جواز سفر ${passport} يريد السفر إلى ${visaDest}. هل يحتاج تأشيرة؟ المدة المسموحة؟ أجب في 3 جمل بالعربية.`
-        : `${passport} passport traveling to ${visaDest}. Is a visa required? Duration allowed? Answer in max 3 sentences.`;
+      const prompt = `${passport} passport traveling to ${visaDest}. Is a visa required? Duration allowed? Answer in ${lang}, max 3 sentences.`;
       setVisaResp(await askAI(prompt));
     } catch {
-      setVisaResp(t('تعذر الاتصال بالخدمة الآن.', 'Could not reach the AI service.'));
+      setVisaResp(ac.visaError);
     } finally {
       setVisaLoading(false);
     }
@@ -160,15 +159,13 @@ export function AIFeatureCards({ locale }: Props) {
     const bestIdx = s.reduce((m, v, i, a) => (v < a[m] ? i : m), 0);
     const saving = Math.round((1 - s[bestIdx] / s[0]) * 100);
     setPriceLoading(true);
-    setPriceResp(t('يحلل الذكاء الاصطناعي أنماط الأسعار…', 'Analyzing price patterns…'));
+    setPriceResp(ac.priceAnalyzing);
     try {
-      const prompt = ar
-        ? `توقعات سعر ${priceDest}: أفضل يوم هو اليوم رقم ${bestIdx} بتوفير ${saving}% تقريباً. اكتب نصيحة حجز قصيرة بالعربية في جملتين.`
-        : `Price forecast for ${priceDest}: best day is day ${bestIdx}, saving about ${saving}%. Write a short 2-sentence booking tip.`;
+      const prompt = `Price forecast for ${priceDest}: best day is day ${bestIdx}, saving about ${saving}%. Write a short booking tip in ${lang}, max 2 sentences.`;
       setPriceResp(await askAI(prompt));
     } catch {
       setPriceResp(
-        t(`أفضل توقيت للحجز: بعد ${bestIdx} يوماً — وفر حتى ${saving}%.`, `Best booking window: day ${bestIdx} — save up to ${saving}%.`)
+        ac.priceErrorTemplate.replace('{bestIdx}', String(bestIdx)).replace('{saving}', String(saving))
       );
     } finally {
       setPriceLoading(false);
@@ -185,12 +182,12 @@ export function AIFeatureCards({ locale }: Props) {
   async function runTranslate(text: string) {
     if (!text.trim()) return;
     setTranslateLoading(true);
-    setTranslateOut(t('جاري الترجمة…', 'Translating…'));
+    setTranslateOut(ac.translating);
     try {
       const reply = await askAI(`Translate the following text to ${targetLang}. Reply with only the translated text, nothing else:\n\n${text}`);
       setTranslateOut(reply.trim());
     } catch {
-      setTranslateOut(t('تعذرت الترجمة الآن.', 'Translation unavailable right now.'));
+      setTranslateOut(ac.translateError);
     } finally {
       setTranslateLoading(false);
     }
@@ -230,14 +227,12 @@ export function AIFeatureCards({ locale }: Props) {
   async function runBudget() {
     if (!budgetNum) return;
     setBudgetLoading(true);
-    setBudgetTip(t('جاري التحليل…', 'Analyzing…'));
+    setBudgetTip(ac.budgetAnalyzing);
     try {
-      const prompt = ar
-        ? `ميزانية ${budgetNum}$ لمدة ${days} أيام. اكتب نصيحة توفير قصيرة بالعربية في جملتين.`
-        : `Budget of $${budgetNum} for ${days} days. Write one short practical money-saving tip, max 2 sentences.`;
+      const prompt = `Budget of $${budgetNum} for ${days} days. Write one short practical money-saving tip in ${lang}, max 2 sentences.`;
       setBudgetTip(await askAI(prompt));
     } catch {
-      setBudgetTip(t('تعذر الاتصال بالخدمة الآن.', 'Could not reach the AI service.'));
+      setBudgetTip(ac.budgetError);
     } finally {
       setBudgetLoading(false);
     }
@@ -250,8 +245,8 @@ export function AIFeatureCards({ locale }: Props) {
   const [carbonResult, setCarbonResult] = useState<{ co2: number; trees: number; offset: string } | null>(null);
 
   function runCarbon() {
-    const from = carbonFrom.trim() || (ar ? 'القاهرة' : 'Cairo');
-    const to = carbonTo.trim() || (ar ? 'دبي' : 'Dubai');
+    const from = carbonFrom.trim() || 'Cairo';
+    const to = carbonTo.trim() || 'Dubai';
     const mult = { economy: 1, business: 2, first: 3 }[travelClass];
     const dist = hashDistance(from, to);
     const co2 = Math.round(dist * 0.255 * mult);
@@ -266,9 +261,9 @@ export function AIFeatureCards({ locale }: Props) {
       {/* 1. Emotional AI Concierge */}
       <div className={styles.fc}>
         <div className={styles.fcHead}>
-          <div className={styles.fcTitle}>🧠 {t('مستشار AI العاطفي', 'Emotional AI Concierge')}</div>
+          <div className={styles.fcTitle}>🧠 {ac.moodTitle}</div>
         </div>
-        <div className={styles.fcSub}>{t('أخبرني كيف تشعر — يجد لك الذكاء الاصطناعي وجهتك المثالية.', 'Tell me how you feel — AI finds your perfect destination.')}</div>
+        <div className={styles.fcSub}>{ac.moodSub}</div>
         <div className="mood-btns">
           {MOODS.map(m => (
             <button
@@ -285,12 +280,12 @@ export function AIFeatureCards({ locale }: Props) {
           <input
             className="finput"
             style={{ flex: 1, fontSize: '.78rem', padding: '9px 12px' }}
-            placeholder={t('أو صف مزاجك بحرية…', 'Or describe your mood freely…')}
+            placeholder={ac.moodPlaceholder}
             value={moodText}
             onChange={e => { setMoodText(e.target.value); setMood(''); }}
           />
           <button className="btn btn-g" style={{ padding: '9px 14px', borderRadius: 'var(--rM)' }} onClick={runMood} disabled={moodLoading}>
-            ✨ {t('اكتشف', 'Discover')}
+            ✨ {ac.discover}
           </button>
         </div>
         {moodResp && <div className={`ai-resp${moodLoading ? ' loading' : ''}`} style={{ marginTop: 10 }}>{moodResp}</div>}
@@ -299,44 +294,44 @@ export function AIFeatureCards({ locale }: Props) {
       {/* 2. Smart Visa Checker */}
       <div className={styles.fc}>
         <div className={styles.fcHead}>
-          <div className={styles.fcTitle}>🛂 {t('فاحص التأشيرة الذكي', 'Smart Visa Checker')}</div>
+          <div className={styles.fcTitle}>🛂 {ac.visaTitle}</div>
         </div>
-        <div className={styles.fcSub}>{t('اعرف متطلبات التأشيرة فورياً لأي جواز سفر ووجهة.', 'Instantly know visa requirements for any passport & destination.')}</div>
+        <div className={styles.fcSub}>{ac.visaSub}</div>
         <div className="fgrid2" style={{ marginBottom: 9 }}>
           <div className="fgroup" style={{ margin: 0 }}>
-            <label className="flabel">{t('جواز سفرك', 'Your passport')}</label>
+            <label className="flabel">{ac.yourPassport}</label>
             <select className="finput" style={{ fontSize: '.8rem' }} value={passport} onChange={e => setPassport(e.target.value)}>
               {PASSPORTS.map(p => <option key={p.code} value={p.code}>{p.flag} {ar ? p.ar : p.en}</option>)}
             </select>
           </div>
           <div className="fgroup" style={{ margin: 0 }}>
-            <label className="flabel">{t('الوجهة', 'Destination')}</label>
+            <label className="flabel">{ac.destinationLabel}</label>
             <select className="finput" style={{ fontSize: '.8rem' }} value={visaDest} onChange={e => setVisaDest(e.target.value)}>
               {DESTINATIONS.map(d => <option key={d.code} value={d.code}>{d.flag} {ar ? d.ar : d.en}</option>)}
             </select>
           </div>
         </div>
         <button className="btn btn-g" style={{ width: '100%', padding: 10, borderRadius: 'var(--rM)', fontSize: '.8rem' }} onClick={runVisa} disabled={visaLoading}>
-          🔍 {t('فحص التأشيرة', 'Check Visa')}
+          🔍 {ac.checkVisa}
         </button>
         {visaResp && <div className={`visa-result${visaLoading ? ' loading' : ''}`}>{visaResp}</div>}
         <div style={{ fontSize: '.62rem', color: 'var(--tm)', marginTop: 7, lineHeight: 1.6 }}>
-          ⚠️ {t('معلومات تقديرية وقد لا تكون محدّثة — تأكد من السفارة قبل السفر.', 'AI estimate, may not be current — verify with the embassy before traveling.')}
+          ⚠️ {ac.visaDisclaimer}
         </div>
       </div>
 
       {/* 3. Predictive Pricing AI */}
       <div className={styles.fc}>
         <div className={styles.fcHead}>
-          <div className={styles.fcTitle}>📈 {t('توقع الأسعار بالذكاء الاصطناعي', 'Predictive Pricing AI')}</div>
+          <div className={styles.fcTitle}>📈 {ac.priceTitle}</div>
         </div>
-        <div className={styles.fcSub}>{t('توقع أسعار 30 يوماً مع نصيحة الحجز المثلى.', '30-day price forecast with AI-generated booking advice.')}</div>
+        <div className={styles.fcSub}>{ac.priceSub}</div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
           <select className="finput" style={{ fontSize: '.79rem', flex: 1 }} value={priceDest} onChange={e => setPriceDest(e.target.value)}>
             {Object.keys(PRICE_DESTS).map(d => <option key={d} value={d}>{d[0].toUpperCase() + d.slice(1)}</option>)}
           </select>
           <button className="btn btn-g" style={{ padding: '8px 14px', borderRadius: 'var(--rM)', fontSize: '.76rem' }} onClick={runPredict} disabled={priceLoading}>
-            🔮 {t('توقع', 'Predict')}
+            🔮 {ac.predict}
           </button>
         </div>
         {series && <Sparkline values={series} highlightIndex={series.reduce((m, v, i, a) => (v < a[m] ? i : m), 0)} />}
@@ -346,9 +341,9 @@ export function AIFeatureCards({ locale }: Props) {
       {/* 4. Voice AI + Translation */}
       <div className={styles.fc}>
         <div className={styles.fcHead}>
-          <div className={styles.fcTitle}>🎙️ {t('الترجمة الصوتية الفورية', 'Voice AI + Translation')}</div>
+          <div className={styles.fcTitle}>🎙️ {ac.voiceTitle}</div>
         </div>
-        <div className={styles.fcSub}>{t('تحدث أو اكتب — يترجم الذكاء الاصطناعي فورياً.', 'Speak or type — AI translates instantly.')}</div>
+        <div className={styles.fcSub}>{ac.voiceSub}</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 9 }}>
           <select className="finput" style={{ fontSize: '.79rem', flex: 1 }} value={targetLang} onChange={e => setTargetLang(e.target.value)}>
             {TRANSLATE_LANGS.map(l => <option key={l.code} value={l.code}>{l.flag} {ar ? l.ar : l.en}</option>)}
@@ -356,7 +351,7 @@ export function AIFeatureCards({ locale }: Props) {
           <button
             className={`mic-btn${listening ? ' active' : ''}`}
             onClick={startListening}
-            title={t('تحدث', 'Speak')}
+            title={ac.speak}
           >
             🎤
           </button>
@@ -365,36 +360,36 @@ export function AIFeatureCards({ locale }: Props) {
           <input
             className="finput"
             style={{ flex: 1, fontSize: '.79rem', padding: '9px 12px' }}
-            placeholder={t('أو اكتب نصاً للترجمة…', 'Or type text to translate…')}
+            placeholder={ac.translatePlaceholder}
             value={translateIn}
             onChange={e => setTranslateIn(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') runTranslate(translateIn); }}
           />
           <button className="btn btn-g" style={{ padding: '9px 12px', borderRadius: 'var(--rM)', fontSize: '.76rem' }} onClick={() => runTranslate(translateIn)} disabled={translateLoading}>
-            {t('ترجم', 'Translate')}
+            {ac.translateBtn}
           </button>
         </div>
         <div className={`ai-resp${translateLoading ? ' loading' : ''}`}>
-          {translateOut || t('ستظهر الترجمة هنا.', 'Translation will appear here.')}
+          {translateOut || ac.translationPlaceholder}
         </div>
       </div>
 
       {/* 5. AI Budget Planner */}
       <div className={styles.fc}>
         <div className={styles.fcHead}>
-          <div className={styles.fcTitle}>💰 {t('مخطط الميزانية الذكي', 'AI Budget Planner')}</div>
+          <div className={styles.fcTitle}>💰 {ac.budgetTitle}</div>
         </div>
-        <div className={styles.fcSub}>{t('أدخل ميزانيتك — يوزعها الذكاء الاصطناعي بذكاء.', 'Enter your budget — AI allocates it smartly.')}</div>
+        <div className={styles.fcSub}>{ac.budgetSub}</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 9 }}>
           <div className="sfield" style={{ flex: 1, padding: '8px 11px' }}>
             <span>💵</span>
-            <input type="number" placeholder={t('ميزانيتك بالدولار', 'Your budget in USD')} value={budget} onChange={e => setBudget(e.target.value)} />
+            <input type="number" placeholder={ac.budgetPlaceholder} value={budget} onChange={e => setBudget(e.target.value)} />
           </div>
           <select className="finput" style={{ maxWidth: 90, fontSize: '.79rem' }} value={days} onChange={e => setDays(Number(e.target.value))}>
-            {[3, 5, 7, 10, 14].map(d => <option key={d} value={d}>{d} {t('أيام', 'days')}</option>)}
+            {[3, 5, 7, 10, 14].map(d => <option key={d} value={d}>{d} {tr.phase2.days}</option>)}
           </select>
           <button className="btn btn-g" style={{ padding: '8px 13px', borderRadius: 'var(--rM)', fontSize: '.76rem' }} onClick={runBudget} disabled={budgetLoading}>
-            ✨ {t('خطط', 'Plan')}
+            ✨ {ac.plan}
           </button>
         </div>
         {budgetNum > 0 ? (
@@ -409,7 +404,7 @@ export function AIFeatureCards({ locale }: Props) {
           </div>
         ) : (
           <div style={{ textAlign: 'center', padding: 16, fontSize: '.78rem', color: 'var(--tm)' }}>
-            {t('أدخل ميزانيتك لرؤية التوزيع', 'Enter your budget to see the breakdown')}
+            {ac.enterBudgetPrompt}
           </div>
         )}
         {budgetTip && <div className={`ai-resp${budgetLoading ? ' loading' : ''}`} style={{ marginTop: 9 }}>{budgetTip}</div>}
@@ -418,38 +413,38 @@ export function AIFeatureCards({ locale }: Props) {
       {/* 6. Carbon Footprint Tracker */}
       <div className={styles.fc}>
         <div className={styles.fcHead}>
-          <div className={styles.fcTitle}>🌱 {t('تتبع البصمة الكربونية', 'Carbon Footprint Tracker')}</div>
+          <div className={styles.fcTitle}>🌱 {ac.carbonTitle}</div>
         </div>
-        <div className={styles.fcSub}>{t('احسب انبعاثات رحلتك وتعوّض عنها.', "Calculate your trip's emissions and offset them.")}</div>
+        <div className={styles.fcSub}>{ac.carbonSub}</div>
         <div className="fgrid2" style={{ marginBottom: 9, gap: 8 }}>
           <div className="fgroup" style={{ margin: 0 }}>
-            <label className="flabel">{t('من', 'From')}</label>
-            <input className="finput" style={{ fontSize: '.8rem' }} placeholder={t('القاهرة', 'Cairo')} value={carbonFrom} onChange={e => setCarbonFrom(e.target.value)} />
+            <label className="flabel">{ac.from}</label>
+            <input className="finput" style={{ fontSize: '.8rem' }} placeholder="Cairo" value={carbonFrom} onChange={e => setCarbonFrom(e.target.value)} />
           </div>
           <div className="fgroup" style={{ margin: 0 }}>
-            <label className="flabel">{t('إلى', 'To')}</label>
-            <input className="finput" style={{ fontSize: '.8rem' }} placeholder={t('دبي', 'Dubai')} value={carbonTo} onChange={e => setCarbonTo(e.target.value)} />
+            <label className="flabel">{ac.to}</label>
+            <input className="finput" style={{ fontSize: '.8rem' }} placeholder="Dubai" value={carbonTo} onChange={e => setCarbonTo(e.target.value)} />
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 9, alignItems: 'center' }}>
           <select className="finput" style={{ fontSize: '.79rem', flex: 1 }} value={travelClass} onChange={e => setTravelClass(e.target.value as any)}>
-            <option value="economy">{t('اقتصادي ✈️', 'Economy ✈️')}</option>
-            <option value="business">{t('رجال أعمال 🎩', 'Business 🎩')}</option>
-            <option value="first">{t('درجة أولى 👑', 'First Class 👑')}</option>
+            <option value="economy">{ac.economy}</option>
+            <option value="business">{ac.business}</option>
+            <option value="first">{ac.firstClass}</option>
           </select>
           <button className="btn btn-g" style={{ padding: '8px 13px', borderRadius: 'var(--rM)', fontSize: '.76rem' }} onClick={runCarbon}>
-            🌍 {t('احسب', 'Calculate')}
+            🌍 {ac.calculate}
           </button>
         </div>
         {carbonResult ? (
           <div className="carbon-gauge">
-            <div className="cg-item"><div className="cg-val">{carbonResult.co2}</div><div className="cg-lbl">{t('كجم CO₂', 'kg CO₂')}</div></div>
-            <div className="cg-item"><div className="cg-val">{carbonResult.trees}</div><div className="cg-lbl">{t('أشجار', 'Trees')}</div></div>
-            <div className="cg-item"><div className="cg-val">${carbonResult.offset}</div><div className="cg-lbl">{t('تعويض', 'Offset')}</div></div>
+            <div className="cg-item"><div className="cg-val">{carbonResult.co2}</div><div className="cg-lbl">{ac.kgCO2}</div></div>
+            <div className="cg-item"><div className="cg-val">{carbonResult.trees}</div><div className="cg-lbl">{ac.trees}</div></div>
+            <div className="cg-item"><div className="cg-val">${carbonResult.offset}</div><div className="cg-lbl">{ac.offset}</div></div>
           </div>
         ) : (
           <div style={{ textAlign: 'center', padding: 16, fontSize: '.78rem', color: 'var(--tm)' }}>
-            {t('أدخل رحلتك لحساب البصمة الكربونية', 'Enter your trip to calculate its footprint')}
+            {ac.enterTripPrompt}
           </div>
         )}
       </div>
