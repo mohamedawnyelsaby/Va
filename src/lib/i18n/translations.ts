@@ -280,6 +280,23 @@ export interface Translations {
     offset: string;
     enterTripPrompt: string;
   };
+  // Search page
+  search: {
+    overline: string;
+    titlePlain: string;
+    titleEm: string;
+    placeholder: string;
+    searchBtn: string;
+    startTitle: string;
+    startSub: string;
+    resultsTemplate: string;
+    noResultsTemplate: string;
+    nothingFoundTitle: string;
+    nothingFoundSub: string;
+    foundTemplate: string;
+    perNightUnit: string;
+    entryUnit: string;
+  };
   // Common
   common: {
     bookNow: string;
@@ -564,6 +581,22 @@ const en: Translations = {
     trees: 'Trees',
     offset: 'Offset',
     enterTripPrompt: 'Enter your trip to calculate its footprint',
+  },
+  search: {
+    overline: 'Search',
+    titlePlain: 'Search',
+    titleEm: 'Results',
+    placeholder: 'Search everything...',
+    searchBtn: 'Search',
+    startTitle: 'Start Searching',
+    startSub: 'Type a destination, hotel name, or attraction above.',
+    resultsTemplate: '{count} results for "{query}"',
+    noResultsTemplate: 'No results found for "{query}"',
+    nothingFoundTitle: 'Nothing Found',
+    nothingFoundSub: 'Try a different search term.',
+    foundTemplate: '{count} found',
+    perNightUnit: '/ NIGHT',
+    entryUnit: 'ENTRY',
   },
   home: {
     badge: 'Real AI · Real Bookings · 180+ Countries',
@@ -897,6 +930,22 @@ const ar: Translations = {
     offset: 'تعويض',
     enterTripPrompt: 'أدخل رحلتك لحساب البصمة الكربونية',
   },
+  search: {
+    overline: 'بحث',
+    titlePlain: 'نتائج',
+    titleEm: 'البحث',
+    placeholder: 'ابحث عن أي شيء...',
+    searchBtn: 'بحث',
+    startTitle: 'ابدأ البحث',
+    startSub: 'اكتب وجهة أو اسم فندق أو معلم سياحي بالأعلى.',
+    resultsTemplate: '{count} نتيجة لـ "{query}"',
+    noResultsTemplate: 'لا توجد نتائج لـ "{query}"',
+    nothingFoundTitle: 'لا توجد نتائج',
+    nothingFoundSub: 'جرّب كلمة بحث مختلفة.',
+    foundTemplate: '{count} نتيجة',
+    perNightUnit: '/ ليلة',
+    entryUnit: 'دخول',
+  },
   home: {
     badge: 'ذكاء اصطناعي حقيقي · حجوزات حقيقية · 180+ دولة',
     heroPart1: 'سافر', heroPart1Em: false,
@@ -1228,6 +1277,22 @@ const fr: Translations = {
     trees: 'Arbres',
     offset: 'Compensation',
     enterTripPrompt: 'Indiquez votre voyage pour calculer son empreinte',
+  },
+  search: {
+    overline: 'Recherche',
+    titlePlain: 'Résultats de',
+    titleEm: 'Recherche',
+    placeholder: 'Rechercher n\'importe quoi...',
+    searchBtn: 'Rechercher',
+    startTitle: 'Commencez la Recherche',
+    startSub: 'Tapez une destination, un nom d\'hôtel ou une attraction ci-dessus.',
+    resultsTemplate: '{count} résultats pour « {query} »',
+    noResultsTemplate: 'Aucun résultat pour « {query} »',
+    nothingFoundTitle: 'Aucun Résultat',
+    nothingFoundSub: 'Essayez un autre terme de recherche.',
+    foundTemplate: '{count} trouvés',
+    perNightUnit: '/ NUIT',
+    entryUnit: 'ENTRÉE',
   },
   home: {
     badge: 'IA Réelle · Réservations Réelles · 180+ Pays',
@@ -1561,6 +1626,22 @@ const es: Translations = {
     offset: 'Compensación',
     enterTripPrompt: 'Ingresa tu viaje para calcular su huella',
   },
+  search: {
+    overline: 'Buscar',
+    titlePlain: 'Resultados de',
+    titleEm: 'Búsqueda',
+    placeholder: 'Buscar cualquier cosa...',
+    searchBtn: 'Buscar',
+    startTitle: 'Comienza a Buscar',
+    startSub: 'Escribe un destino, nombre de hotel o atracción arriba.',
+    resultsTemplate: '{count} resultados para "{query}"',
+    noResultsTemplate: 'No se encontraron resultados para "{query}"',
+    nothingFoundTitle: 'Nada Encontrado',
+    nothingFoundSub: 'Prueba con otro término de búsqueda.',
+    foundTemplate: '{count} encontrados',
+    perNightUnit: '/ NOCHE',
+    entryUnit: 'ENTRADA',
+  },
   home: {
     badge: 'IA Real · Reservas Reales · 180+ Países',
     heroPart1: 'Viaja', heroPart1Em: true,
@@ -1892,6 +1973,22 @@ const de: Translations = {
     trees: 'Bäume',
     offset: 'Ausgleich',
     enterTripPrompt: 'Gib deine Reise ein, um den Fußabdruck zu berechnen',
+  },
+  search: {
+    overline: 'Suche',
+    titlePlain: 'Deine',
+    titleEm: 'Suchergebnisse',
+    placeholder: 'Alles durchsuchen...',
+    searchBtn: 'Suchen',
+    startTitle: 'Suche starten',
+    startSub: 'Gib oben ein Reiseziel, einen Hotelnamen oder eine Attraktion ein.',
+    resultsTemplate: '{count} Ergebnisse für „{query}"',
+    noResultsTemplate: 'Keine Ergebnisse für „{query}"',
+    nothingFoundTitle: 'Nichts Gefunden',
+    nothingFoundSub: 'Versuche einen anderen Suchbegriff.',
+    foundTemplate: '{count} gefunden',
+    perNightUnit: '/ NACHT',
+    entryUnit: 'EINTRITT',
   },
   home: {
     badge: 'Echte KI · Echte Buchungen · 180+ Länder',
@@ -2225,6 +2322,22 @@ const zh: Translations = {
     offset: '抵消',
     enterTripPrompt: '输入行程即可计算碳足迹',
   },
+  search: {
+    overline: '搜索',
+    titlePlain: '搜索',
+    titleEm: '结果',
+    placeholder: '搜索任何内容...',
+    searchBtn: '搜索',
+    startTitle: '开始搜索',
+    startSub: '在上方输入目的地、酒店名称或景点。',
+    resultsTemplate: '找到 {count} 条 "{query}" 的结果',
+    noResultsTemplate: '未找到 "{query}" 的相关结果',
+    nothingFoundTitle: '未找到结果',
+    nothingFoundSub: '请尝试其他搜索词。',
+    foundTemplate: '找到 {count} 个',
+    perNightUnit: '/ 晚',
+    entryUnit: '门票',
+  },
   home: {
     badge: '真实AI · 真实预订 · 180+国家',
     heroPart1: '智慧', heroPart1Em: true,
@@ -2557,6 +2670,22 @@ const ja: Translations = {
     offset: 'オフセット',
     enterTripPrompt: '旅行内容を入力するとフットプリントを計算します',
   },
+  search: {
+    overline: '検索',
+    titlePlain: '検索',
+    titleEm: '結果',
+    placeholder: 'すべてを検索...',
+    searchBtn: '検索',
+    startTitle: '検索を開始',
+    startSub: '上に目的地、ホテル名、観光スポットを入力してください。',
+    resultsTemplate: '「{query}」の検索結果 {count} 件',
+    noResultsTemplate: '「{query}」の検索結果はありません',
+    nothingFoundTitle: '見つかりませんでした',
+    nothingFoundSub: '別のキーワードで検索してください。',
+    foundTemplate: '{count} 件',
+    perNightUnit: '/ 泊',
+    entryUnit: '入場料',
+  },
   home: {
     badge: '本物のAI · 本物の予約 · 180以上の国',
     heroPart1: 'スマートに', heroPart1Em: true,
@@ -2888,6 +3017,22 @@ const ru: Translations = {
     trees: 'Деревьев',
     offset: 'Компенсация',
     enterTripPrompt: 'Укажите поездку, чтобы рассчитать её след',
+  },
+  search: {
+    overline: 'Поиск',
+    titlePlain: 'Результаты',
+    titleEm: 'поиска',
+    placeholder: 'Искать что угодно...',
+    searchBtn: 'Найти',
+    startTitle: 'Начните поиск',
+    startSub: 'Введите направление, название отеля или достопримечательность выше.',
+    resultsTemplate: '{count} результатов по запросу «{query}»',
+    noResultsTemplate: 'Нет результатов по запросу «{query}»',
+    nothingFoundTitle: 'Ничего не найдено',
+    nothingFoundSub: 'Попробуйте другой поисковый запрос.',
+    foundTemplate: 'найдено: {count}',
+    perNightUnit: '/ НОЧЬ',
+    entryUnit: 'ВХОД',
   },
   home: {
     badge: 'Настоящий ИИ · Реальные бронирования · 180+ стран',
