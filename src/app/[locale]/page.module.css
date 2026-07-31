@@ -3,7 +3,7 @@
    Va Travel — Homepage matching reference app shape exactly
    ============================================================ */
 
-.main { min-height: 100dvh; background: var(--bg); }
+.main { min-height: 100dvh; background: var(--bg); padding-top: 76px; }
 
 /* Ticker */
 .ticker { background: var(--gdim); border-bottom: 1px solid rgba(201,162,39,.15); padding: 5px 0; overflow: hidden; position: relative; }
