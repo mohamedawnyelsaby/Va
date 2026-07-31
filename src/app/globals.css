@@ -182,6 +182,14 @@
 }
 
 html{scroll-behavior:smooth}
+
+/* .text-label — used for small overline labels (e.g. "اكتشف"/"Discover"
+   above page titles). This class was referenced in 2 files but never
+   defined anywhere, so it rendered with the browser's default text
+   color (near-black) — invisible on the dark theme's near-black
+   background, only visible by coincidence on the light theme.
+   Uses the already-contrast-verified --tm token from the color audit. */
+.text-label{font-size:var(--fs-sm2);font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tm)}
 body{font-family:var(--font-ar);background:var(--bg);color:var(--t);padding-bottom:var(--bnavH);overflow-x:hidden;transition:background .3s,color .3s}
 /* Per-locale font switching happens explicitly on the locale wrapper in
    src/app/[locale]/layout.tsx (inline style), not here: `body` never
