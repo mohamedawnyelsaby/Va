@@ -5,6 +5,7 @@
 .main {
   min-height: 100dvh;
   background: var(--bg);
+  padding-top: 76px;
   padding-bottom: 80px;
 }
 
