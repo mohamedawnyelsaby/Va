@@ -82,7 +82,7 @@ export default function HomePage({ params: { locale } }: Props) {
   const [query, setQuery] = useState('');
 
   const TABS = [
-    { id: 'hotels', icon: '🏨', label: h.tabHotels },
+    { id: 'hotels', icon: '🏨', label: h.tabHotels, href: `/${locale}/hotels` },
     { id: 'flights', icon: '✈️', label: h.tabFlights, soon: true },
     { id: 'pkgs', icon: '🎁', label: h.tabPackages },
     { id: 'visa', icon: '🛂', label: h.tabVisa },
@@ -126,16 +126,32 @@ export default function HomePage({ params: { locale } }: Props) {
           {/* Search widget */}
           <div className={styles.sw}>
             <div className={styles.stabs}>
-              {TABS.map((tItem) => (
-                <button
-                  key={tItem.id}
-                  className={`${styles.stab} ${tab === tItem.id ? styles.on : ''}`}
-                  onClick={() => setTab(tItem.id)}
-                >
-                  {tItem.icon} {tItem.label}
-                  {tItem.soon && <span className={styles.soonBadge}>{h.soon}</span>}
-                </button>
-              ))}
+              {TABS.map((tItem) => {
+                const content = (
+                  <>
+                    {tItem.icon} {tItem.label}
+                    {tItem.soon && <span className={styles.soonBadge}>{h.soon}</span>}
+                  </>
+                );
+                return tItem.href ? (
+                  <Link
+                    key={tItem.id}
+                    href={tItem.href}
+                    className={`${styles.stab} ${tab === tItem.id ? styles.on : ''}`}
+                    onClick={() => setTab(tItem.id)}
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <button
+                    key={tItem.id}
+                    className={`${styles.stab} ${tab === tItem.id ? styles.on : ''}`}
+                    onClick={() => setTab(tItem.id)}
+                  >
+                    {content}
+                  </button>
+                );
+              })}
             </div>
             <div className={styles.sbody}>
               <div className={styles.sfield}>
