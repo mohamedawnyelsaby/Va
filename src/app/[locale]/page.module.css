@@ -8,6 +8,12 @@
 /* Ticker */
 .ticker { background: var(--gdim); border-bottom: 1px solid rgba(201,162,39,.15); padding: 5px 0; overflow: hidden; position: relative; }
 .tickerInner { display: flex; white-space: nowrap; animation: ticker 35s linear infinite; }
+/* Defined locally (not just in globals.css) because Next.js CSS Modules
+   scope/hash animation names referenced inside a .module.css file — a
+   @keyframes with the same literal name in a plain global stylesheet
+   does not match the scoped reference, which silently breaks the
+   animation (it stops moving, no console error). */
+@keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 .tickerItem { padding: 0 28px; font-size: .67rem; color: var(--td); display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .tickerItem strong { color: var(--g); }
 
