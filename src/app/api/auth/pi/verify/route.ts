@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyPiUser } from '@/lib/pi-network/platform-api';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
+import { Prisma } from '@prisma/client';
 
 // ============================================
 // CONFIGURATION & CONSTANTS
@@ -168,7 +169,7 @@ export async function POST(request: NextRequest) {
     // Database transaction for atomic user creation/update
     const sessionToken = generateSessionToken(piUser.uid);
     
-    const user = await prisma.$transaction(async (tx) => {
+    const user = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Upsert user with optimistic locking
       const updatedUser = await tx.user.upsert({
         where: { piWalletId: piUser.uid },
