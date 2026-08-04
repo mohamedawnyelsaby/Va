@@ -17,6 +17,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
+import { Prisma } from '@prisma/client';
 
 const PI_API_URL = 'https://api.minepi.com';
 const PI_API_KEY = process.env.PI_API_KEY;
@@ -177,7 +178,7 @@ export async function POST(request: NextRequest) {
     const cashback = parseFloat((payment.amount * CASHBACK_RATE).toFixed(7));
 
     // Database transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const updated = await tx.payment.update({
         where: { id: payment.id },
         data: {
