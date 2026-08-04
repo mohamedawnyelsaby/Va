@@ -7,7 +7,12 @@
 
 /* Ticker */
 .ticker { background: var(--gdim); border-bottom: 1px solid rgba(201,162,39,.15); padding: 5px 0; overflow: hidden; position: relative; }
-.tickerInner { display: flex; white-space: nowrap; animation: ticker 35s linear infinite; }
+.tickerInner { display: flex; white-space: nowrap; animation: ticker 22s linear infinite; }
+/* In RTL (Arabic), reading flows right-to-left, so the ticker should
+   visually flow the opposite way from LTR. animation-direction:reverse
+   plays the exact same keyframes backward — no separate keyframes
+   needed, and it can never drift out of sync with the LTR version. */
+:global([dir="rtl"]) .tickerInner { animation-direction: reverse; }
 /* Defined locally (not just in globals.css) because Next.js CSS Modules
    scope/hash animation names referenced inside a .module.css file — a
    @keyframes with the same literal name in a plain global stylesheet
