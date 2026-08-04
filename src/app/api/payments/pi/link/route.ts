@@ -11,6 +11,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
+import { Prisma } from '@prisma/client';
 
 // ============================================
 // CONFIGURATION
@@ -103,6 +104,12 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
   const clientIp = request.headers.get('x-forwarded-for') || 'unknown';
   let lockAcquired = false;
+  // Declared outside the try block so the `finally` clause below can still
+  // see it and release the lock. It was previously declared with `const`
+  // inside the try block, which meant every request that reached the
+  // `finally` block threw "ReferenceError: paymentId is not defined"
+  // instead of releasing the lock — permanently leaking a lock per request.
+  let paymentId: string | undefined;
 
   try {
     console.log(`[${requestId}] 🔗 Payment linking request initiated`);
@@ -123,7 +130,8 @@ export async function POST(request: NextRequest) {
     // STEP 2: Input Validation
     // ========================================
     const body = await request.json();
-    const { paymentId, piPaymentId } = body;
+    const { piPaymentId } = body;
+    paymentId = body.paymentId;
 
     // Validate payment ID
     if (!paymentId || !isValidPaymentId(paymentId)) {
@@ -162,7 +170,7 @@ export async function POST(request: NextRequest) {
     // ========================================
     // STEP 4: Database Transaction (ACID)
     // ========================================
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Fetch payment with row-level locking
       const payment = await tx.payment.findUnique({
         where: { id: paymentId },
@@ -333,8 +341,10 @@ export async function POST(request: NextRequest) {
     );
 
   } finally {
-    // Always release lock
-    if (lockAcquired) {
+    // Always release lock. `lockAcquired` can only be true if `paymentId`
+    // was validated and passed to acquireLock() earlier, so this guard
+    // also satisfies TypeScript's strict narrowing across the closure.
+    if (lockAcquired && paymentId) {
       releaseLock(paymentId, requestId);
       console.log(`[${requestId}] 🔓 Lock released`);
     }
