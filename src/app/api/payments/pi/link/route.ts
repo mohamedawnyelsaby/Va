@@ -12,6 +12,7 @@ import { authOptions } from '@/lib/auth/options';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
+import { captureException } from '@/lib/monitoring/sentry';
 
 // ============================================
 // CONFIGURATION
@@ -282,6 +283,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const duration = Date.now() - startTime;
     console.error(`[${requestId}] ❌ Payment linking failed after ${duration}ms:`, error);
+    captureException(error instanceof Error ? error : new Error(String(error)), {
+      requestId, paymentId,
+    });
 
     // Handle specific business errors
     if (error instanceof Error) {
@@ -307,6 +311,9 @@ export async function POST(request: NextRequest) {
             });
           } catch (logError) {
             console.error(`[${requestId}] Failed to log security incident:`, logError);
+            captureException(logError instanceof Error ? logError : new Error(String(logError)), {
+              requestId, context: 'payment_link_unauthorized_attempt security log write failed',
+            });
           }
 
           return NextResponse.json(
