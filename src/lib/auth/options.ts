@@ -13,16 +13,28 @@ export const authOptions: NextAuthOptions = {
     signIn: '/auth/signin',
     error: '/auth/error',
   },
-  trustHost: true,
+  // `trustHost` is a next-auth v5/Auth.js option — this project is on
+  // next-auth v4.24, which doesn't read this field at all (it's a silent
+  // no-op here, and TypeScript correctly flags it as unknown). Trusting
+  // the deployment host in v4 is controlled by NEXTAUTH_URL, so the field
+  // is removed rather than kept as dead, misleading config.
   secret: process.env.NEXTAUTH_SECRET,
   cookies: {
     sessionToken: {
-      name: 'next-auth.session-token',
+      // NextAuth's default naming applies the `__Secure-` prefix
+      // automatically when the cookie is secure. Overriding the cookie
+      // config here previously hardcoded the insecure name AND
+      // `secure: false` unconditionally — meaning the session cookie
+      // was never marked Secure even in production over HTTPS. Both are
+      // now derived from NODE_ENV instead of being hardcoded off.
+      name: process.env.NODE_ENV === 'production'
+        ? '__Secure-next-auth.session-token'
+        : 'next-auth.session-token',
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: false,
+        secure: process.env.NODE_ENV === 'production',
       },
     },
   },
@@ -39,20 +51,24 @@ export const authOptions: NextAuthOptions = {
         password: { type: 'text' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email || !credentials?.password) {return null;}
         try {
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
           });
-          if (!user) return null;
+          if (!user) {return null;}
           if (!user.password) {
-            if (credentials.password === user.id) {
-              return { id: user.id, name: user.name, email: user.email };
-            }
+            // ✅ SECURITY FIX: this used to accept the user's own database
+            // id as a valid "password" for accounts with no real password
+            // set (Google/Pi Network users). A user's id is not a secret —
+            // it appears in URLs and API responses throughout the app —
+            // so this let anyone who saw a user's id sign in as them with
+            // zero real credentials. OAuth-only accounts must sign in
+            // through their real provider; credentials login just fails.
             return null;
           }
           const isValid = await bcrypt.compare(credentials.password, user.password);
-          if (!isValid) return null;
+          if (!isValid) {return null;}
           return { id: user.id, name: user.name, email: user.email };
         } catch (e) {
           return null;
@@ -68,7 +84,7 @@ export const authOptions: NextAuthOptions = {
         username: { type: 'text' },
       },
       async authorize(credentials) {
-        if (!credentials?.accessToken || !credentials?.uid) return null;
+        if (!credentials?.accessToken || !credentials?.uid) {return null;}
         try {
           const piUid = credentials.uid;
           const piUsername = credentials.username || piUid;
@@ -141,7 +157,13 @@ export const authOptions: NextAuthOptions = {
             token.sub = dbUser.id;
             token.id = dbUser.id;
           }
-        } catch (e) {}
+        } catch (e) {
+          // Previously an empty catch block — a failed lookup here (DB
+          // outage, network blip) vanished silently and the JWT callback
+          // just continued without dbUser.id, with zero visibility into
+          // why. Now at least logged so outages are diagnosable.
+          console.error('[auth] Failed to resolve Google-linked user id:', e);
+        }
       }
       return token;
     },
