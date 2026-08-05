@@ -17,16 +17,18 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    let userId = session?.user?.id;
+    // ✅ FIX: guest reviews previously all shared a single hardcoded
+    // 'guest@pi.network' account. That meant every anonymous visitor was
+    // treated as the SAME user, so once any guest reviewed an item, the
+    // "already reviewed" check below blocked every other guest from ever
+    // reviewing that same item again — and gave zero real spam protection
+    // or traceability. Reviews now require a real, authenticated session.
+    const userId = session?.user?.id;
     if (!userId) {
-      // Guest reviews allowed with a guest account
-      let guest = await prisma.user.findFirst({ where: { email: 'guest@pi.network' } });
-      if (!guest) {
-        guest = await prisma.user.create({
-          data: { email: 'guest@pi.network', name: 'Guest User', emailVerified: new Date() },
-        });
-      }
-      userId = guest.id;
+      return NextResponse.json(
+        { error: 'You must be signed in to leave a review' },
+        { status: 401 }
+      );
     }
 
     const body = await request.json();
@@ -62,7 +64,7 @@ export async function POST(request: NextRequest) {
       select: { rating: true },
     });
 
-    const avgRating = allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length;
+    const avgRating = allReviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / allReviews.length;
     const count = allReviews.length;
 
     if (data.itemType === 'hotel') {
