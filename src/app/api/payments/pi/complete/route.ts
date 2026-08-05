@@ -18,6 +18,7 @@ import { authOptions } from '@/lib/auth/options';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
+import { captureException } from '@/lib/monitoring/sentry';
 
 const PI_API_URL = 'https://api.minepi.com';
 const PI_API_KEY = process.env.PI_API_KEY;
@@ -151,6 +152,9 @@ export async function POST(request: NextRequest) {
         // ✅ FIX: a network error means we got NO response from Pi at all —
         // this must never be treated as success, sandbox or not.
         piCompleteError = err instanceof Error ? err.message : 'Network error';
+        captureException(err instanceof Error ? err : new Error(piCompleteError), {
+          requestId, paymentId: payment.id, piPaymentIdToUse,
+        });
         console.error(`[${requestId}] ❌ Pi Platform error: ${piCompleteError}`);
       }
     } else {
@@ -231,6 +235,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error(`[${requestId}] ❌ Unexpected error:`, error);
+    captureException(error instanceof Error ? error : new Error(String(error)), { requestId });
     return NextResponse.json(
       {
         error: 'Payment completion failed',
