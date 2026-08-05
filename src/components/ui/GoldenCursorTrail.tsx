@@ -39,11 +39,14 @@ export default function GoldenCursorTrail() {
   const mouseRef  = useRef({ x: -300, y: -300 });
   const rafRef    = useRef<number>(0);
   const activeRef = useRef(false);
-  const idleRef   = useRef<ReturnType<typeof setTimeout>>();
+  // React 19's useRef<T>() with no initial value no longer compiles — the
+  // zero-arg overload was removed, so a value (here `undefined`) must be
+  // passed explicitly. This was a real build-breaking error, not stylistic.
+  const idleRef   = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const resize = useCallback(() => {
     const c = canvasRef.current;
-    if (!c) return;
+    if (!c) {return;}
     c.width  = window.innerWidth;
     c.height = window.innerHeight;
   }, []);
@@ -57,7 +60,7 @@ export default function GoldenCursorTrail() {
 
   const draw = useCallback(() => {
     const c = canvasRef.current;
-    if (!c) return;
+    if (!c) {return;}
     const ctx   = c.getContext('2d')!;
     const nodes = nodesRef.current;
     const n     = nodes.length;
@@ -66,7 +69,7 @@ export default function GoldenCursorTrail() {
 
     nodes[0].springTo(mouseRef.current.x, mouseRef.current.y, SPRING_STIFF, SPRING_DAMP);
     for (let i = 1; i < n; i++)
-      nodes[i].springTo(nodes[i-1].x, nodes[i-1].y, SPRING_STIFF, SPRING_DAMP);
+      {nodes[i].springTo(nodes[i-1].x, nodes[i-1].y, SPRING_STIFF, SPRING_DAMP);}
 
     if (n >= 2) {
       ctx.save();
@@ -119,19 +122,19 @@ export default function GoldenCursorTrail() {
 
     if (!activeRef.current) {
       activeRef.current = true;
-      if (canvasRef.current) canvasRef.current.style.opacity = '1';
+      if (canvasRef.current) {canvasRef.current.style.opacity = '1';}
     }
 
     clearTimeout(idleRef.current);
     idleRef.current = setTimeout(() => {
-      if (canvasRef.current) canvasRef.current.style.opacity = '0';
+      if (canvasRef.current) {canvasRef.current.style.opacity = '0';}
       activeRef.current = false;
     }, 2000);
   }, []);
 
   useEffect(() => {
     // لا تشغّل على الأجهزة اللمسية
-    if (window.matchMedia('(pointer: coarse)').matches) return;
+    if (window.matchMedia('(pointer: coarse)').matches) {return;}
 
     resize();
     initNodes();
