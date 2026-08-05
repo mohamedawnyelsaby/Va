@@ -11,6 +11,7 @@ import { verifyPiUser } from '@/lib/pi-network/platform-api';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
+import { captureException, captureMessage } from '@/lib/monitoring/sentry';
 
 // ============================================
 // CONFIGURATION & CONSTANTS
@@ -141,6 +142,10 @@ export async function POST(request: NextRequest) {
     // Critical security check: UID must match
     if (piUser.uid !== uid) {
       console.error(`[${requestId}] 🚨 SECURITY ALERT: UID mismatch! Expected: ${uid}, Got: ${piUser.uid}`);
+      captureMessage(
+        `SECURITY ALERT: Pi UID mismatch - requestId=${requestId}, expected=${uid}, received=${piUser.uid}`,
+        'error'
+      );
       
       // Log security incident
       await prisma.securityLog.create({
@@ -266,6 +271,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const duration = Date.now() - startTime;
     console.error(`[${requestId}] ❌ Verification failed after ${duration}ms:`, error);
+    captureException(error instanceof Error ? error : new Error(String(error)), { requestId });
 
     // Log error to security log
     try {
