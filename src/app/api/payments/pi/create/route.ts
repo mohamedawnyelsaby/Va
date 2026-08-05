@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prevent duplicate payment
-    const existingPayment = booking.payments.find(p =>
+    const existingPayment = booking.payments.find((p: { status: string }) =>
       ['approved', 'completed'].includes(p.status)
     );
     if (existingPayment) {
