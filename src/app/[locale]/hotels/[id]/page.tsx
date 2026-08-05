@@ -9,7 +9,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { MapPin, Star, Heart, Share2, Wifi, Coffee, Dumbbell, Utensils, Calendar, Users, ChevronLeft, ChevronRight, ArrowLeft, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
+import { formatDate } from '@/lib/i18n/formatters';
 import { VG, inputBase, inputFocus, inputBlur, monoLabel } from '@/lib/tokens';
 import { ImageLightbox, useImageLightbox } from '@/components/ui/ImageLightbox';
 import { ReviewModal } from '@/components/ui/ReviewModal';
@@ -24,7 +25,7 @@ function Spinner() {
         <div style={{ width: '40px', height: '40px', border: '1px solid var(--vg-gold-border)', borderTop: '1px solid var(--vg-gold)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
         <div style={{ ...monoLabel, letterSpacing: VG.tracking.wide, textAlign: 'center' }}>Loading Hotel</div>
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{'@keyframes spin { to { transform: rotate(360deg); } }'}</style>
     </div>
   );
 }
@@ -51,10 +52,10 @@ export default function HotelDetailPage() {
   const fetchHotel = useCallback(async () => {
     try {
       const res = await fetch(`/api/hotels/${params.id}`);
-      if (!res.ok) throw new Error('Not found');
+      if (!res.ok) {throw new Error('Not found');}
       const data = await res.json();
       setHotel(data);
-      if (data.roomTypes?.length > 0) setSelectedRoom(data.roomTypes[0]);
+      if (data.roomTypes?.length > 0) {setSelectedRoom(data.roomTypes[0]);}
       addToRecentlyViewed({
         id: data.id, type: 'hotel', name: data.name, thumbnail: data.thumbnail,
         price: data.pricePerNight, currency: data.currency, rating: data.rating,
@@ -68,7 +69,7 @@ export default function HotelDetailPage() {
   useEffect(() => { fetchHotel(); }, [fetchHotel]);
 
   useEffect(() => {
-    if (!hotel) return;
+    if (!hotel) {return;}
     try {
       const stored = JSON.parse(localStorage.getItem('va-favorites') || '[]');
       setIsFav(stored.some((f: any) => f.id === hotel.id));
@@ -76,7 +77,7 @@ export default function HotelDetailPage() {
   }, [hotel]);
 
   const toggleFav = () => {
-    if (!hotel) return;
+    if (!hotel) {return;}
     try {
       const stored = JSON.parse(localStorage.getItem('va-favorites') || '[]');
       const exists = stored.some((f: any) => f.id === hotel.id);
@@ -117,15 +118,15 @@ export default function HotelDetailPage() {
   const subtotal      = pricePerNight * nights * bookingData.rooms;
   const total         = subtotal * 1.1;
 
-  if (loading) return <Spinner />;
-  if (!hotel) return (
+  if (loading) {return <Spinner />;}
+  if (!hotel) {return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '60px' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '3rem', color: 'var(--vg-text-3)', marginBottom: '1rem' }}>Hotel Not Found</div>
         <Link href={`/${locale}/hotels`} className="vg-btn-outline" style={{ textDecoration: 'none' }}>← Back to Hotels</Link>
       </div>
     </div>
-  );
+  );}
 
   const images = hotel.images?.length > 0 ? hotel.images : [hotel.thumbnail].filter(Boolean);
 
@@ -231,7 +232,7 @@ export default function HotelDetailPage() {
       {/* Main content */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: '2rem', padding: `2.5rem ${VG.section.x}`, maxWidth: '1400px', margin: '0 auto' }}
         className="hotel-detail-grid">
-        <style>{`@media(max-width:900px){.hotel-detail-grid{grid-template-columns:1fr!important}}`}</style>
+        <style>{'@media(max-width:900px){.hotel-detail-grid{grid-template-columns:1fr!important}}'}</style>
 
         {/* Left */}
         <div>
