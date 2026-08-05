@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import { captureException } from '@/lib/monitoring/sentry';
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -106,6 +107,9 @@ export const authOptions: NextAuthOptions = {
           return { id: user.id, name: user.name, email: user.email };
         } catch (e) {
           console.error('Pi auth error:', e);
+          captureException(e instanceof Error ? e : new Error(String(e)), {
+            context: 'pi-network credentials authorize',
+          });
           return null;
         }
       },
@@ -132,6 +136,9 @@ export const authOptions: NextAuthOptions = {
           return true;
         } catch (e) {
           console.error('Google signIn error:', e);
+          captureException(e instanceof Error ? e : new Error(String(e)), {
+            context: 'google signIn callback',
+          });
           return false;
         }
       }
@@ -161,8 +168,11 @@ export const authOptions: NextAuthOptions = {
           // Previously an empty catch block — a failed lookup here (DB
           // outage, network blip) vanished silently and the JWT callback
           // just continued without dbUser.id, with zero visibility into
-          // why. Now at least logged so outages are diagnosable.
+          // why. Now logged AND reported so outages are diagnosable.
           console.error('[auth] Failed to resolve Google-linked user id:', e);
+          captureException(e instanceof Error ? e : new Error(String(e)), {
+            context: 'jwt callback - resolve Google-linked user id',
+          });
         }
       }
       return token;
