@@ -1,7 +1,13 @@
 // src/app/sitemap.ts
 import { MetadataRoute } from 'next';
 
-const BASE_URL = 'https://va-pied.vercel.app';
+// FIX: BASE_URL was hardcoded to a Vercel preview URL
+// ('https://va-pied.vercel.app'), so every sitemap entry pointed at that
+// preview deployment regardless of the actual production domain. It now
+// reads from NEXTAUTH_URL — the env var this project already uses
+// elsewhere for the canonical site URL — falling back to the old preview
+// URL only if NEXTAUTH_URL isn't set.
+const BASE_URL = process.env.NEXTAUTH_URL || 'https://va-pied.vercel.app';
 const LOCALES = ['en', 'ar', 'fr', 'es', 'de', 'it', 'ru', 'zh', 'ja', 'ko'];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -49,7 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       take: 100, // Limit for build performance
     });
 
-    cities.forEach((city) => {
+    cities.forEach((city: { id: string; slug: string; updatedAt: Date }) => {
       LOCALES.forEach((locale) => {
         sitemap.push({
           url: `${BASE_URL}/${locale}/cities/${city.slug}`,
