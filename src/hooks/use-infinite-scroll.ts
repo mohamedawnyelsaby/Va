@@ -7,7 +7,12 @@ interface UseInfiniteScrollOptions {
 }
 
 interface UseInfiniteScrollReturn {
-  ref: React.RefObject<HTMLDivElement>;
+  // React 19's useRef<T>(null) now always returns RefObject<T | null>
+  // (previously RefObject<T>), since the ref can genuinely be null before
+  // mount / after unmount. The old `RefObject<HTMLDivElement>` signature
+  // no longer matches what useRef actually returns, which is what tsc
+  // was flagging.
+  ref: React.RefObject<HTMLDivElement | null>;
   isIntersecting: boolean;
 }
 
@@ -38,10 +43,10 @@ export function useInfiniteScroll(
   );
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {return;}
 
     const target = targetRef.current;
-    if (!target) return;
+    if (!target) {return;}
 
     observerRef.current = new IntersectionObserver(handleIntersection, {
       threshold,
@@ -79,7 +84,7 @@ export function useInfiniteScrollWithState<T>(
   const [hasMore, setHasMore] = useState(true);
 
   const loadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return;
+    if (isLoading || !hasMore) {return;}
 
     setIsLoading(true);
     setIsError(false);
@@ -139,7 +144,7 @@ export function useInfiniteScrollCursor<T extends { id: string }>(
   const [hasMore, setHasMore] = useState(true);
 
   const loadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return;
+    if (isLoading || !hasMore) {return;}
 
     setIsLoading(true);
     setIsError(false);
