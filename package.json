@@ -4,10 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma db push --accept-data-loss && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate deploy",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",
@@ -58,13 +62,21 @@
     "zustand": "^4.5.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
     "@types/bcryptjs": "2.4.6",
     "@types/node": "^20.0.0",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
     "@types/validator": "^13.12.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "eslint": "8.56.0",
     "eslint-config-next": "15.3.6",
-    "typescript": "^5.4.0"
+    "eslint-config-prettier": "^9.1.0",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.4.0",
+    "vitest": "^2.1.8"
   }
 }
