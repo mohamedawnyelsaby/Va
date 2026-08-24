@@ -2,15 +2,47 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 export async function POST(request: Request) {
   try {
-    // Security check
+    // --------------------------------------------------------------
+    // SECURITY: this endpoint used to check the request body against
+    // a secret ('Va-Travel-Seed-2026-Secret') that was hardcoded in
+    // source and committed to a PUBLIC repo — anyone reading the repo
+    // could call this route. It also unconditionally created an
+    // admin@vatravel.com account with the password "password123",
+    // so a single unauthenticated POST could hand out an admin login.
+    // Fixed by: (1) disabling the route entirely outside local/dev
+    // environments, (2) reading the secret from an env var instead of
+    // hardcoding it, comparing it with a timing-safe check, and
+    // (3) generating a random admin password instead of a known one.
+    // --------------------------------------------------------------
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_SEED !== 'true') {
+      return NextResponse.json(
+        { error: 'Seeding is disabled in production' },
+        { status: 403 }
+      );
+    }
+
+    const seedSecret = process.env.SEED_SECRET;
+    if (!seedSecret) {
+      return NextResponse.json(
+        { error: 'SEED_SECRET is not configured on the server' },
+        { status: 500 }
+      );
+    }
+
     const body = await request.json();
-    const { secret } = body;
-    
-    // Change this to your own secret!
-    if (secret !== 'Va-Travel-Seed-2026-Secret') {
+    const providedSecret: string = body?.secret ?? '';
+
+    const provided = Buffer.from(providedSecret);
+    const expected = Buffer.from(seedSecret);
+    const isValid =
+      provided.length === expected.length &&
+      crypto.timingSafeEqual(provided, expected);
+
+    if (!isValid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -102,20 +134,28 @@ export async function POST(request: Request) {
 
     console.log(`✅ Created ${cities.length} cities`);
 
-    // Create Users
-    const hashedPassword = await bcrypt.hash('password123', 12);
+    // Create Users — random passwords generated per run instead of the
+    // previous hardcoded "password123" for every account. Returned once
+    // in the response so whoever ran the seed can capture them; never
+    // logged or stored anywhere else.
+    const adminPassword = crypto.randomBytes(12).toString('base64url');
+    const testPassword = crypto.randomBytes(12).toString('base64url');
+    const [adminHash, testHash] = await Promise.all([
+      bcrypt.hash(adminPassword, 12),
+      bcrypt.hash(testPassword, 12),
+    ]);
     const users = await Promise.all([
       prisma.user.create({
         data: {
           email: 'admin@vatravel.com',
-          password: hashedPassword,
+          password: adminHash,
           name: 'Admin User',
         },
       }),
       prisma.user.create({
         data: {
           email: 'user@vatravel.com',
-          password: hashedPassword,
+          password: testHash,
           name: 'Test User',
         },
       }),
@@ -196,6 +236,12 @@ export async function POST(request: Request) {
         cities: cities.length,
         users: users.length,
         hotels: hotels.length,
+        // One-time credentials — save these now, they are not recoverable
+        // and are never logged or stored in plaintext anywhere.
+        credentials: {
+          admin: { email: 'admin@vatravel.com', password: adminPassword },
+          testUser: { email: 'user@vatravel.com', password: testPassword },
+        },
       },
     });
 
