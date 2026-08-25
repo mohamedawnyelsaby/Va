@@ -37,7 +37,7 @@ function SkeletonCard() {
           </div>
         ))}
       </div>
-      <style>{`@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
+      <style>{'@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}'}</style>
     </div>
   );
 }
@@ -51,7 +51,7 @@ function PaginationBar({
   totalPages: number;
   onPage: (p: number) => void;
 }) {
-  if (totalPages <= 1) return null;
+  if (totalPages <= 1) {return null;}
 
   const pages: (number | 'ellipsis')[] = [];
   const delta = 2;
@@ -139,13 +139,13 @@ export default function AttractionsPage() {
         limit: '12',
         ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)),
       });
-      if (searchTerm) q.append('search', searchTerm);
+      if (searchTerm) {q.append('search', searchTerm);}
       const res = await fetch(`/api/attractions?${q}`);
       const data = await res.json();
       setAttractions(data.attractions || []);
       setTotalPages(data.pagination?.totalPages || 1);
       setTotalCount(data.pagination?.total || 0);
-    } catch { } finally { setLoading(false); }
+    } catch { /* fetch failed silently — loading state cleared in finally below */ } finally { setLoading(false); }
   };
 
   useEffect(() => { fetchAttractions(); }, [currentPage, filters]);
