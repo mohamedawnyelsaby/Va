@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 export default function CareersPage() {
   const roles = [
@@ -17,7 +17,7 @@ export default function CareersPage() {
           Careers at <em className="vg-italic">Va Travel</em>
         </h1>
         <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.9rem', color: 'var(--vg-text-2)', maxWidth: '560px', margin: '0 auto', lineHeight: 1.8, textAlign: 'center' }}>
-          We are building the future of travel. Join our team and help shape the world's first AI-powered travel platform on Pi Network.
+          We are building the future of travel. Join our team and help shape the world&apos;s first AI-powered travel platform on Pi Network.
         </p>
       </div>
 
@@ -43,7 +43,7 @@ export default function CareersPage() {
         </div>
         <div style={{ textAlign: 'center', marginTop: '3rem', padding: '2rem', background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)' }}>
           <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.86rem', color: 'var(--vg-text-2)', marginBottom: '1rem' }}>
-            Don't see your role? Send us your CV anyway.
+            Don&apos;t see your role? Send us your CV anyway.
           </div>
           <a href="mailto:careers@vatravel.com" className="vg-btn-primary" style={{ textDecoration: 'none', display: 'inline-flex' }}>
             careers@vatravel.com
