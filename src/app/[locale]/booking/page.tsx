@@ -14,7 +14,7 @@ function Spinner({ label }: { label?: string }) {
         <div style={{ width: '40px', height: '40px', border: '1px solid var(--vg-gold-border)', borderTop: '1px solid var(--vg-gold)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
         <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.48rem', letterSpacing: '0.3em', color: 'var(--vg-text-3)', textTransform: 'uppercase' }}>{label || 'Loading'}</div>
       </div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
     </div>
   );
 }
@@ -39,7 +39,7 @@ export default function BookingPage() {
   const rooms    = parseInt(searchParams.get('rooms') || '1');
 
   useEffect(() => {
-    if (status === 'loading') return;
+    if (status === 'loading') {return;}
     if (!itemId || !checkIn || !checkOut) {
       setError('Missing booking details. Please go back and select dates.'); setLoading(false); return;
     }
@@ -50,7 +50,7 @@ export default function BookingPage() {
     try {
       setLoading(true);
       const hotelRes = await fetch(`/api/hotels/${itemId}`);
-      if (!hotelRes.ok) throw new Error('Hotel not found');
+      if (!hotelRes.ok) {throw new Error('Hotel not found');}
       const hotelData = await hotelRes.json();
       setHotel(hotelData);
 
@@ -70,7 +70,7 @@ export default function BookingPage() {
         }),
       });
       const bookingData = await bookingRes.json();
-      if (!bookingRes.ok) throw new Error(bookingData.error || 'Failed to create booking');
+      if (!bookingRes.ok) {throw new Error(bookingData.error || 'Failed to create booking');}
 
       setBooking({ ...bookingData, checkIn, checkOut, nights, pricePerNight, amount: totalPrice, currency: hotelData.currency || 'USD', roomType, hotelName: hotelData.name });
     } catch (e: any) {
@@ -78,9 +78,9 @@ export default function BookingPage() {
     } finally { setLoading(false); }
   };
 
-  if (status === 'loading' || loading) return <Spinner label="Preparing Your Booking" />;
+  if (status === 'loading' || loading) {return <Spinner label="Preparing Your Booking" />;}
 
-  if (error) return (
+  if (error) {return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', paddingTop: '80px' }}>
       <div style={{ background: 'var(--vg-bg-card)', border: '1px solid rgba(239,68,68,0.3)', padding: '2.5rem', maxWidth: '420px', width: '100%', textAlign: 'center' }}>
         <div style={{ width: '48px', height: '48px', border: '1px solid rgba(239,68,68,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: '#ef4444' }}>
@@ -91,9 +91,9 @@ export default function BookingPage() {
         <button onClick={() => router.push(`/${locale}/hotels`)} className="vg-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Back to Hotels</button>
       </div>
     </div>
-  );
+  );}
 
-  if (!booking || !hotel) return null;
+  if (!booking || !hotel) {return null;}
 
   const SummaryRow = ({ label, value }: { label: string; value: string }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0', borderBottom: '1px solid var(--vg-border)' }}>
@@ -123,7 +123,7 @@ export default function BookingPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: '2rem' }}
           className="booking-grid">
-          <style>{`@media(max-width:800px){.booking-grid{grid-template-columns:1fr!important}}`}</style>
+          <style>{'@media(max-width:800px){.booking-grid{grid-template-columns:1fr!important}}'}</style>
 
           {/* Booking Summary */}
           <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', padding: '2rem' }}>
