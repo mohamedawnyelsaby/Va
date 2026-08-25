@@ -39,7 +39,9 @@ export default function AttractionDetailPage() {
         try {
           const stored = JSON.parse(localStorage.getItem('va-favorites') || '[]');
           setIsFav(stored.some((f: any) => f.id === d.id));
-        } catch {}
+        } catch {
+          // intentionally ignored: best-effort localStorage read/write; a corrupt or missing value here should not break the page
+        }
       })
       .catch(() => setLoading(false));
   }, [params.id]);
@@ -53,27 +55,29 @@ export default function AttractionDetailPage() {
         : [...stored, { id: attraction.id, type: 'attraction' }];
       localStorage.setItem('va-favorites', JSON.stringify(updated));
       setIsFav(!exists);
-    } catch {}
+    } catch {
+      // intentionally ignored: best-effort localStorage read/write; a corrupt or missing value here should not break the page
+    }
   };
 
-  if (loading) return (
+  if (loading) {return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '60px' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ width: '40px', height: '40px', border: '1px solid var(--vg-gold-border)', borderTop: '1px solid var(--vg-gold)', borderRadius: '50%', animation: 'spin 0.9s linear infinite', margin: '0 auto 1rem' }} />
         <div style={{ ...monoLabel, textAlign: 'center' }}>Loading</div>
       </div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
     </div>
-  );
+  );}
 
-  if (!attraction) return (
+  if (!attraction) {return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '60px' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '3rem', color: 'var(--vg-text-3)', marginBottom: '1.5rem' }}>Not Found</div>
         <Link href={`/${locale}/attractions`} className="vg-btn-outline" style={{ textDecoration: 'none' }}>← Attractions</Link>
       </div>
     </div>
-  );
+  );}
 
   const images = attraction.images?.length > 0 ? attraction.images : [attraction.thumbnail].filter(Boolean);
 
@@ -145,7 +149,7 @@ export default function AttractionDetailPage() {
       {/* Content */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: '2rem', padding: `2.5rem ${VG.section.x}`, maxWidth: '1200px', margin: '0 auto' }}
         className="attr-grid">
-        <style>{`@media(max-width:800px){.attr-grid{grid-template-columns:1fr!important}}`}</style>
+        <style>{'@media(max-width:800px){.attr-grid{grid-template-columns:1fr!important}}'}</style>
 
         {/* Left */}
         <div>
