@@ -56,9 +56,21 @@ export default function SignInPage() {
         body: JSON.stringify({ accessToken: piUser.accessToken, uid: piUser.uid }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Auth failed');
-      const result = await signIn('credentials', {
-        email: data.user.email, password: data.user.id, redirect: false,
+      if (!res.ok) {throw new Error(data.error || 'Auth failed');}
+      // ✅ FIX: this used to sign in via the 'credentials' (email/password)
+      // provider using the user's own database id AS the password —
+      // exploiting the exact auth bypass that was closed in
+      // src/lib/auth/options.ts (a user's id is not a secret; it's
+      // visible in URLs and API responses throughout the app). That
+      // bypass is now rejected server-side, so this call would simply
+      // fail. Pi Network sign-in should go through the dedicated
+      // 'pi-network' provider, authenticated with the real Pi access
+      // token — not a fake credentials login.
+      const result = await signIn('pi-network', {
+        accessToken: piUser.accessToken,
+        uid: piUser.uid,
+        username: piUser.username,
+        redirect: false,
       });
       if (result?.ok) {
         router.push(`/${locale}/dashboard`);
@@ -78,7 +90,7 @@ export default function SignInPage() {
     }
   };
 
-  if (!mounted) return null;
+  if (!mounted) {return null;}
 
   return (
     <div style={{
@@ -309,7 +321,7 @@ export default function SignInPage() {
                 fontFamily: 'var(--font-dm-sans)', fontSize: '0.83rem',
                 transition: 'background 0.2s',
               }}
-              onMouseEnter={e => { if (!isPiLoading) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(201,162,39,0.2)'; }}
+              onMouseEnter={e => { if (!isPiLoading) {(e.currentTarget as HTMLButtonElement).style.background = 'rgba(201,162,39,0.2)';} }}
               onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--vg-gold-dim)'; }}
             >
               <span style={{ fontSize: '1rem', lineHeight: 1 }}>π</span>
