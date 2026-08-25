@@ -34,12 +34,12 @@ export default function SignUpPage() {
         body: JSON.stringify(formData),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Registration failed');
+      if (!response.ok) {throw new Error(data.error || 'Registration failed');}
       const result = await signIn('credentials', {
         email: formData.email, password: formData.password, redirect: false,
       });
-      if (result?.error) router.push(`/${locale}/auth/signin`);
-      else router.push(`/${locale}/dashboard`);
+      if (result?.error) {router.push(`/${locale}/auth/signin`);}
+      else {router.push(`/${locale}/dashboard`);}
     } catch (error: any) {
       toast({ title: 'Error', description: error.message || 'Something went wrong', variant: 'destructive' });
     } finally {
@@ -52,7 +52,7 @@ export default function SignUpPage() {
     catch { toast({ title: 'Error', description: 'Google signup failed', variant: 'destructive' }); }
   };
 
-  if (!mounted) return null;
+  if (!mounted) {return null;}
 
   const inputStyle = {
     width: '100%', boxSizing: 'border-box' as const,
