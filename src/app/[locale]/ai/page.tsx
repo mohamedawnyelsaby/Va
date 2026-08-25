@@ -39,7 +39,7 @@ export default function AIPage({ params }: { params: { locale: string } }) {
         ? '🌍 مرحباً بك في Logy AI!\n\nأتحدث لغتك — اكتب بأي لغة وسأرد بها.\n\nإلى أين تريد السفر؟'
         : '🌍 Welcome to Logy AI!\n\nI speak your language — write in any language and I\'ll respond in kind.\n\nWhere would you like to go?',
       time: formatTime(new Date()),
-    }
+    },
   ]);
 
   const [input, setInput] = useState('');
@@ -52,7 +52,7 @@ export default function AIPage({ params }: { params: { locale: string } }) {
   }, [messages, loading]);
 
   const send = async (text: string) => {
-    if (!text.trim() || loading) return;
+    if (!text.trim() || loading) {return;}
 
     const userMsg: Message = {
       id: Date.now().toString(),
