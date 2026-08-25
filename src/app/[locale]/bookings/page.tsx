@@ -20,7 +20,7 @@ function SkeletonRow() {
           </div>
         ))}
       </div>
-      <style>{`@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
+      <style>{'@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}'}</style>
     </div>
   );
 }
@@ -34,7 +34,7 @@ function PaginationBar({
   totalPages: number;
   onPage: (p: number) => void;
 }) {
-  if (totalPages <= 1) return null;
+  if (totalPages <= 1) {return null;}
 
   const pages: (number | 'ellipsis')[] = [];
   const delta = 2;
