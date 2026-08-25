@@ -93,7 +93,7 @@ export default function ForgotPasswordPage() {
           ) : (
             <>
               <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.84rem', color: 'var(--vg-text-2)', lineHeight: 1.7, marginBottom: '1.8rem' }}>
-                Enter your email address and we'll send you a link to reset your password.
+                Enter your email address and we&apos;ll send you a link to reset your password.
               </p>
 
               <form onSubmit={handleSubmit}>
