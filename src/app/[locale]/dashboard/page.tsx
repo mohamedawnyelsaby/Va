@@ -69,7 +69,7 @@ export default function DashboardPage() {
         const bookingsData = await bookingsRes.json();
         setUserData(user);
         setRecentBookings(bookingsData.bookings || []);
-      } catch { }
+      } catch { /* fetch failed silently — loading state cleared in finally below */ }
       finally { setLoading(false); }
     };
     fetchData();
@@ -83,7 +83,7 @@ export default function DashboardPage() {
           {/* FIX: 0.48rem → VG.font.micro */}
           <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: VG.tracking.wide, color: 'var(--vg-text-3)', textTransform: 'uppercase' }}>Loading Dashboard</div>
         </div>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
       </div>
     );
   }
@@ -151,7 +151,7 @@ export default function DashboardPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 280px', gap: '1px', background: 'var(--vg-border)' }}
           className="dash-grid">
-          <style>{`@media(max-width:800px){.dash-grid{grid-template-columns:1fr!important}}`}</style>
+          <style>{'@media(max-width:800px){.dash-grid{grid-template-columns:1fr!important}}'}</style>
 
           {/* Recent Bookings */}
           <div style={{ background: 'var(--vg-bg-card)', padding: '2rem' }}>
