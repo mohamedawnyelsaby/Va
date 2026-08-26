@@ -148,13 +148,13 @@ export default function HotelsPage({ params }: { params: { locale: string } }) {
 
               <div className={styles.hotelStars}>
                 {'★'.repeat(hotel.stars)}{'☆'.repeat(5 - hotel.stars)}
-                <span className={`text-small muted`}>({hotel.reviews.toLocaleString()})</span>
+                <span className={'text-small muted'}>({hotel.reviews.toLocaleString()})</span>
               </div>
 
               <div className={styles.hotelFooter}>
                 <div className={styles.hotelPrice}>
                   <span className={styles.priceNum}>${hotel.price}</span>
-                  <span className={`text-small muted`}>/ {isAr ? 'ليلة' : 'night'}</span>
+                  <span className={'text-small muted'}>/ {isAr ? 'ليلة' : 'night'}</span>
                 </div>
                 <button className={`btn btn-primary ${styles.bookBtn}`}>
                   {isAr ? 'احجز الآن' : 'Book Now'}
