@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
+import { logger } from '@/lib/logger';
 export async function POST(request: Request) {
   try {
     // --------------------------------------------------------------
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
       });
     }
 
-    console.log('🌱 Starting seed...');
+    logger.log('🌱 Starting seed...');
 
     // Create Cities
     const cities = await Promise.all([
@@ -132,7 +133,7 @@ export async function POST(request: Request) {
       }),
     ]);
 
-    console.log(`✅ Created ${cities.length} cities`);
+    logger.log(`✅ Created ${cities.length} cities`);
 
     // Create Users — random passwords generated per run instead of the
     // previous hardcoded "password123" for every account. Returned once
@@ -161,7 +162,7 @@ export async function POST(request: Request) {
       }),
     ]);
 
-    console.log(`✅ Created ${users.length} users`);
+    logger.log(`✅ Created ${users.length} users`);
 
     // Create Hotels
     const hotels = [];
@@ -227,7 +228,7 @@ export async function POST(request: Request) {
       hotels.push(budgetHotel);
     }
 
-    console.log(`✅ Created ${hotels.length} hotels`);
+    logger.log(`✅ Created ${hotels.length} hotels`);
 
     return NextResponse.json({
       success: true,
@@ -246,7 +247,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error: any) {
-    console.error('❌ Seed error:', error);
+    logger.error('❌ Seed error:', error);
     return NextResponse.json(
       { 
         error: 'Seed failed', 

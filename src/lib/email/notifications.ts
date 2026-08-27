@@ -1,5 +1,6 @@
 import sgMail from '@sendgrid/mail';
 
+import { logger } from '@/lib/logger';
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 }
@@ -26,14 +27,14 @@ function baseTemplate(content: string): string {
 
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
   if (!process.env.SENDGRID_API_KEY) {
-    console.warn('⚠️ SENDGRID_API_KEY not set — email skipped:', subject);
+    logger.warn('⚠️ SENDGRID_API_KEY not set — email skipped:', subject);
     return;
   }
   try {
     await sgMail.send({ to, from: FROM_EMAIL, subject, html });
-    console.log('✅ Email sent:', subject, '→', to);
+    logger.log('✅ Email sent:', subject, '→', to);
   } catch (error) {
-    console.error('❌ Email failed:', subject, error);
+    logger.error('❌ Email failed:', subject, error);
   }
 }
 

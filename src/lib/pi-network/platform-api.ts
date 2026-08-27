@@ -12,6 +12,7 @@ import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 // CONFIGURATION
 // ============================================
 
+import { logger } from '@/lib/logger';
 const PI_API_URL = process.env.PI_SANDBOX === 'true'
   ? 'https://api.minepi.com'
   : 'https://api.minepi.com';
@@ -78,7 +79,7 @@ export function verifyPiSignature(
 ): boolean {
   try {
     if (!PI_SECRET) {
-      console.error('❌ PI_SECRET not configured');
+      logger.error('❌ PI_SECRET not configured');
       return false;
     }
 
@@ -97,7 +98,7 @@ export function verifyPiSignature(
       Buffer.from(expectedSignature)
     );
   } catch (error) {
-    console.error('❌ Signature verification error:', error);
+    logger.error('❌ Signature verification error:', error);
     return false;
   }
 }
@@ -118,7 +119,7 @@ async function makeRequest<T>(
     return response.data;
   } catch (error) {
     if (retries > 0 && shouldRetry(error)) {
-      console.log(`⚠️ Request failed, retrying... (${MAX_RETRIES - retries + 1}/${MAX_RETRIES})`);
+      logger.log(`⚠️ Request failed, retrying... (${MAX_RETRIES - retries + 1}/${MAX_RETRIES})`);
       
       // Exponential backoff
       const delay = RETRY_DELAY * Math.pow(2, MAX_RETRIES - retries);
@@ -191,7 +192,7 @@ function sleep(ms: number): Promise<void> {
  * Returns user data if token is valid
  */
 export async function verifyPiUser(accessToken: string): Promise<PiUser> {
-  console.log('🔐 Verifying Pi user token...');
+  logger.log('🔐 Verifying Pi user token...');
   
   try {
     const user = await makeRequest<PiUser>({
@@ -202,10 +203,10 @@ export async function verifyPiUser(accessToken: string): Promise<PiUser> {
       },
     });
     
-    console.log(`✅ User verified: ${user.username}`);
+    logger.log(`✅ User verified: ${user.username}`);
     return user;
   } catch (error) {
-    console.error('❌ User verification failed:', error);
+    logger.error('❌ User verification failed:', error);
     throw new Error('Failed to verify Pi user token');
   }
 }
@@ -218,7 +219,7 @@ export async function verifyPiUser(accessToken: string): Promise<PiUser> {
  * Get payment details from Pi Platform
  */
 export async function getPayment(paymentId: string): Promise<PiPayment> {
-  console.log(`📋 Fetching payment: ${paymentId}`);
+  logger.log(`📋 Fetching payment: ${paymentId}`);
   
   if (!PI_API_KEY) {
     throw new Error('PI_API_KEY not configured');
@@ -233,10 +234,10 @@ export async function getPayment(paymentId: string): Promise<PiPayment> {
       },
     });
     
-    console.log(`✅ Payment fetched: ${payment.identifier}`);
+    logger.log(`✅ Payment fetched: ${payment.identifier}`);
     return payment;
   } catch (error) {
-    console.error('❌ Failed to fetch payment:', error);
+    logger.error('❌ Failed to fetch payment:', error);
     throw new Error(`Failed to get payment: ${paymentId}`);
   }
 }
@@ -246,7 +247,7 @@ export async function getPayment(paymentId: string): Promise<PiPayment> {
  * Must be called before payment can be completed
  */
 export async function approvePayment(paymentId: string): Promise<void> {
-  console.log(`✅ Approving payment: ${paymentId}`);
+  logger.log(`✅ Approving payment: ${paymentId}`);
   
   if (!PI_API_KEY) {
     throw new Error('PI_API_KEY not configured');
@@ -261,9 +262,9 @@ export async function approvePayment(paymentId: string): Promise<void> {
       },
     });
     
-    console.log('✅ Payment approved successfully');
+    logger.log('✅ Payment approved successfully');
   } catch (error) {
-    console.error('❌ Failed to approve payment:', error);
+    logger.error('❌ Failed to approve payment:', error);
     throw new Error(`Failed to approve payment: ${paymentId}`);
   }
 }
@@ -276,8 +277,8 @@ export async function completePayment(
   paymentId: string,
   txid: string
 ): Promise<void> {
-  console.log(`🎉 Completing payment: ${paymentId}`);
-  console.log(`⛓️ Transaction ID: ${txid}`);
+  logger.log(`🎉 Completing payment: ${paymentId}`);
+  logger.log(`⛓️ Transaction ID: ${txid}`);
   
   if (!PI_API_KEY) {
     throw new Error('PI_API_KEY not configured');
@@ -294,9 +295,9 @@ export async function completePayment(
       data: { txid },
     });
     
-    console.log('✅ Payment completed successfully');
+    logger.log('✅ Payment completed successfully');
   } catch (error) {
-    console.error('❌ Failed to complete payment:', error);
+    logger.error('❌ Failed to complete payment:', error);
     throw new Error(`Failed to complete payment: ${paymentId}`);
   }
 }
@@ -305,7 +306,7 @@ export async function completePayment(
  * Cancel payment on Pi Platform
  */
 export async function cancelPayment(paymentId: string): Promise<void> {
-  console.log(`❌ Cancelling payment: ${paymentId}`);
+  logger.log(`❌ Cancelling payment: ${paymentId}`);
   
   if (!PI_API_KEY) {
     throw new Error('PI_API_KEY not configured');
@@ -320,9 +321,9 @@ export async function cancelPayment(paymentId: string): Promise<void> {
       },
     });
     
-    console.log('✅ Payment cancelled successfully');
+    logger.log('✅ Payment cancelled successfully');
   } catch (error) {
-    console.error('❌ Failed to cancel payment:', error);
+    logger.error('❌ Failed to cancel payment:', error);
     throw new Error(`Failed to cancel payment: ${paymentId}`);
   }
 }
@@ -348,7 +349,7 @@ export async function getIncompletePayment(
     
     return null;
   } catch (error) {
-    console.error('Failed to get incomplete payment:', error);
+    logger.error('Failed to get incomplete payment:', error);
     return null;
   }
 }
@@ -367,8 +368,8 @@ export async function createA2UPayment(
   memo: string,
   metadata: Record<string, any> = {}
 ): Promise<string> {
-  console.log(`💸 Creating A2U payment to user: ${userId}`);
-  console.log(`💰 Amount: ${amount} Pi`);
+  logger.log(`💸 Creating A2U payment to user: ${userId}`);
+  logger.log(`💰 Amount: ${amount} Pi`);
   
   if (!PI_API_KEY) {
     throw new Error('PI_API_KEY not configured');
@@ -392,10 +393,10 @@ export async function createA2UPayment(
       },
     });
     
-    console.log(`✅ A2U payment created: ${response.identifier}`);
+    logger.log(`✅ A2U payment created: ${response.identifier}`);
     return response.identifier;
   } catch (error) {
-    console.error('❌ Failed to create A2U payment:', error);
+    logger.error('❌ Failed to create A2U payment:', error);
     throw new Error('Failed to create App-to-User payment');
   }
 }

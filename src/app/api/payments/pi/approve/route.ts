@@ -15,6 +15,7 @@ import { authOptions } from '@/lib/auth/options';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
 
+import { logger } from '@/lib/logger';
 const PI_API_URL = 'https://api.minepi.com';
 const PI_API_KEY = process.env.PI_API_KEY;
 const IS_SANDBOX =
@@ -37,20 +38,20 @@ async function updateDbBackground(
 
     if (!payment && internalPaymentId) {
       const p2 = await prisma.payment.findFirst({ where: { piPaymentId: internalPaymentId } });
-      if (!p2) { console.error(`[${requestId}] DB: payment not found`); return; }
+      if (!p2) { logger.error(`[${requestId}] DB: payment not found`); return; }
       await prisma.payment.update({
         where: { id: p2.id },
         data: { status: 'approved', piPaymentId: piPaymentId || internalPaymentId,
           metadata: { ...((p2.metadata as object) || {}), approvedAt: new Date().toISOString(), requestId } },
       });
       if (p2.bookingId) {await prisma.booking.update({ where: { id: p2.bookingId }, data: { paymentStatus: 'processing' } });}
-      console.log(`[${requestId}] DB: approved via piPaymentId fallback`);
+      logger.log(`[${requestId}] DB: approved via piPaymentId fallback`);
       return;
     }
 
-    if (!payment) { console.error(`[${requestId}] DB: not found`); return; }
+    if (!payment) { logger.error(`[${requestId}] DB: not found`); return; }
     if (payment.status === 'approved' || payment.status === 'completed') {
-      console.log(`[${requestId}] DB: already approved`); return;
+      logger.log(`[${requestId}] DB: already approved`); return;
     }
 
     await prisma.payment.update({
@@ -64,15 +65,15 @@ async function updateDbBackground(
     if (payment.bookingId) {
       await prisma.booking.update({ where: { id: payment.bookingId }, data: { paymentStatus: 'processing' } });
     }
-    console.log(`[${requestId}] DB: payment approved ✅`);
+    logger.log(`[${requestId}] DB: payment approved ✅`);
   } catch (err) {
-    console.error(`[${requestId}] DB error:`, err instanceof Error ? err.message : err);
+    logger.error(`[${requestId}] DB error:`, err instanceof Error ? err.message : err);
   }
 }
 
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  console.log(`[${requestId}] 📥 v8 ${new Date().toISOString()} sandbox=${IS_SANDBOX} apiKey=${!!PI_API_KEY}`);
+  logger.log(`[${requestId}] 📥 v8 ${new Date().toISOString()} sandbox=${IS_SANDBOX} apiKey=${!!PI_API_KEY}`);
 
   // ✅ FIX: require a real, verified session before doing anything.
   const session = await getServerSession(authOptions);
@@ -88,9 +89,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     paymentId = body?.paymentId;
     piPaymentId = body?.piPaymentId;
-    console.log(`[${requestId}] body: paymentId=${paymentId} piPaymentId=${piPaymentId}`);
+    logger.log(`[${requestId}] body: paymentId=${paymentId} piPaymentId=${piPaymentId}`);
   } catch (err) {
-    console.error(`[${requestId}] parse error:`, err);
+    logger.error(`[${requestId}] parse error:`, err);
     return NextResponse.json({ success: true, requestId, warning: 'parse error' });
   }
 
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
   // So if piPaymentId not sent, use paymentId as the Pi payment ID
   const piIdToApprove = piPaymentId || paymentId;
 
-  console.log(`[${requestId}] will call Pi API with: ${piIdToApprove}`);
+  logger.log(`[${requestId}] will call Pi API with: ${piIdToApprove}`);
 
   // Call Pi Platform SYNCHRONOUSLY — this is what Pi wallet waits for
   if (piIdToApprove && PI_API_KEY) {
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
     const timer = setTimeout(() => controller.abort(), 7000);
 
     try {
-      console.log(`[${requestId}] 🌐 POST ${PI_API_URL}/v2/payments/${piIdToApprove}/approve`);
+      logger.log(`[${requestId}] 🌐 POST ${PI_API_URL}/v2/payments/${piIdToApprove}/approve`);
       const piRes = await fetch(
         `${PI_API_URL}/v2/payments/${piIdToApprove}/approve`,
         {
@@ -138,21 +139,21 @@ export async function POST(request: NextRequest) {
       );
       clearTimeout(timer);
       const text = await piRes.text();
-      console.log(`[${requestId}] Pi API response: ${piRes.status} — ${text.slice(0, 400)}`);
+      logger.log(`[${requestId}] Pi API response: ${piRes.status} — ${text.slice(0, 400)}`);
     } catch (err) {
       clearTimeout(timer);
-      console.error(`[${requestId}] Pi API error:`, err instanceof Error ? err.message : err);
+      logger.error(`[${requestId}] Pi API error:`, err instanceof Error ? err.message : err);
     }
   } else {
-    console.warn(`[${requestId}] ⚠️ skipping Pi API — piId=${piIdToApprove} apiKey=${!!PI_API_KEY}`);
+    logger.warn(`[${requestId}] ⚠️ skipping Pi API — piId=${piIdToApprove} apiKey=${!!PI_API_KEY}`);
   }
 
   // Background DB update (non-blocking)
   updateDbBackground(paymentId, piPaymentId || paymentId, requestId).catch(e =>
-    console.error(`[${requestId}] BG:`, e)
+    logger.error(`[${requestId}] BG:`, e)
   );
 
-  console.log(`[${requestId}] ✅ returning 200`);
+  logger.log(`[${requestId}] ✅ returning 200`);
   return NextResponse.json({
     success: true,
     paymentId,

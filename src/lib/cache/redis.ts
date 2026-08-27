@@ -1,6 +1,7 @@
 // src/lib/cache/redis.ts
 
 // ✅ In-Memory Cache Fallback
+import { logger } from '@/lib/logger';
 class InMemoryCache {
   private cache: Map<string, { value: any; expiry: number }> = new Map();
 
@@ -72,11 +73,11 @@ async function getRedisClient() {
         url: process.env.UPSTASH_REDIS_REST_URL,
         token: process.env.UPSTASH_REDIS_REST_TOKEN,
       });
-      console.log('✅ Redis connected');
+      logger.log('✅ Redis connected');
       return redisClient;
     }
   } catch (error) {
-    console.warn('⚠️ Redis not available, using in-memory cache');
+    logger.warn('⚠️ Redis not available, using in-memory cache');
   }
   
   useInMemory = true;
@@ -98,7 +99,7 @@ export class CacheService {
       const data = await redis.get(key);
       return data as T | null;
     } catch (error) {
-      console.error('Cache get error:', error);
+      logger.error('Cache get error:', error);
       return null;
     }
   }
@@ -117,7 +118,7 @@ export class CacheService {
       await redis.setex(key, ttl, JSON.stringify(value));
       return true;
     } catch (error) {
-      console.error('Cache set error:', error);
+      logger.error('Cache set error:', error);
       return false;
     }
   }
@@ -136,7 +137,7 @@ export class CacheService {
       await redis.del(key);
       return true;
     } catch (error) {
-      console.error('Cache delete error:', error);
+      logger.error('Cache delete error:', error);
       return false;
     }
   }
@@ -157,7 +158,7 @@ export class CacheService {
       }
       return true;
     } catch (error) {
-      console.error('Cache delete many error:', error);
+      logger.error('Cache delete many error:', error);
       return false;
     }
   }
@@ -175,7 +176,7 @@ export class CacheService {
 
       return await redis.keys(pattern);
     } catch (error) {
-      console.error('Cache keys error:', error);
+      logger.error('Cache keys error:', error);
       return [];
     }
   }
@@ -227,7 +228,7 @@ export class CacheService {
 
       return await redis.incrby(key, amount);
     } catch (error) {
-      console.error('Cache increment error:', error);
+      logger.error('Cache increment error:', error);
       return 0;
     }
   }
@@ -246,7 +247,7 @@ export class CacheService {
       const result = await redis.exists(key);
       return result === 1;
     } catch (error) {
-      console.error('Cache exists error:', error);
+      logger.error('Cache exists error:', error);
       return false;
     }
   }

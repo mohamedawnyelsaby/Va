@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+import { logger } from '@/lib/logger';
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = 'booking-com15.p.rapidapi.com';
 
@@ -55,7 +56,7 @@ async function searchRealHotels(destination: string, checkIn: string, checkOut: 
     if (budget) {hotels = hotels.filter((h: any) => h.price <= budget);}
     return hotels;
   } catch (err) {
-    console.error('Hotel search error:', err);
+    logger.error('Hotel search error:', err);
     return [];
   }
 }
@@ -132,7 +133,7 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
     
     // Fallback to OpenAI if Gemini failed
     if (!geminiSuccess && OPENAI_API_KEY) {
-      console.log('Falling back to OpenAI...');
+      logger.log('Falling back to OpenAI...');
       const oaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -154,7 +155,7 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
       const oaiData = await oaiRes.json();
       const oaiText = oaiData.choices?.[0]?.message?.content;
       if (oaiText) {aiText = oaiText;}
-      else {console.error('OpenAI error:', oaiData.error);}
+      else {logger.error('OpenAI error:', oaiData.error);}
     }
     
     if (aiText === '{}' || !aiText) {
@@ -196,7 +197,7 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
     });
 
   } catch (err) {
-    console.error('AI Travel error:', err);
+    logger.error('AI Travel error:', err);
     return NextResponse.json({
       error: 'AI error',
       message: 'Sorry, an error occurred. Please try again.',

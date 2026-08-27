@@ -10,6 +10,7 @@ import {
   useRef,
   ReactNode, 
 } from 'react';
+import { logger } from '@/lib/logger';
 
 // ============================================
 // Types & Interfaces
@@ -106,7 +107,7 @@ class SecurityManager {
     );
 
     if (this.requestTimestamps.length >= SECURITY_CONFIG.MAX_REQUESTS_PER_WINDOW) {
-      console.warn('🚫 Rate limit exceeded');
+      logger.warn('🚫 Rate limit exceeded');
       return false;
     }
 
@@ -180,7 +181,7 @@ class SecurityManager {
   canAttemptPayment(userId: string): boolean {
     const attempts = this.paymentAttempts.get(userId) || 0;
     if (attempts >= SECURITY_CONFIG.MAX_RETRY_ATTEMPTS) {
-      console.warn('🚫 Maximum payment attempts reached');
+      logger.warn('🚫 Maximum payment attempts reached');
       return false;
     }
     return true;
@@ -241,7 +242,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setIsAuthenticated(false);
     } catch (error) {
-      console.error('❌ Session clear failed:', error);
+      logger.error('❌ Session clear failed:', error);
     }
   }, []);
 
@@ -257,7 +258,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('pi_user_timestamp', Date.now().toString());
       
     } catch (error) {
-      console.error('❌ Session save failed:', error);
+      logger.error('❌ Session save failed:', error);
     }
   }, []);
 
@@ -273,7 +274,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       // Check session timeout
       const timestamp = parseInt(savedTimestamp, 10);
       if (Date.now() - timestamp > SECURITY_CONFIG.SESSION_TIMEOUT) {
-        console.log('⏰ Session expired');
+        logger.log('⏰ Session expired');
         clearSession();
         return;
       }
@@ -282,17 +283,17 @@ export function PiProvider({ children }: { children: ReactNode }) {
       
       // Validate user data structure
       if (!userData.uid || !userData.username) {
-        console.warn('⚠️ Invalid session data');
+        logger.warn('⚠️ Invalid session data');
         clearSession();
         return;
       }
 
       setUser(userData);
       setIsAuthenticated(true);
-      console.log('✅ Session restored:', userData.username);
+      logger.log('✅ Session restored:', userData.username);
       
     } catch (error) {
-      console.error('❌ Session restore failed:', error);
+      logger.error('❌ Session restore failed:', error);
       clearSession();
     }
   }, [clearSession]);
@@ -320,11 +321,11 @@ export function PiProvider({ children }: { children: ReactNode }) {
         initializationAttempts.current++;
         
         if (initializationAttempts.current >= maxInitAttempts) {
-          console.error('❌ CRITICAL: Pi SDK Failed to load!');
-          console.warn('💡 Fix: Make sure:');
-          console.warn('  1. Pi SDK script is in layout.tsx <head>: <Script src="https://sdk.minepi.com/pi-sdk.js" />');
-          console.warn('  2. NEXT_PUBLIC_PI_SANDBOX=true in .env.local');
-          console.warn('  3. You are using Pi Browser or Pi Network testnet');
+          logger.error('❌ CRITICAL: Pi SDK Failed to load!');
+          logger.warn('💡 Fix: Make sure:');
+          logger.warn('  1. Pi SDK script is in layout.tsx <head>: <Script src="https://sdk.minepi.com/pi-sdk.js" />');
+          logger.warn('  2. NEXT_PUBLIC_PI_SANDBOX=true in .env.local');
+          logger.warn('  3. You are using Pi Browser or Pi Network testnet');
           setSdkStatus('unavailable');
           if (sdkCheckInterval.current) {
             clearInterval(sdkCheckInterval.current);
@@ -332,7 +333,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        console.log(`⏳ Waiting for Pi SDK... (Attempt ${initializationAttempts.current}/${maxInitAttempts})`);
+        logger.log(`⏳ Waiting for Pi SDK... (Attempt ${initializationAttempts.current}/${maxInitAttempts})`);
         return;
       }
 
@@ -340,7 +341,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       try {
         const isSandbox = process.env.NEXT_PUBLIC_PI_SANDBOX === 'true';
         
-        console.log('🔧 Initializing Pi SDK...');
+        logger.log('🔧 Initializing Pi SDK...');
         
         Pi.init({ 
           version: '2.0',
@@ -348,8 +349,8 @@ export function PiProvider({ children }: { children: ReactNode }) {
         });
 
         setSdkStatus('available');
-        console.log('✅ Pi Network SDK initialized successfully');
-        console.log(`🌍 Environment: ${isSandbox ? 'SANDBOX (TEST MODE)' : 'PRODUCTION'}`);
+        logger.log('✅ Pi Network SDK initialized successfully');
+        logger.log(`🌍 Environment: ${isSandbox ? 'SANDBOX (TEST MODE)' : 'PRODUCTION'}`);
 
         // Clear interval once initialized
         if (sdkCheckInterval.current) {
@@ -360,7 +361,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
         restoreSession();
 
       } catch (error) {
-        console.error('❌ Pi SDK initialization failed:', error);
+        logger.error('❌ Pi SDK initialization failed:', error);
         setSdkStatus('error');
       }
     };
@@ -394,12 +395,12 @@ export function PiProvider({ children }: { children: ReactNode }) {
 
   // Handle incomplete payments
   const handleIncompletePayment = useCallback((payment: any) => {
-    console.log('🔄 Handling incomplete payment:', payment);
+    logger.log('🔄 Handling incomplete payment:', payment);
     
     try {
       // Validate incomplete payment data
       if (!payment?.identifier || !payment?.amount) {
-        console.warn('⚠️ Invalid incomplete payment data');
+        logger.warn('⚠️ Invalid incomplete payment data');
         return;
       }
 
@@ -420,7 +421,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
         return [incompletePayment, ...prev];
       });
     } catch (error) {
-      console.error('❌ Failed to handle incomplete payment:', error);
+      logger.error('❌ Failed to handle incomplete payment:', error);
     }
   }, []);
 
@@ -440,7 +441,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      console.log('🔐 Authenticating with Pi Network...');
+      logger.log('🔐 Authenticating with Pi Network...');
       
       // Validate scopes
       const validScopes = ['username', 'payments', 'wallet_address'];
@@ -451,7 +452,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       }
 
       const auth = await Pi.authenticate(sanitizedScopes, (payment: any) => {
-        console.log('📦 Incomplete payment found during auth:', payment);
+        logger.log('📦 Incomplete payment found during auth:', payment);
         handleIncompletePayment(payment);
       });
 
@@ -470,7 +471,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(true);
       saveSession(userData);
 
-      console.log('✅ Authentication successful:', userData.username);
+      logger.log('✅ Authentication successful:', userData.username);
       
       // Verify with backend (critical for security)
       try {
@@ -490,10 +491,10 @@ export function PiProvider({ children }: { children: ReactNode }) {
         }
 
         await verifyResponse.json();
-        console.log('✅ Backend verification successful');
+        logger.log('✅ Backend verification successful');
         
       } catch (error) {
-        console.error('❌ Backend verification failed:', error);
+        logger.error('❌ Backend verification failed:', error);
         // Backend rejected this Pi auth — don't leave the user optimistically
         // authenticated on the client while the server disagrees.
         clearSession();
@@ -503,7 +504,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       return userData;
 
     } catch (error) {
-      console.error('❌ Authentication failed:', error);
+      logger.error('❌ Authentication failed:', error);
       clearSession();
       throw error;
     }
@@ -513,7 +514,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
     clearSession();
     setActivePayment(null);
     setPaymentHistory([]);
-    console.log('👋 Logged out from Pi Network');
+    logger.log('👋 Logged out from Pi Network');
   }, [clearSession]);
 
   // ============================================
@@ -560,7 +561,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
     };
 
     try {
-      console.log('💳 Creating payment...', sanitizedData);
+      logger.log('💳 Creating payment...', sanitizedData);
 
       securityManager.current.incrementPaymentAttempts(user.uid);
 
@@ -576,7 +577,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
 
       // Set payment timeout
       const timeoutId = setTimeout(() => {
-        console.warn('⏰ Payment timeout');
+        logger.warn('⏰ Payment timeout');
         setActivePayment(prev => prev ? { ...prev, status: 'failed' } : null);
         callbacks.onError(new Error('Payment timeout'));
       }, SECURITY_CONFIG.PAYMENT_TIMEOUT);
@@ -585,7 +586,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
         sanitizedData,
         {
           onReadyForServerApproval: async (paymentId: string) => {
-            console.log('📝 Payment ready for server approval:', paymentId);
+            logger.log('📝 Payment ready for server approval:', paymentId);
             
             // Validate payment ID
             if (!paymentId || typeof paymentId !== 'string') {
@@ -607,10 +608,10 @@ export function PiProvider({ children }: { children: ReactNode }) {
                 status: 'approved', 
               } : null);
               
-              console.log('✅ Server approved payment');
+              logger.log('✅ Server approved payment');
               
             } catch (error) {
-              console.error('❌ Server approval failed:', error);
+              logger.error('❌ Server approval failed:', error);
               clearTimeout(timeoutId);
               paymentTimeouts.current.delete(paymentId);
               
@@ -624,7 +625,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
           },
 
           onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-            console.log('⛓️ Payment ready for completion:', paymentId, txid);
+            logger.log('⛓️ Payment ready for completion:', paymentId, txid);
             
             // Clear timeout
             clearTimeout(timeoutId);
@@ -651,7 +652,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
               setActivePayment(completedPayment);
               setPaymentHistory(prev => [completedPayment, ...prev]);
               
-              console.log('✅ Payment completed successfully!');
+              logger.log('✅ Payment completed successfully!');
               
               // Clear active payment after delay
               setTimeout(() => {
@@ -659,7 +660,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
               }, 5000);
 
             } catch (error) {
-              console.error('❌ Server completion failed:', error);
+              logger.error('❌ Server completion failed:', error);
               setActivePayment(prev => prev ? { 
                 ...prev, 
                 status: 'failed', 
@@ -669,7 +670,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
           },
 
           onCancel: (paymentId: string) => {
-            console.log('❌ Payment cancelled by user:', paymentId);
+            logger.log('❌ Payment cancelled by user:', paymentId);
             clearTimeout(timeoutId);
             paymentTimeouts.current.delete(paymentId);
             
@@ -686,7 +687,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
           },
 
           onError: (error: Error, payment?: any) => {
-            console.error('💥 Payment error:', error, payment);
+            logger.error('💥 Payment error:', error, payment);
             clearTimeout(timeoutId);
             if (payment?.identifier) {
               paymentTimeouts.current.delete(payment.identifier);
@@ -709,7 +710,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       paymentTimeouts.current.set(payment.identifier || 'temp', timeoutId);
 
     } catch (error) {
-      console.error('❌ Payment creation failed:', error);
+      logger.error('❌ Payment creation failed:', error);
       setActivePayment(null);
       throw error;
     }
@@ -736,7 +737,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       return await response.json();
       
     } catch (error) {
-      console.error('❌ Failed to get payment status:', error);
+      logger.error('❌ Failed to get payment status:', error);
       throw error;
     }
   }, []);
@@ -747,13 +748,13 @@ export function PiProvider({ children }: { children: ReactNode }) {
 
   const share = useCallback((title: string, message: string) => {
     if (sdkStatus !== 'available') {
-      console.warn('⚠️ Pi SDK not available for sharing');
+      logger.warn('⚠️ Pi SDK not available for sharing');
       return;
     }
 
     const Pi = (window as any).Pi;
     if (!Pi?.openShareDialog) {
-      console.warn('⚠️ Share dialog not available');
+      logger.warn('⚠️ Share dialog not available');
       return;
     }
 
@@ -763,9 +764,9 @@ export function PiProvider({ children }: { children: ReactNode }) {
       const safeMessage = securityManager.current.sanitizeString(message);
       
       Pi.openShareDialog(safeTitle, safeMessage);
-      console.log('📤 Share dialog opened');
+      logger.log('📤 Share dialog opened');
     } catch (error) {
-      console.error('❌ Share failed:', error);
+      logger.error('❌ Share failed:', error);
     }
   }, [sdkStatus]);
 
