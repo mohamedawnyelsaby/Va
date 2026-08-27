@@ -17,6 +17,7 @@ import { captureException, captureMessage } from '@/lib/monitoring/sentry';
 // CONFIGURATION & CONSTANTS
 // ============================================
 
+import { logger } from '@/lib/logger';
 const TOKEN_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const MAX_VERIFICATION_ATTEMPTS = 5;
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
   const clientIp = request.headers.get('x-forwarded-for') || 'unknown';
 
   try {
-    console.log(`[${requestId}] 🔐 Pi verification request from ${clientIp}`);
+    logger.log(`[${requestId}] 🔐 Pi verification request from ${clientIp}`);
 
     // Parse and validate request body
     const body = await request.json();
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     // Input validation
     if (!accessToken || typeof accessToken !== 'string') {
-      console.warn(`[${requestId}] ⚠️ Missing or invalid accessToken`);
+      logger.warn(`[${requestId}] ⚠️ Missing or invalid accessToken`);
       return NextResponse.json(
         { error: 'Invalid access token format' },
         { status: 400 }
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!uid || typeof uid !== 'string') {
-      console.warn(`[${requestId}] ⚠️ Missing or invalid uid`);
+      logger.warn(`[${requestId}] ⚠️ Missing or invalid uid`);
       return NextResponse.json(
         { error: 'Invalid user identifier format' },
         { status: 400 }
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     // Rate limiting
     if (!checkRateLimit(clientIp)) {
-      console.warn(`[${requestId}] 🚫 Rate limit exceeded for ${clientIp}`);
+      logger.warn(`[${requestId}] 🚫 Rate limit exceeded for ${clientIp}`);
       return NextResponse.json(
         { error: 'Too many verification attempts. Please try again later.' },
         { status: 429 }
@@ -123,7 +124,7 @@ export async function POST(request: NextRequest) {
     // Check token cache for performance optimization
     const cached = tokenCache.get(accessToken);
     if (cached && cached.uid === uid) {
-      console.log(`[${requestId}] ⚡ Cache hit for ${uid}`);
+      logger.log(`[${requestId}] ⚡ Cache hit for ${uid}`);
       return NextResponse.json({
         verified: true,
         cached: true,
@@ -136,12 +137,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify with Pi Platform API
-    console.log(`[${requestId}] 🌐 Verifying with Pi Platform...`);
+    logger.log(`[${requestId}] 🌐 Verifying with Pi Platform...`);
     const piUser = await verifyPiUser(accessToken);
 
     // Critical security check: UID must match
     if (piUser.uid !== uid) {
-      console.error(`[${requestId}] 🚨 SECURITY ALERT: UID mismatch! Expected: ${uid}, Got: ${piUser.uid}`);
+      logger.error(`[${requestId}] 🚨 SECURITY ALERT: UID mismatch! Expected: ${uid}, Got: ${piUser.uid}`);
       captureMessage(
         `SECURITY ALERT: Pi UID mismatch - requestId=${requestId}, expected=${uid}, received=${piUser.uid}`,
         'error'
@@ -169,7 +170,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[${requestId}] ✅ Pi Platform verification successful`);
+    logger.log(`[${requestId}] ✅ Pi Platform verification successful`);
 
     // Database transaction for atomic user creation/update
     const sessionToken = generateSessionToken(piUser.uid);
@@ -240,7 +241,7 @@ export async function POST(request: NextRequest) {
     setImmediate(() => cleanExpiredCache());
 
     const duration = Date.now() - startTime;
-    console.log(`[${requestId}] 🎉 Verification completed in ${duration}ms`);
+    logger.log(`[${requestId}] 🎉 Verification completed in ${duration}ms`);
 
     return NextResponse.json(
       {
@@ -270,7 +271,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(`[${requestId}] ❌ Verification failed after ${duration}ms:`, error);
+    logger.error(`[${requestId}] ❌ Verification failed after ${duration}ms:`, error);
     captureException(error instanceof Error ? error : new Error(String(error)), { requestId });
 
     // Log error to security log
@@ -289,7 +290,7 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (logError) {
-      console.error(`[${requestId}] ❌ Failed to log error:`, logError);
+      logger.error(`[${requestId}] ❌ Failed to log error:`, logError);
     }
 
     // Determine appropriate error response
@@ -348,7 +349,7 @@ export async function GET() {
 
 if (typeof process !== 'undefined') {
   process.on('SIGTERM', () => {
-    console.log('🧹 Cleaning up verification cache...');
+    logger.log('🧹 Cleaning up verification cache...');
     tokenCache.clear();
     verificationAttempts.clear();
   });

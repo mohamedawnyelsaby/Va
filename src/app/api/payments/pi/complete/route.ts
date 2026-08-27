@@ -20,6 +20,7 @@ import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
 import { captureException } from '@/lib/monitoring/sentry';
 
+import { logger } from '@/lib/logger';
 const PI_API_URL = 'https://api.minepi.com';
 const PI_API_KEY = process.env.PI_API_KEY;
 const IS_SANDBOX =
@@ -30,7 +31,7 @@ const CASHBACK_RATE = 0.02;
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
 
-  console.log(`[${requestId}] 📥 Payment completion request received`);
+  logger.log(`[${requestId}] 📥 Payment completion request received`);
 
   try {
     // ✅ FIX: require a real, verified session before touching any payment.
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { paymentId, piPaymentId, txid } = body;
 
-    console.log(`[${requestId}] paymentId=${paymentId}, piPaymentId=${piPaymentId}, txid=${txid}`);
+    logger.log(`[${requestId}] paymentId=${paymentId}, piPaymentId=${piPaymentId}, txid=${txid}`);
 
     if (!txid) {
       return NextResponse.json(
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden', requestId }, { status: 403 });
     }
 
-    console.log(`[${requestId}] ✅ Payment found: ${payment.id}, status: ${payment.status}`);
+    logger.log(`[${requestId}] ✅ Payment found: ${payment.id}, status: ${payment.status}`);
 
     const piPaymentIdToUse = piPaymentId || payment.piPaymentId;
 
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
 
     if (piPaymentIdToUse && PI_API_KEY) {
       try {
-        console.log(`[${requestId}] 🌐 Calling Pi Platform complete...`);
+        logger.log(`[${requestId}] 🌐 Calling Pi Platform complete...`);
 
         const piRes = await fetch(
           `${PI_API_URL}/v2/payments/${piPaymentIdToUse}/complete`,
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
         );
 
         const piResText = await piRes.text();
-        console.log(`[${requestId}] Pi Platform: ${piRes.status} - ${piResText}`);
+        logger.log(`[${requestId}] Pi Platform: ${piRes.status} - ${piResText}`);
 
         if (piRes.ok) {
           piCompleteSuccess = true;
@@ -155,7 +156,7 @@ export async function POST(request: NextRequest) {
         captureException(err instanceof Error ? err : new Error(piCompleteError), {
           requestId, paymentId: payment.id, piPaymentIdToUse,
         });
-        console.error(`[${requestId}] ❌ Pi Platform error: ${piCompleteError}`);
+        logger.error(`[${requestId}] ❌ Pi Platform error: ${piCompleteError}`);
       }
     } else {
       if (IS_SANDBOX) {
@@ -205,7 +206,7 @@ export async function POST(request: NextRequest) {
           where: { id: payment.booking.id },
           data: { status: 'confirmed', paymentStatus: 'paid' },
         });
-        console.log(`[${requestId}] ✅ Booking confirmed`);
+        logger.log(`[${requestId}] ✅ Booking confirmed`);
       }
 
       await tx.user.update({
@@ -213,11 +214,11 @@ export async function POST(request: NextRequest) {
         data: { piBalance: { increment: cashback } },
       });
 
-      console.log(`[${requestId}] 💰 Cashback ${cashback} Pi credited`);
+      logger.log(`[${requestId}] 💰 Cashback ${cashback} Pi credited`);
       return updated;
     });
 
-    console.log(`[${requestId}] 🎉 Payment completed!`);
+    logger.log(`[${requestId}] 🎉 Payment completed!`);
 
     return NextResponse.json({
       success: true,
@@ -234,7 +235,7 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
-    console.error(`[${requestId}] ❌ Unexpected error:`, error);
+    logger.error(`[${requestId}] ❌ Unexpected error:`, error);
     captureException(error instanceof Error ? error : new Error(String(error)), { requestId });
     return NextResponse.json(
       {

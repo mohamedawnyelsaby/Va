@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+import { logger } from '@/lib/logger';
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = 'booking-com15.p.rapidapi.com';
 
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Step 1: Get destination ID
-    console.log(`🔍 Searching destination: ${destination}`);
+    logger.log(`🔍 Searching destination: ${destination}`);
     
     const destRes = await fetch(
       `https://${RAPIDAPI_HOST}/api/v1/hotels/searchDestination?query=${encodeURIComponent(destination)}`,
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
     const destId = destData.data[0].dest_id;
     const destType = destData.data[0].dest_type;
     
-    console.log(`✅ Destination found: ${destId} (${destType})`);
+    logger.log(`✅ Destination found: ${destId} (${destType})`);
 
     // Step 2: Search hotels
     const hotelsRes = await fetch(
@@ -100,7 +101,7 @@ export async function GET(request: NextRequest) {
       source: 'booking.com',
     }));
 
-    console.log(`✅ Found ${hotels.length} hotels in ${destination}`);
+    logger.log(`✅ Found ${hotels.length} hotels in ${destination}`);
 
     return NextResponse.json({
       success: true,
@@ -113,7 +114,7 @@ export async function GET(request: NextRequest) {
 
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Hotels search error:', msg);
+    logger.error('Hotels search error:', msg);
     return NextResponse.json({ error: msg, hotels: [] }, { status: 500 });
   }
 }

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
+import { logger } from '@/lib/logger';
 const passwordSchema = z
   .string()
   .min(8, 'Password must be at least 8 characters')
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log('✅ New user created:', {
+    logger.log('✅ New user created:', {
       id: user.id,
       email: user.email,
       ip,
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Signup error:', error);
+    logger.error('Signup error:', error);
 
     return NextResponse.json(
       {

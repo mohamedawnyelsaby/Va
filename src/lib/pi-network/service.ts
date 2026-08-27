@@ -1,4 +1,5 @@
 // src/lib/pi-network/service.ts
+import { logger } from '@/lib/logger';
 export class PiNetworkService {
   private pi: any;
   private isInitialized = false;
@@ -15,9 +16,9 @@ export class PiNetworkService {
         throw new Error('Pi SDK not loaded. Make sure you are running in Pi Browser.');
       }
       this.isInitialized = true;
-      console.log('Pi Network SDK initialized');
+      logger.log('Pi Network SDK initialized');
     } catch (error) {
-      console.error('Failed to initialize Pi Network SDK:', error);
+      logger.error('Failed to initialize Pi Network SDK:', error);
       throw error;
     }
   }
@@ -28,11 +29,11 @@ export class PiNetworkService {
     }
     try {
       const user = await this.pi.authenticate(scopes, (payment: any) => {
-        console.log('Payment callback:', payment);
+        logger.log('Payment callback:', payment);
       });
       return user;
     } catch (error) {
-      console.error('Pi Network authentication failed:', error);
+      logger.error('Pi Network authentication failed:', error);
       throw error;
     }
   }
@@ -52,21 +53,21 @@ export class PiNetworkService {
         metadata: options.metadata || {},
       }, {
         onReadyForServerApproval: (paymentId: string) => {
-          console.log('Payment ready for approval:', paymentId);
+          logger.log('Payment ready for approval:', paymentId);
         },
         onReadyForServerCompletion: (paymentId: string, txid: string) => {
-          console.log('Payment ready for completion:', paymentId, txid);
+          logger.log('Payment ready for completion:', paymentId, txid);
         },
         onCancel: (paymentId: string) => {
-          console.log('Payment cancelled:', paymentId);
+          logger.log('Payment cancelled:', paymentId);
         },
         onError: (error: any, payment: any) => {
-          console.error('Payment error:', error, payment);
+          logger.error('Payment error:', error, payment);
         },
       });
       return payment;
     } catch (error) {
-      console.error('Pi Network payment creation failed:', error);
+      logger.error('Pi Network payment creation failed:', error);
       throw error;
     }
   }

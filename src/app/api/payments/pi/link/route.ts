@@ -18,6 +18,7 @@ import { captureException } from '@/lib/monitoring/sentry';
 // CONFIGURATION
 // ============================================
 
+import { logger } from '@/lib/logger';
 const LINK_TIMEOUT = 30 * 1000; // 30 seconds
 const MAX_LINK_ATTEMPTS = 3;
 
@@ -113,14 +114,14 @@ export async function POST(request: NextRequest) {
   let paymentId: string | undefined;
 
   try {
-    console.log(`[${requestId}] 🔗 Payment linking request initiated`);
+    logger.log(`[${requestId}] 🔗 Payment linking request initiated`);
 
     // ========================================
     // STEP 1: Authentication & Authorization
     // ========================================
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      console.warn(`[${requestId}] ⚠️ Unauthorized linking attempt from ${clientIp}`);
+      logger.warn(`[${requestId}] ⚠️ Unauthorized linking attempt from ${clientIp}`);
       return NextResponse.json(
         { error: 'Authentication required', requestId },
         { status: 401 }
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
 
     // Validate payment ID
     if (!paymentId || !isValidPaymentId(paymentId)) {
-      console.warn(`[${requestId}] ⚠️ Invalid paymentId: ${paymentId}`);
+      logger.warn(`[${requestId}] ⚠️ Invalid paymentId: ${paymentId}`);
       return NextResponse.json(
         { error: 'Invalid payment ID format', requestId },
         { status: 400 }
@@ -145,28 +146,28 @@ export async function POST(request: NextRequest) {
 
     // Validate Pi payment ID
     if (!piPaymentId || !isValidPiPaymentId(piPaymentId)) {
-      console.warn(`[${requestId}] ⚠️ Invalid piPaymentId: ${piPaymentId}`);
+      logger.warn(`[${requestId}] ⚠️ Invalid piPaymentId: ${piPaymentId}`);
       return NextResponse.json(
         { error: 'Invalid Pi payment ID format', requestId },
         { status: 400 }
       );
     }
 
-    console.log(`[${requestId}] 📋 Linking: ${paymentId} → ${piPaymentId}`);
+    logger.log(`[${requestId}] 📋 Linking: ${paymentId} → ${piPaymentId}`);
 
     // ========================================
     // STEP 3: Acquire Distributed Lock
     // ========================================
     lockAcquired = acquireLock(paymentId, requestId);
     if (!lockAcquired) {
-      console.warn(`[${requestId}] 🔒 Payment ${paymentId} is locked by another request`);
+      logger.warn(`[${requestId}] 🔒 Payment ${paymentId} is locked by another request`);
       return NextResponse.json(
         { error: 'Payment linking in progress. Please retry.', requestId },
         { status: 409 } // Conflict
       );
     }
 
-    console.log(`[${requestId}] 🔓 Lock acquired for ${paymentId}`);
+    logger.log(`[${requestId}] 🔓 Lock acquired for ${paymentId}`);
 
     // ========================================
     // STEP 4: Database Transaction (ACID)
@@ -190,7 +191,7 @@ export async function POST(request: NextRequest) {
 
       // Idempotency: Check if already linked to this piPaymentId
       if (payment.piPaymentId === piPaymentId) {
-        console.log(`[${requestId}] ✅ Payment already linked (idempotent)`);
+        logger.log(`[${requestId}] ✅ Payment already linked (idempotent)`);
         return {
           alreadyLinked: true,
           payment,
@@ -256,7 +257,7 @@ export async function POST(request: NextRequest) {
     // STEP 5: Success Response
     // ========================================
     const duration = Date.now() - startTime;
-    console.log(`[${requestId}] ✅ Payment linked successfully in ${duration}ms`);
+    logger.log(`[${requestId}] ✅ Payment linked successfully in ${duration}ms`);
 
     return NextResponse.json(
       {
@@ -282,7 +283,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(`[${requestId}] ❌ Payment linking failed after ${duration}ms:`, error);
+    logger.error(`[${requestId}] ❌ Payment linking failed after ${duration}ms:`, error);
     captureException(error instanceof Error ? error : new Error(String(error)), {
       requestId, paymentId,
     });
@@ -310,7 +311,7 @@ export async function POST(request: NextRequest) {
               },
             });
           } catch (logError) {
-            console.error(`[${requestId}] Failed to log security incident:`, logError);
+            logger.error(`[${requestId}] Failed to log security incident:`, logError);
             captureException(logError instanceof Error ? logError : new Error(String(logError)), {
               requestId, context: 'payment_link_unauthorized_attempt security log write failed',
             });
@@ -353,7 +354,7 @@ export async function POST(request: NextRequest) {
     // also satisfies TypeScript's strict narrowing across the closure.
     if (lockAcquired && paymentId) {
       releaseLock(paymentId, requestId);
-      console.log(`[${requestId}] 🔓 Lock released`);
+      logger.log(`[${requestId}] 🔓 Lock released`);
     }
   }
 }
@@ -388,7 +389,7 @@ export async function GET() {
 
 if (typeof process !== 'undefined') {
   process.on('SIGTERM', () => {
-    console.log('🧹 Cleaning up payment linking locks...');
+    logger.log('🧹 Cleaning up payment linking locks...');
     linkLocks.clear();
   });
 }

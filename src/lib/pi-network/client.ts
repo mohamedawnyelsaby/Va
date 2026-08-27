@@ -1,6 +1,7 @@
 // src/lib/pi-network/client.ts
 // Complete Pi Network Frontend SDK Integration
 
+import { logger } from '@/lib/logger';
 declare global {
   interface Window {
     Pi?: {
@@ -62,7 +63,7 @@ export class PiNetworkClient {
    */
   static init(): void {
     if (typeof window === 'undefined') {
-      console.warn('PiNetworkClient: Cannot initialize on server side');
+      logger.warn('PiNetworkClient: Cannot initialize on server side');
       return;
     }
 
@@ -71,7 +72,7 @@ export class PiNetworkClient {
     }
 
     if (!window.Pi) {
-      console.warn('Pi SDK not available. Make sure you are in Pi Browser and the SDK is loaded.');
+      logger.warn('Pi SDK not available. Make sure you are in Pi Browser and the SDK is loaded.');
       return;
     }
 
@@ -82,9 +83,9 @@ export class PiNetworkClient {
       });
 
       this.initialized = true;
-      console.log(`✅ Pi Network SDK initialized (${this.SANDBOX ? 'SANDBOX' : 'PRODUCTION'} mode)`);
+      logger.log(`✅ Pi Network SDK initialized (${this.SANDBOX ? 'SANDBOX' : 'PRODUCTION'} mode)`);
     } catch (error) {
-      console.error('Failed to initialize Pi SDK:', error);
+      logger.error('Failed to initialize Pi SDK:', error);
     }
   }
 
@@ -109,7 +110,7 @@ export class PiNetworkClient {
 
     try {
       const auth = await window.Pi.authenticate(scopes, (payment) => {
-        console.log('📝 Incomplete payment found:', payment);
+        logger.log('📝 Incomplete payment found:', payment);
         // Handle incomplete payment if needed
       });
 
@@ -119,7 +120,7 @@ export class PiNetworkClient {
         username: auth.user.username,
       };
     } catch (error) {
-      console.error('Pi authentication failed:', error);
+      logger.error('Pi authentication failed:', error);
       throw new Error(
         error instanceof Error 
           ? error.message 
@@ -158,30 +159,30 @@ export class PiNetworkClient {
         },
         {
           onReadyForServerApproval: async (paymentId) => {
-            console.log('✅ Payment ready for server approval:', paymentId);
+            logger.log('✅ Payment ready for server approval:', paymentId);
             try {
               await callbacks.onReadyForServerApproval(paymentId);
               resolve();
             } catch (error) {
-              console.error('Server approval failed:', error);
+              logger.error('Server approval failed:', error);
               reject(error);
             }
           },
           onReadyForServerCompletion: async (paymentId, txid) => {
-            console.log('✅ Payment ready for server completion:', paymentId, txid);
+            logger.log('✅ Payment ready for server completion:', paymentId, txid);
             try {
               await callbacks.onReadyForServerCompletion(paymentId, txid);
             } catch (error) {
-              console.error('Server completion failed:', error);
+              logger.error('Server completion failed:', error);
             }
           },
           onCancel: (paymentId) => {
-            console.log('❌ Payment cancelled:', paymentId);
+            logger.log('❌ Payment cancelled:', paymentId);
             callbacks.onCancel(paymentId);
             reject(new Error('Payment cancelled by user'));
           },
           onError: (error, payment) => {
-            console.error('❌ Payment error:', error, payment);
+            logger.error('❌ Payment error:', error, payment);
             callbacks.onError(error, payment);
             reject(error);
           },
@@ -197,14 +198,14 @@ export class PiNetworkClient {
     this.init();
 
     if (!window.Pi) {
-      console.warn('Pi SDK not available for sharing');
+      logger.warn('Pi SDK not available for sharing');
       return;
     }
 
     try {
       window.Pi.openShareDialog(title, message);
     } catch (error) {
-      console.error('Failed to open share dialog:', error);
+      logger.error('Failed to open share dialog:', error);
     }
   }
 

@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db';
 import crypto from 'crypto';
 
 // Force dynamic route (no caching)
+import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -18,7 +19,7 @@ const WEBHOOK_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 function verifyPiSignature(body: string, signature: string, timestamp: string): boolean {
   try {
     if (!PI_SECRET) {
-      console.error('❌ PI_SECRET not configured');
+      logger.error('❌ PI_SECRET not configured');
       return false;
     }
 
@@ -33,7 +34,7 @@ function verifyPiSignature(body: string, signature: string, timestamp: string): 
       Buffer.from(expectedSignature)
     );
   } catch (error) {
-    console.error('❌ Signature verification failed:', error);
+    logger.error('❌ Signature verification failed:', error);
     return false;
   }
 }
@@ -47,34 +48,34 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    console.log(`[${requestId}] 📥 Pi webhook received`);
+    logger.log(`[${requestId}] 📥 Pi webhook received`);
 
     // 1. Get headers
     const signature = request.headers.get('x-pi-signature');
     const timestamp = request.headers.get('x-pi-timestamp');
 
     if (!signature || !timestamp) {
-      console.error(`[${requestId}] ❌ Missing headers`);
+      logger.error(`[${requestId}] ❌ Missing headers`);
       return NextResponse.json({ error: 'Missing headers' }, { status: 400 });
     }
 
     // 2. Read body
     const body = await request.text();
     if (!body) {
-      console.error(`[${requestId}] ❌ Empty body`);
+      logger.error(`[${requestId}] ❌ Empty body`);
       return NextResponse.json({ error: 'Empty body' }, { status: 400 });
     }
 
     // 3. Verify signature
     if (!verifyPiSignature(body, signature, timestamp)) {
-      console.error(`[${requestId}] ❌ Invalid signature`);
+      logger.error(`[${requestId}] ❌ Invalid signature`);
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
     // 4. Check timestamp (prevent replay attacks)
     const timestampAge = Date.now() - parseInt(timestamp);
     if (timestampAge > WEBHOOK_TIMEOUT) {
-      console.error(`[${requestId}] ❌ Webhook too old`);
+      logger.error(`[${requestId}] ❌ Webhook too old`);
       return NextResponse.json({ error: 'Webhook expired' }, { status: 400 });
     }
 
@@ -82,8 +83,8 @@ export async function POST(request: NextRequest) {
     const payload = JSON.parse(body);
     const { event, payment } = payload;
 
-    console.log(`[${requestId}] 📦 Event: ${event}`);
-    console.log(`[${requestId}] 💳 Payment ID: ${payment.identifier}`);
+    logger.log(`[${requestId}] 📦 Event: ${event}`);
+    logger.log(`[${requestId}] 💳 Payment ID: ${payment.identifier}`);
 
     // 6. Check for duplicate processing
     const existingLog = await prisma.auditLog.findFirst({
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingLog) {
-      console.log(`[${requestId}] ⚠️ Duplicate webhook - already processed`);
+      logger.log(`[${requestId}] ⚠️ Duplicate webhook - already processed`);
       return NextResponse.json({ 
         success: true, 
         message: 'Already processed',
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
         break;
 
       default:
-        console.warn(`[${requestId}] ⚠️ Unknown event: ${event}`);
+        logger.warn(`[${requestId}] ⚠️ Unknown event: ${event}`);
         return NextResponse.json({ error: 'Unknown event' }, { status: 400 });
     }
 
@@ -140,7 +141,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log(`[${requestId}] ✅ Processed in ${duration}ms`);
+    logger.log(`[${requestId}] ✅ Processed in ${duration}ms`);
 
     return NextResponse.json({
       success: true,
@@ -150,7 +151,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error(`[${requestId}] ❌ Webhook error:`, error);
+    logger.error(`[${requestId}] ❌ Webhook error:`, error);
     return NextResponse.json(
       { error: 'Internal error', requestId },
       { status: 500 }
@@ -162,7 +163,7 @@ export async function POST(request: NextRequest) {
  * Handle payment_completed event
  */
 async function handlePaymentCompleted(payment: any, requestId: string) {
-  console.log(`[${requestId}] 💰 Processing completed payment`);
+  logger.log(`[${requestId}] 💰 Processing completed payment`);
 
   const dbPayment = await prisma.payment.findFirst({
     where: { piPaymentId: payment.identifier },
@@ -210,7 +211,7 @@ async function handlePaymentCompleted(payment: any, requestId: string) {
     data: { piBalance: { increment: cashback } },
   });
 
-  console.log(`[${requestId}] 🎁 Cashback: ${cashback} Pi`);
+  logger.log(`[${requestId}] 🎁 Cashback: ${cashback} Pi`);
 
   return {
     paymentId: dbPayment.id,
@@ -224,7 +225,7 @@ async function handlePaymentCompleted(payment: any, requestId: string) {
  * Handle payment_cancelled event
  */
 async function handlePaymentCancelled(payment: any, requestId: string) {
-  console.log(`[${requestId}] ❌ Processing cancelled payment`);
+  logger.log(`[${requestId}] ❌ Processing cancelled payment`);
 
   const dbPayment = await prisma.payment.findFirst({
     where: { piPaymentId: payment.identifier },
@@ -254,7 +255,7 @@ async function handlePaymentCancelled(payment: any, requestId: string) {
  * Handle payment_failed event
  */
 async function handlePaymentFailed(payment: any, requestId: string) {
-  console.log(`[${requestId}] ⚠️ Processing failed payment`);
+  logger.log(`[${requestId}] ⚠️ Processing failed payment`);
 
   const dbPayment = await prisma.payment.findFirst({
     where: { piPaymentId: payment.identifier },
