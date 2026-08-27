@@ -2,7 +2,7 @@
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Star } from 'lucide-react';
 
 const testimonials = [
@@ -48,7 +48,7 @@ export function Testimonials({ locale: _locale }: { locale: string }) {
               <CardContent className="pt-6">
                 <div className="flex items-center gap-4 mb-4">
                   <Avatar className="h-12 w-12">
-                    <img 
+                    <AvatarImage 
                       src={testimonial.avatar} 
                       alt={testimonial.name}
                       className="w-full h-full object-cover"

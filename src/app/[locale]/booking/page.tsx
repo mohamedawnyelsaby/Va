@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { MapPin, AlertCircle, ArrowLeft } from 'lucide-react';
@@ -38,15 +38,7 @@ export default function BookingPage() {
   const guests   = parseInt(searchParams.get('guests') || '1');
   const rooms    = parseInt(searchParams.get('rooms') || '1');
 
-  useEffect(() => {
-    if (status === 'loading') {return;}
-    if (!itemId || !checkIn || !checkOut) {
-      setError('Missing booking details. Please go back and select dates.'); setLoading(false); return;
-    }
-    initBooking();
-  }, [status, itemId]);
-
-  const initBooking = async () => {
+  const initBooking = useCallback(async () => {
     try {
       setLoading(true);
       const hotelRes = await fetch(`/api/hotels/${itemId}`);
@@ -76,9 +68,18 @@ export default function BookingPage() {
     } catch (e: any) {
       setError(e.message || 'Failed to initialize booking');
     } finally { setLoading(false); }
-  };
+  }, [itemId, checkIn, checkOut, roomType, guests, rooms]);
+
+  useEffect(() => {
+    if (status === 'loading') {return;}
+    if (!itemId || !checkIn || !checkOut) {
+      setError('Missing booking details. Please go back and select dates.'); setLoading(false); return;
+    }
+    initBooking();
+  }, [status, itemId, checkIn, checkOut, initBooking]);
 
   if (status === 'loading' || loading) {return <Spinner label="Preparing Your Booking" />;}
+
 
   if (error) {return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', paddingTop: '80px' }}>

@@ -86,9 +86,9 @@
 /* Destination grid */
 .dg { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 14px; padding: 0 18px; max-width: 1100px; margin: 0 auto; }
 @media (min-width: 900px) { .dg { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); } }
-.dc { border-radius: var(--rL); overflow: hidden; background: var(--s1); box-shadow: var(--sh); cursor: pointer; transition: .22s var(--ease); position: relative; border: none; text-align: start; padding: 0; color: inherit; font-family: inherit; }
+.dc { border-radius: var(--rL); overflow: hidden; background: var(--s1); box-shadow: var(--sh); cursor: pointer; transition: .22s var(--ease); position: relative; border: none; text-align: start; padding: 0; color: inherit; font-family: inherit; aspect-ratio: 4/3; }
 .dc:hover { transform: translateY(-5px); box-shadow: var(--shH); }
-.dc img { width: 100%; aspect-ratio: 4/3; object-fit: cover; transition: .35s; display: block; }
+.dc img { object-fit: cover; transition: .35s; }
 .dc:hover img { transform: scale(1.06); }
 .wbtn { position: absolute; top: 9px; inset-inline-end: 9px; width: 30px; height: 30px; background: rgba(0,0,0,.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .85rem; cursor: pointer; border: none; backdrop-filter: blur(6px); transition: .18s; z-index: 2; }
 .wbtn.on { background: rgba(239,68,68,.35); }
@@ -103,7 +103,8 @@
 .hc { flex: 0 0 290px; background: var(--s1); border-radius: 20px; overflow: hidden; box-shadow: var(--sh); scroll-snap-align: start; transition: .22s; position: relative; }
 .hc:hover { transform: translateY(-4px); box-shadow: var(--shH); }
 @media (max-width: 600px) { .hc { flex: 0 0 265px; } }
-.hcImg { width: 100%; height: 175px; object-fit: cover; display: block; }
+.hcImgWrap { position: relative; width: 100%; height: 175px; }
+.hcImg { object-fit: cover; }
 .pdrop { position: absolute; top: 9px; inset-inline-end: 9px; background: rgba(239,68,68,.9); color: #fff; font-size: .58rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; z-index: 3; }
 .hbody { padding: 13px; }
 .hname { font-weight: 700; font-size: .95rem; }

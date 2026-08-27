@@ -2,7 +2,7 @@
 // PATH: src/app/[locale]/restaurants/page.tsx
 // FIX: Skeleton shimmer uses CSS variable — visible in light mode
 // FIX: Image filter via vg-hotel-thumb CSS class (handled in globals.css)
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { Search, MapPin, Star, Heart, SlidersHorizontal, Utensils, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
@@ -122,14 +122,17 @@ export default function RestaurantsPage() {
     { value: '$$$$', label: '$$$$ — Fine Dining' },
   ];
 
-  const fetchRestaurants = async () => {
+  const searchTermRef = useRef(searchTerm);
+  useEffect(() => { searchTermRef.current = searchTerm; }, [searchTerm]);
+
+  const fetchRestaurants = useCallback(async () => {
     try {
       setLoading(true);
       const q = new URLSearchParams({
         page: currentPage.toString(), limit: '12',
         ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)),
       });
-      if (searchTerm) {q.append('search', searchTerm);}
+      if (searchTermRef.current) {q.append('search', searchTermRef.current);}
       const res = await fetch(`/api/restaurants?${q}`);
       const data = await res.json();
       setRestaurants(data.restaurants || []);
@@ -138,9 +141,9 @@ export default function RestaurantsPage() {
     } catch {
       // ignore fetch/parsing errors here; loading state is cleared in `finally`
     } finally { setLoading(false); }
-  };
+  }, [currentPage, filters]);
 
-  useEffect(() => { fetchRestaurants(); }, [currentPage, filters]);
+  useEffect(() => { fetchRestaurants(); }, [fetchRestaurants]);
 
   const toggleFav = (e: React.MouseEvent, id: string) => {
     e.preventDefault(); e.stopPropagation();
