@@ -7,7 +7,18 @@ import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { VG, monoLabel } from '@/lib/tokens';
 import { useParams, useRouter } from 'next/navigation';
 
-export default function PaymentFlow({ booking }: { booking: any }) {
+interface Booking {
+  id?: string;
+  amount?: number;
+  currency?: string;
+  hotelName?: string;
+  itemName?: string;
+  checkIn?: string;
+  checkOut?: string;
+  guests?: number;
+}
+
+export default function PaymentFlow({ booking }: { booking: Booking }) {
   const { isAvailable, authenticate, createPayment, sdkStatus } = usePi();
   const params = useParams();
   const router = useRouter();
@@ -110,7 +121,7 @@ export default function PaymentFlow({ booking }: { booking: any }) {
           { label: 'Hotel',      value: booking.hotelName || booking.itemName },
           booking.checkIn  && { label: 'Check-in',  value: booking.checkIn },
           booking.checkOut && { label: 'Check-out', value: booking.checkOut },
-        ].filter(Boolean).map((row: any) => (
+        ].filter((r): r is { label: string; value: string } => Boolean(r)).map((row) => (
           <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid var(--vg-border)' }}>
             <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-3)' }}>{row.label}</span>
             <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-2)', maxWidth: '55%', textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.value}</span>

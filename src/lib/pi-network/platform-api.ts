@@ -37,7 +37,7 @@ interface PiPayment {
   user_uid: string;
   amount: number;
   memo: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   from_address: string;
   to_address: string;
   direction: 'user_to_app' | 'app_to_user';
@@ -135,7 +135,7 @@ async function makeRequest<T>(
 /**
  * Check if error is retryable
  */
-function shouldRetry(error: any): boolean {
+function shouldRetry(error: unknown): boolean {
   if (!axios.isAxiosError(error)) {
     return false;
   }
@@ -153,7 +153,7 @@ function shouldRetry(error: any): boolean {
 /**
  * Handle API errors
  */
-function handleApiError(error: any): Error {
+function handleApiError(error: unknown): Error {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<PiApiError>;
     
@@ -366,7 +366,7 @@ export async function createA2UPayment(
   userId: string,
   amount: number,
   memo: string,
-  metadata: Record<string, any> = {}
+  metadata: Record<string, unknown> = {}
 ): Promise<string> {
   logger.log(`💸 Creating A2U payment to user: ${userId}`);
   logger.log(`💰 Amount: ${amount} Pi`);
