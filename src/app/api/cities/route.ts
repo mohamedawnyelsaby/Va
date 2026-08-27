@@ -1,5 +1,6 @@
 // src/app/api/cities/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 
 // Helper function to generate slug from city name
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     const country = searchParams.get('country');
     const popular = searchParams.get('popular') === 'true';
     
-    const where: any = {};
+    const where: Prisma.CityWhereInput = {};
     
     if (search) {
       where.OR = [
