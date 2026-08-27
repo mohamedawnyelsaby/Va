@@ -39,8 +39,8 @@ export function ReviewModal({ isOpen, onClose, itemId, itemName, itemType }: Rev
       toast({ title: 'Review submitted!', variant: 'success' });
       onClose();
       setRating(0); setTitle(''); setComment('');
-    } catch (e: any) {
-      toast({ title: e.message || 'Something went wrong', variant: 'destructive' });
+    } catch (e) {
+      toast({ title: e instanceof Error ? e.message : 'Something went wrong', variant: 'destructive' });
     } finally {
       setLoading(false);
     }

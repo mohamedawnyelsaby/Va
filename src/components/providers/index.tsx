@@ -10,11 +10,12 @@ import ToastProvider from './toast-provider';
 import ModalProvider from './modal-provider';
 import { TooltipProvider } from './tooltip-provider';
 import { SessionProvider } from 'next-auth/react';
+import type { Session } from 'next-auth';
 
 interface ProvidersProps {
   children: React.ReactNode;
   locale?: string;
-  session?: any;
+  session?: Session | null;
 }
 
 export function Providers({ children, locale = 'en', session }: ProvidersProps) {
