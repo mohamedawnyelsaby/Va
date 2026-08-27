@@ -25,7 +25,15 @@ export async function GET(request: NextRequest) {
       mode: 'insensitive' as const,
     };
 
-    const results: any = {
+    interface SearchResults {
+      query: string;
+      hotels: unknown[];
+      cities: unknown[];
+      attractions: unknown[];
+      restaurants: unknown[];
+    }
+
+    const results: SearchResults = {
       query,
       hotels: [],
       cities: [],

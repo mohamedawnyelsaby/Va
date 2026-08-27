@@ -1,5 +1,6 @@
 // src/app/api/hotels/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
@@ -14,9 +15,9 @@ export async function GET(request: NextRequest) {
     const maxPrice = searchParams.get('maxPrice');
     const starRating = searchParams.get('starRating');
     const sortBy = searchParams.get('sortBy') || 'rating';
-    const order = searchParams.get('order') || 'desc';
+    const order: 'asc' | 'desc' = searchParams.get('order') === 'asc' ? 'asc' : 'desc';
 
-    const where: any = {};
+    const where: Prisma.HotelWhereInput = {};
 
     if (cityId) {
       where.cityId = cityId;
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
       where.starRating = parseInt(starRating);
     }
 
-    const orderBy: any = {};
+    const orderBy: Record<string, 'asc' | 'desc'> = {};
     orderBy[sortBy] = order;
 
     const [hotels, total] = await Promise.all([

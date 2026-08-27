@@ -1,5 +1,6 @@
 // src/app/api/restaurants/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
@@ -14,9 +15,9 @@ export async function GET(request: NextRequest) {
     const priceRange = searchParams.get('priceRange');
     const search = searchParams.get('search');
     const sortBy = searchParams.get('sortBy') || 'rating';
-    const order = searchParams.get('order') || 'desc';
+    const order: 'asc' | 'desc' = searchParams.get('order') === 'asc' ? 'asc' : 'desc';
 
-    const where: any = {};
+    const where: Prisma.RestaurantWhereInput = {};
 
     if (cityId) {
       where.cityId = cityId;
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const orderBy: any = {};
+    const orderBy: Record<string, 'asc' | 'desc'> = {};
     orderBy[sortBy] = order;
 
     const [restaurants, total] = await Promise.all([

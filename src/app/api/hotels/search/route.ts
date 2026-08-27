@@ -78,8 +78,25 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    interface RapidApiHotel {
+      hotel_id?: number | string;
+      property?: {
+        name?: string;
+        countryCode?: string;
+        wishlistName?: string;
+        latitude?: number;
+        longitude?: number;
+        propertyClass?: number;
+        reviewScore?: number;
+        reviewCount?: number;
+        reviewScoreWord?: string;
+        priceBreakdown?: { grossPrice?: { value?: number; currency?: string } };
+        photoUrls?: string[];
+      };
+    }
+
     // Format hotels
-    const hotels = hotelsData.data.hotels.slice(0, 20).map((hotel: any) => ({
+    const hotels = hotelsData.data.hotels.slice(0, 20).map((hotel: RapidApiHotel) => ({
       id: hotel.hotel_id?.toString(),
       name: hotel.property?.name,
       city: destination,
@@ -95,7 +112,7 @@ export async function GET(request: NextRequest) {
       currency: hotel.property?.priceBreakdown?.grossPrice?.currency || 'USD',
       thumbnail: hotel.property?.photoUrls?.[0],
       images: hotel.property?.photoUrls || [],
-      isFeatured: hotel.property?.reviewScore > 8.5,
+      isFeatured: (hotel.property?.reviewScore ?? 0) > 8.5,
       checkIn,
       checkOut,
       source: 'booking.com',

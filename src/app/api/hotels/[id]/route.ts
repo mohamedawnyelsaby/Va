@@ -1,6 +1,7 @@
 // src/app/api/hotels/[id]/route.ts
 // Single Hotel API - Get, Update, Delete
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
@@ -64,7 +65,7 @@ export async function PATCH(
     const body = await request.json();
     
     // Only update fields that exist in the schema
-    const updateData: any = {};
+    const updateData: Prisma.HotelUpdateInput = {};
     
     if (body.name) {updateData.name = body.name;}
     if (body.description) {updateData.description = body.description;}
