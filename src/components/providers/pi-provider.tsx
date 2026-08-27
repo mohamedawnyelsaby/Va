@@ -231,6 +231,73 @@ export function PiProvider({ children }: { children: ReactNode }) {
   const paymentTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   // ============================================
+  // Session Management (Secure)
+  // ============================================
+
+  const clearSession = useCallback(() => {
+    try {
+      localStorage.removeItem('pi_user');
+      localStorage.removeItem('pi_user_timestamp');
+      setUser(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('❌ Session clear failed:', error);
+    }
+  }, []);
+
+  const saveSession = useCallback((userData: PiUser) => {
+    try {
+      // Never store access token in localStorage for security
+      const safeUserData = {
+        uid: userData.uid,
+        username: userData.username,
+      };
+      
+      localStorage.setItem('pi_user', JSON.stringify(safeUserData));
+      localStorage.setItem('pi_user_timestamp', Date.now().toString());
+      
+    } catch (error) {
+      console.error('❌ Session save failed:', error);
+    }
+  }, []);
+
+  const restoreSession = useCallback(() => {
+    try {
+      const savedUser = localStorage.getItem('pi_user');
+      const savedTimestamp = localStorage.getItem('pi_user_timestamp');
+      
+      if (!savedUser || !savedTimestamp) {
+        return;
+      }
+
+      // Check session timeout
+      const timestamp = parseInt(savedTimestamp, 10);
+      if (Date.now() - timestamp > SECURITY_CONFIG.SESSION_TIMEOUT) {
+        console.log('⏰ Session expired');
+        clearSession();
+        return;
+      }
+
+      const userData = JSON.parse(savedUser);
+      
+      // Validate user data structure
+      if (!userData.uid || !userData.username) {
+        console.warn('⚠️ Invalid session data');
+        clearSession();
+        return;
+      }
+
+      setUser(userData);
+      setIsAuthenticated(true);
+      console.log('✅ Session restored:', userData.username);
+      
+    } catch (error) {
+      console.error('❌ Session restore failed:', error);
+      clearSession();
+    }
+  }, [clearSession]);
+
+  // ============================================
   // SDK Initialization - FIXED VERSION
   // ============================================
 
@@ -304,6 +371,11 @@ export function PiProvider({ children }: { children: ReactNode }) {
     // Set up interval to keep checking (faster check for quicker detection)
     sdkCheckInterval.current = setInterval(initializePiSDK, 300);
 
+    // Snapshot the timeouts map for cleanup — paymentTimeouts.current is a
+    // stable Map (only ever mutated in place, never reassigned), but ESLint
+    // can't know that statically, so we capture the reference explicitly.
+    const timeoutsAtMount = paymentTimeouts.current;
+
     // Cleanup
     return () => {
       mounted = false;
@@ -311,81 +383,46 @@ export function PiProvider({ children }: { children: ReactNode }) {
         clearInterval(sdkCheckInterval.current);
       }
       // Clear all payment timeouts
-      paymentTimeouts.current.forEach(timeout => clearTimeout(timeout));
-      paymentTimeouts.current.clear();
+      timeoutsAtMount.forEach(timeout => clearTimeout(timeout));
+      timeoutsAtMount.clear();
     };
-  }, []);
-
-  // ============================================
-  // Session Management (Secure)
-  // ============================================
-
-  const restoreSession = useCallback(() => {
-    try {
-      const savedUser = localStorage.getItem('pi_user');
-      const savedTimestamp = localStorage.getItem('pi_user_timestamp');
-      
-      if (!savedUser || !savedTimestamp) {
-        return;
-      }
-
-      // Check session timeout
-      const timestamp = parseInt(savedTimestamp, 10);
-      if (Date.now() - timestamp > SECURITY_CONFIG.SESSION_TIMEOUT) {
-        console.log('⏰ Session expired');
-        clearSession();
-        return;
-      }
-
-      const userData = JSON.parse(savedUser);
-      
-      // Validate user data structure
-      if (!userData.uid || !userData.username) {
-        console.warn('⚠️ Invalid session data');
-        clearSession();
-        return;
-      }
-
-      setUser(userData);
-      setIsAuthenticated(true);
-      console.log('✅ Session restored:', userData.username);
-      
-    } catch (error) {
-      console.error('❌ Session restore failed:', error);
-      clearSession();
-    }
-  }, []);
-
-  const saveSession = useCallback((userData: PiUser) => {
-    try {
-      // Never store access token in localStorage for security
-      const safeUserData = {
-        uid: userData.uid,
-        username: userData.username,
-      };
-      
-      localStorage.setItem('pi_user', JSON.stringify(safeUserData));
-      localStorage.setItem('pi_user_timestamp', Date.now().toString());
-      
-    } catch (error) {
-      console.error('❌ Session save failed:', error);
-    }
-  }, []);
-
-  const clearSession = useCallback(() => {
-    try {
-      localStorage.removeItem('pi_user');
-      localStorage.removeItem('pi_user_timestamp');
-      setUser(null);
-      setIsAuthenticated(false);
-    } catch (error) {
-      console.error('❌ Session clear failed:', error);
-    }
-  }, []);
+  }, [restoreSession]);
 
   // ============================================
   // Authentication (Secure)
   // ============================================
+
+  // Handle incomplete payments
+  const handleIncompletePayment = useCallback((payment: any) => {
+    console.log('🔄 Handling incomplete payment:', payment);
+    
+    try {
+      // Validate incomplete payment data
+      if (!payment?.identifier || !payment?.amount) {
+        console.warn('⚠️ Invalid incomplete payment data');
+        return;
+      }
+
+      const incompletePayment: PiPayment = {
+        identifier: payment.identifier,
+        amount: Number(payment.amount),
+        memo: payment.memo || 'Incomplete payment',
+        status: 'pending',
+        createdAt: payment.created_at ? new Date(payment.created_at) : new Date(),
+      };
+
+      setActivePayment(incompletePayment);
+      setPaymentHistory(prev => {
+        // Prevent duplicates
+        if (prev.some(p => p.identifier === incompletePayment.identifier)) {
+          return prev;
+        }
+        return [incompletePayment, ...prev];
+      });
+    } catch (error) {
+      console.error('❌ Failed to handle incomplete payment:', error);
+    }
+  }, []);
 
   const authenticate = useCallback(async (scopes: string[] = ['username', 'payments']): Promise<PiUser> => {
     // Check rate limit
@@ -469,7 +506,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       clearSession();
       throw error;
     }
-  }, [sdkStatus, saveSession, clearSession]);
+  }, [sdkStatus, saveSession, clearSession, handleIncompletePayment]);
 
   const logout = useCallback(() => {
     clearSession();
@@ -676,38 +713,6 @@ export function PiProvider({ children }: { children: ReactNode }) {
       throw error;
     }
   }, [sdkStatus, isAuthenticated, user]);
-
-  // Handle incomplete payments
-  const handleIncompletePayment = useCallback((payment: any) => {
-    console.log('🔄 Handling incomplete payment:', payment);
-    
-    try {
-      // Validate incomplete payment data
-      if (!payment?.identifier || !payment?.amount) {
-        console.warn('⚠️ Invalid incomplete payment data');
-        return;
-      }
-
-      const incompletePayment: PiPayment = {
-        identifier: payment.identifier,
-        amount: Number(payment.amount),
-        memo: payment.memo || 'Incomplete payment',
-        status: 'pending',
-        createdAt: payment.created_at ? new Date(payment.created_at) : new Date(),
-      };
-
-      setActivePayment(incompletePayment);
-      setPaymentHistory(prev => {
-        // Prevent duplicates
-        if (prev.some(p => p.identifier === incompletePayment.identifier)) {
-          return prev;
-        }
-        return [incompletePayment, ...prev];
-      });
-    } catch (error) {
-      console.error('❌ Failed to handle incomplete payment:', error);
-    }
-  }, []);
 
   // Get payment status from server
   const getPaymentStatus = useCallback(async (paymentId: string) => {
