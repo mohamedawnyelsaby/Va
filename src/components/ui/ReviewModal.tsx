@@ -1,7 +1,7 @@
 'use client';
 // PATH: src/components/ui/ReviewModal.tsx
 import { useState } from 'react';
-import { X, Star } from 'lucide-react';
+import { X } from 'lucide-react';
 import { VG, monoLabel } from '@/lib/tokens';
 import { useToast } from '@/components/ui/use-toast';
 

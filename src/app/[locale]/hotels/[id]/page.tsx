@@ -6,11 +6,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
-import { MapPin, Star, Heart, Share2, Wifi, Coffee, Dumbbell, Utensils, Calendar, Users, ChevronLeft, ChevronRight, ArrowLeft, MessageSquare } from 'lucide-react';
+import { MapPin, Star, Heart, Share2, Wifi, Coffee, Dumbbell, Utensils, Calendar, Users, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
-import { formatDate } from '@/lib/i18n/formatters';
 import { VG, inputBase, inputFocus, inputBlur, monoLabel } from '@/lib/tokens';
 import { ImageLightbox, useImageLightbox } from '@/components/ui/ImageLightbox';
 import { ReviewModal } from '@/components/ui/ReviewModal';

@@ -13,8 +13,6 @@ interface Props {
   locale: string;
 }
 
-const isAr = (locale: string) => locale === 'ar';
-
 async function askAI(message: string): Promise<string> {
   const res = await fetch('/api/ai/travel', {
     method: 'POST',
@@ -43,7 +41,6 @@ function monthPrice(base: number, day: number, month: number) {
 }
 
 export function Phase2Features({ locale }: Props) {
-  const ar = isAr(locale);
   const tr = getTranslations(locale);
   const ph = tr.phase2;
 

@@ -1,8 +1,8 @@
 'use client';
 // PATH: src/components/sections/hero.tsx
 // REDESIGN: Cinematic Noir Luxury — editorial, atmospheric, unforgettable
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { Search, MapPin, Utensils, Bot, ArrowRight, Play } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Search, MapPin, Utensils, Bot, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { t } from '@/lib/i18n/translations';
 

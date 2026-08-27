@@ -3,7 +3,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = 'booking-com15.p.rapidapi.com';
 

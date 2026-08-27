@@ -2,7 +2,6 @@
 // PATH: src/components/sections/how-it-works.tsx
 import { useEffect, useRef } from 'react';
 import { UserCircle, Search, CreditCard, Plane } from 'lucide-react';
-import AnimatedCounter from '@/components/ui/AnimatedCounter';
 import { t } from '@/lib/i18n/translations';
 
 const STEP_ICONS = [UserCircle, Search, CreditCard, Plane];

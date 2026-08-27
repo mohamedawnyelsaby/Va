@@ -5,7 +5,7 @@ import { Calendar, CheckCircle, Clock, AlertCircle, ArrowRight, ChevronLeft, Che
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatCurrency } from '@/lib/utils';
-import { VG, monoLabel } from '@/lib/tokens';
+import { VG } from '@/lib/tokens';
 
 function SkeletonRow() {
   return (

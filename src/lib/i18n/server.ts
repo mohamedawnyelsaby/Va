@@ -5,11 +5,6 @@ type Locale = 'en' | 'ar' | 'fr' | 'es' | 'de' | 'zh' | 'ja' | 'ru' | 'pt' | 'hi
 
 const defaultLocale: Locale = 'en';
 
-// Translation keys type
-type TranslationKeys = {
-  [key: string]: string | TranslationKeys;
-};
-
 // Simple translation getter for server components
 export async function getTranslations(locale: string, namespace: string = 'common') {
   try {

@@ -489,14 +489,15 @@ export function PiProvider({ children }: { children: ReactNode }) {
           throw new Error('Backend verification failed');
         }
 
-        const verifyData = await verifyResponse.json();
+        await verifyResponse.json();
         console.log('✅ Backend verification successful');
         
       } catch (error) {
         console.error('❌ Backend verification failed:', error);
-        // In production, you might want to logout on verification failure
-        // clearSession();
-        // throw new Error('Authentication verification failed');
+        // Backend rejected this Pi auth — don't leave the user optimistically
+        // authenticated on the client while the server disagrees.
+        clearSession();
+        throw new Error('Authentication verification failed');
       }
 
       return userData;

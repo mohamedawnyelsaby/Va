@@ -366,8 +366,8 @@ export class AttackPrevention {
    */
   static async checkSessionAnomaly(
     sessionId: string,
-    currentIP: string,
-    currentUserAgent: string
+    _currentIP: string,
+    _currentUserAgent: string
   ): Promise<boolean> {
     const sessionKey = `session:${sessionId}`;
     const stored = rateLimitStore.get(sessionKey);

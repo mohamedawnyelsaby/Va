@@ -3,7 +3,7 @@
 'use client';
 import { useState } from 'react';
 import { usePi } from '@/components/providers/pi-provider';
-import { CheckCircle, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { VG, monoLabel } from '@/lib/tokens';
 import { useParams, useRouter } from 'next/navigation';
 
