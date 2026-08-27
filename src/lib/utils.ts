@@ -24,7 +24,7 @@ export function formatCurrency(amount: number, currencyCode: string = 'USD'): st
 ══════════════════════════════════════════ */
 
 export function $(id: string): HTMLElement | null {
-  if (typeof document === 'undefined') return null;
+  if (typeof document === 'undefined') {return null;}
   return document.getElementById(id);
 }
 
@@ -43,9 +43,9 @@ export function fp(p: number, currency: 'USD' | 'PI' = 'USD', piRate: number = 0
 }
 
 export function toast(msg: string, type = '') {
-  if (typeof document === 'undefined') return;
+  if (typeof document === 'undefined') {return;}
   const t = $('toastEl') as (HTMLElement & { _t?: ReturnType<typeof setTimeout> }) | null;
-  if (!t) return;
+  if (!t) {return;}
   t.textContent = msg;
   t.className = 'toast ' + (type || '');
   t.classList.add('on');
@@ -54,7 +54,7 @@ export function toast(msg: string, type = '') {
 }
 
 export function toggleTheme() {
-  if (typeof document === 'undefined') return;
+  if (typeof document === 'undefined') {return;}
   const d = document.documentElement.getAttribute('data-theme') === 'dark';
   document.documentElement.setAttribute('data-theme', d ? 'light' : 'dark');
 }

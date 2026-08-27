@@ -31,7 +31,7 @@ export const DESTINATIONS: Destination[] = [
 ];
 
 function readStored(): number[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     return JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '[]');
   } catch {
@@ -40,7 +40,7 @@ function readStored(): number[] {
 }
 
 function writeStored(ids: number[]) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
     window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: ids }));

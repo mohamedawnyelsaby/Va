@@ -73,7 +73,9 @@ export default function HotelDetailPage() {
     try {
       const stored = JSON.parse(localStorage.getItem('va-favorites') || '[]');
       setIsFav(stored.some((f: any) => f.id === hotel.id));
-    } catch {}
+    } catch {
+      // ignore malformed localStorage data
+    }
   }, [hotel]);
 
   const toggleFav = () => {
@@ -87,7 +89,9 @@ export default function HotelDetailPage() {
       localStorage.setItem('va-favorites', JSON.stringify(updated));
       setIsFav(!exists);
       toast({ title: exists ? 'Removed from favorites' : 'Saved to favorites', variant: exists ? 'default' : 'success' });
-    } catch {}
+    } catch {
+      // ignore malformed localStorage data
+    }
   };
 
   const handleShare = () => {

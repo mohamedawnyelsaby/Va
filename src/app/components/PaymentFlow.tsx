@@ -35,7 +35,7 @@ export default function PaymentFlow({ booking }: { booking: any }) {
           memo: `Va Travel - ${booking.hotelName || booking.itemName || 'Booking'}`,
         }),
       });
-      if (!createRes.ok) throw new Error((await createRes.json()).error || 'Failed to create payment');
+      if (!createRes.ok) {throw new Error((await createRes.json()).error || 'Failed to create payment');}
       const { paymentId, amount, memo } = await createRes.json();
 
       setStep('Waiting for Pi confirmation…');
@@ -47,7 +47,7 @@ export default function PaymentFlow({ booking }: { booking: any }) {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ paymentId, piPaymentId }),
           });
-          if (!res.ok) throw new Error('Approval failed');
+          if (!res.ok) {throw new Error('Approval failed');}
         },
         onReadyForServerCompletion: async (piPaymentId: string, txid: string) => {
           setStep('Completing payment…');
@@ -55,7 +55,7 @@ export default function PaymentFlow({ booking }: { booking: any }) {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ paymentId, piPaymentId, txid }),
           });
-          if (!res.ok) throw new Error('Completion failed');
+          if (!res.ok) {throw new Error('Completion failed');}
           const result = await res.json();
           const cb = result.cashback || 0;
           setCashback(cb);
@@ -228,7 +228,7 @@ export default function PaymentFlow({ booking }: { booking: any }) {
         </p>
       </div>
 
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
     </div>
   );
 }

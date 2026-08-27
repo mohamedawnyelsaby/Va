@@ -17,7 +17,7 @@ export async function middleware(request: NextRequest) {
   if (!isPublicPath) {
     const token = await getToken({ 
       req: request,
-      secret: process.env.NEXTAUTH_SECRET 
+      secret: process.env.NEXTAUTH_SECRET, 
     });
 
     if (!token) {

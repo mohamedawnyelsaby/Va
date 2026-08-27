@@ -22,7 +22,7 @@ async function askAI(message: string): Promise<string> {
     body: JSON.stringify({ message, history: [] }),
   });
   const data = await res.json();
-  if (!res.ok || data.error) throw new Error(data.message || 'AI service unavailable');
+  if (!res.ok || data.error) {throw new Error(data.message || 'AI service unavailable');}
   return data.message as string;
 }
 
@@ -64,8 +64,8 @@ export function Phase2Features({ locale }: Props) {
     setPackList(null);
     try {
       const prompt = `Create a packing list for a ${packDays}-day ${packStyle} trip to ${dest}. ` +
-        `Reply with ONLY valid JSON, no other text, in this exact shape: ` +
-        `{"clothing":["item1","item2"],"toiletries":["item1"],"electronics":["item1"],"documents":["item1"]}. Max 5 items per category.`;
+        'Reply with ONLY valid JSON, no other text, in this exact shape: ' +
+        '{"clothing":["item1","item2"],"toiletries":["item1"],"electronics":["item1"],"documents":["item1"]}. Max 5 items per category.';
       const raw = await askAI(prompt);
       const clean = raw.replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(clean);
@@ -96,7 +96,7 @@ export function Phase2Features({ locale }: Props) {
   const [showTable, setShowTable] = useState(false);
 
   async function compareTrips() {
-    if (cmp1 === cmp2) return;
+    if (cmp1 === cmp2) {return;}
     setShowTable(true);
     setCmpLoading(true);
     setCmpResp(ph.cmpAnalyzing);
@@ -131,7 +131,7 @@ export function Phase2Features({ locale }: Props) {
 
   function addMember() {
     const name = memberInput.trim();
-    if (!name) return;
+    if (!name) {return;}
     setMembers(prev => [...prev, name]);
     setMemberInput('');
   }
@@ -143,7 +143,7 @@ export function Phase2Features({ locale }: Props) {
   const perPersonAmount = members.length > 0 ? Math.round(groupBudgetNum / members.length) : 0;
 
   async function planGroupTrip() {
-    if (members.length < 2) return;
+    if (members.length < 2) {return;}
     setGroupLoading(true);
     setGroupResp(ph.groupPlanning);
     try {
@@ -271,7 +271,7 @@ export function Phase2Features({ locale }: Props) {
             placeholder={ph.memberName}
             value={memberInput}
             onChange={e => setMemberInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') addMember(); }}
+            onKeyDown={e => { if (e.key === 'Enter') {addMember();} }}
           />
           <button className="group-add-btn" onClick={addMember}>+ {ph.add}</button>
         </div>

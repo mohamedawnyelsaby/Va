@@ -193,7 +193,7 @@ export class AttackPrevention {
       /(\bDROP\b.*\b(TABLE|DATABASE)\b)/i,
       /(\bDELETE\b.*\bFROM\b)/i,
       /(\bUPDATE\b.*\bSET\b)/i,
-      /(--|\#|\/\*|\*\/)/,
+      /(--|#|\/\*|\*\/)/,
       /(\bOR\b.*=.*)/i,
       /(\bAND\b.*=.*)/i,
       /(\bEXEC\b|\bEXECUTE\b)/i,

@@ -127,7 +127,7 @@ export default function Header({ locale = 'en' }: HeaderProps) {
               <span className={styles.menuNum}>0{i + 1}</span>
               <span className={styles.menuLabel}>{item.label}</span>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={styles.menuArrow}>
-                <path d={locale === 'ar' ? "M19 12H5M12 19l-7-7 7-7" : "M5 12h14M12 5l7 7-7 7"}/>
+                <path d={locale === 'ar' ? 'M19 12H5M12 19l-7-7 7-7' : 'M5 12h14M12 5l7 7-7 7'}/>
               </svg>
             </Link>
           ))}

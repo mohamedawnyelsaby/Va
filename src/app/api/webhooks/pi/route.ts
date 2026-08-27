@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         success: true, 
         message: 'Already processed',
-        requestId 
+        requestId, 
       });
     }
 

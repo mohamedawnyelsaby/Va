@@ -21,7 +21,7 @@ export function ReviewModal({ isOpen, onClose, itemId, itemName, itemType }: Rev
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
 
-  if (!isOpen) return null;
+  if (!isOpen) {return null;}
 
   const handleSubmit = async () => {
     if (!rating) { toast({ title: 'Please select a rating', variant: 'destructive' }); return; }
@@ -35,7 +35,7 @@ export function ReviewModal({ isOpen, onClose, itemId, itemName, itemType }: Rev
         body: JSON.stringify({ itemId, itemType, rating, title, comment }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to submit review');
+      if (!res.ok) {throw new Error(data.error || 'Failed to submit review');}
       toast({ title: 'Review submitted!', variant: 'success' });
       onClose();
       setRating(0); setTitle(''); setComment('');

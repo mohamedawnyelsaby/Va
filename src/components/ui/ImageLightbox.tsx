@@ -19,15 +19,15 @@ export function ImageLightbox({ images, initialIndex = 0, alt = '', onClose }: I
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowLeft') prev();
-      if (e.key === 'ArrowRight') next();
+      if (e.key === 'Escape') {onClose();}
+      if (e.key === 'ArrowLeft') {prev();}
+      if (e.key === 'ArrowRight') {next();}
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose, prev, next]);
 
-  if (!images.length) return null;
+  if (!images.length) {return null;}
 
   return (
     <div

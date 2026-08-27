@@ -27,7 +27,7 @@ async function updateDbBackground(
   requestId: string
 ): Promise<void> {
   try {
-    if (!internalPaymentId && !piPaymentId) return;
+    if (!internalPaymentId && !piPaymentId) {return;}
 
     const payment = await prisma.payment.findFirst({
       where: internalPaymentId
@@ -41,9 +41,9 @@ async function updateDbBackground(
       await prisma.payment.update({
         where: { id: p2.id },
         data: { status: 'approved', piPaymentId: piPaymentId || internalPaymentId,
-          metadata: { ...((p2.metadata as object) || {}), approvedAt: new Date().toISOString(), requestId } }
+          metadata: { ...((p2.metadata as object) || {}), approvedAt: new Date().toISOString(), requestId } },
       });
-      if (p2.bookingId) await prisma.booking.update({ where: { id: p2.bookingId }, data: { paymentStatus: 'processing' } });
+      if (p2.bookingId) {await prisma.booking.update({ where: { id: p2.bookingId }, data: { paymentStatus: 'processing' } });}
       console.log(`[${requestId}] DB: approved via piPaymentId fallback`);
       return;
     }
@@ -58,8 +58,8 @@ async function updateDbBackground(
       data: {
         status: 'approved',
         piPaymentId: piPaymentId || payment.piPaymentId,
-        metadata: { ...((payment.metadata as object) || {}), approvedAt: new Date().toISOString(), requestId, sandboxMode: IS_SANDBOX }
-      }
+        metadata: { ...((payment.metadata as object) || {}), approvedAt: new Date().toISOString(), requestId, sandboxMode: IS_SANDBOX },
+      },
     });
     if (payment.bookingId) {
       await prisma.booking.update({ where: { id: payment.bookingId }, data: { paymentStatus: 'processing' } });

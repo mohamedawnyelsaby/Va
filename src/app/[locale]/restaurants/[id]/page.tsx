@@ -21,28 +21,28 @@ export default function RestaurantDetailPage() {
   useEffect(() => {
     fetch(`/api/restaurants/${params.id}`)
       .then(r => r.json())
-      .then(d => { if (d.error) setError(d.error); else setRestaurant(d); setLoading(false); })
+      .then(d => { if (d.error) {setError(d.error);} else {setRestaurant(d);} setLoading(false); })
       .catch(e => { setError(e.message); setLoading(false); });
   }, [params.id]);
 
-  if (loading) return (
+  if (loading) {return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '60px' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ width: '40px', height: '40px', border: '1px solid var(--vg-gold-border)', borderTop: '1px solid var(--vg-gold)', borderRadius: '50%', animation: 'spin 0.9s linear infinite', margin: '0 auto 1rem' }} />
         <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.28em', color: 'var(--vg-text-3)', textTransform: 'uppercase' }}>Loading</div>
       </div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
     </div>
-  );
+  );}
 
-  if (error || !restaurant) return (
+  if (error || !restaurant) {return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '60px' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '3rem', color: 'var(--vg-text-3)', marginBottom: '1.5rem' }}>Not Found</div>
         <Link href={`/${locale}/restaurants`} className="vg-btn-outline" style={{ textDecoration: 'none' }}>← Restaurants</Link>
       </div>
     </div>
-  );
+  );}
 
   const cuisine = Array.isArray(restaurant.cuisine) ? restaurant.cuisine : [restaurant.cuisine].filter(Boolean);
   const priceColor = PRICE_COLOR[restaurant.priceRange] || 'var(--vg-gold)';
@@ -148,7 +148,7 @@ export default function RestaurantDetailPage() {
         style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 300px', gap: '2rem', padding: '2.5rem clamp(1.5rem,7vw,5rem)', maxWidth: '1200px', margin: '0 auto' }}
         className="rest-grid"
       >
-        <style>{`@media(max-width:800px){.rest-grid{grid-template-columns:1fr!important}}`}</style>
+        <style>{'@media(max-width:800px){.rest-grid{grid-template-columns:1fr!important}}'}</style>
 
         {/* Left */}
         <div>

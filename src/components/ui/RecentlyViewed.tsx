@@ -21,7 +21,7 @@ export function RecentlyViewed({ locale, exclude }: RecentlyViewedProps) {
     setItems(exclude ? all.filter(i => i.id !== exclude) : all);
   }, [exclude]);
 
-  if (!items.length) return null;
+  if (!items.length) {return null;}
 
   return (
     <div>
@@ -53,7 +53,7 @@ export function RecentlyViewed({ locale, exclude }: RecentlyViewedProps) {
                   )}
                 </div>
               </div>
-              {item.price != null && item.price > 0 && (
+              {item.price !== null && item.price !== undefined && item.price > 0 && (
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '0.95rem', fontWeight: 300, color: 'var(--vg-gold)' }}>
                     {formatCurrency(item.price, item.currency || 'USD')}

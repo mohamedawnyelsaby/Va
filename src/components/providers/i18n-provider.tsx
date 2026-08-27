@@ -12,15 +12,15 @@ if (!i18next.isInitialized) {
     resources: {
       en: {
         common: {
-          welcome: 'Welcome'
-        }
+          welcome: 'Welcome',
+        },
       },
       ar: {
         common: {
-          welcome: 'مرحبا'
-        }
-      }
-    }
+          welcome: 'مرحبا',
+        },
+      },
+    },
   });
 }
 

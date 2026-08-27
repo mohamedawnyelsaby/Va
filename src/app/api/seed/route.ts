@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     if (existingCities > 0) {
       return NextResponse.json({ 
         message: 'Database already has data',
-        cities: existingCities 
+        cities: existingCities, 
       });
     }
 
@@ -251,7 +251,7 @@ export async function POST(request: Request) {
       { 
         error: 'Seed failed', 
         message: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       },
       { status: 500 }
     );

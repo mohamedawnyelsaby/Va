@@ -8,14 +8,14 @@ const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = 'booking-com15.p.rapidapi.com';
 
 async function searchRealHotels(destination: string, checkIn: string, checkOut: string, budget?: number, guests?: number) {
-  if (!RAPIDAPI_KEY) return [];
+  if (!RAPIDAPI_KEY) {return [];}
   try {
     const destRes = await fetch(
       `https://${RAPIDAPI_HOST}/api/v1/hotels/searchDestination?query=${encodeURIComponent(destination)}`,
       { headers: { 'X-RapidAPI-Key': RAPIDAPI_KEY, 'X-RapidAPI-Host': RAPIDAPI_HOST } }
     );
     const destData = await destRes.json();
-    if (!destData.data?.length) return [];
+    if (!destData.data?.length) {return [];}
 
     const destId = destData.data[0].dest_id;
     const destType = destData.data[0].dest_type;
@@ -35,7 +35,7 @@ async function searchRealHotels(destination: string, checkIn: string, checkOut: 
       { headers: { 'X-RapidAPI-Key': RAPIDAPI_KEY, 'X-RapidAPI-Host': RAPIDAPI_HOST } }
     );
     const hotelsData = await hotelsRes.json();
-    if (!hotelsData.data?.hotels) return [];
+    if (!hotelsData.data?.hotels) {return [];}
 
     let hotels = hotelsData.data.hotels.slice(0, 10).map((h: any) => ({
       id: h.hotel_id?.toString(),
@@ -53,7 +53,7 @@ async function searchRealHotels(destination: string, checkIn: string, checkOut: 
       checkOut,
     }));
 
-    if (budget) hotels = hotels.filter((h: any) => h.price <= budget);
+    if (budget) {hotels = hotels.filter((h: any) => h.price <= budget);}
     return hotels;
   } catch (err) {
     console.error('Hotel search error:', err);
@@ -98,7 +98,7 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
     // Build Gemini messages
     const geminiMessages = messages.map((m: any) => ({
       role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) }]
+      parts: [{ text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) }],
     }));
 
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -122,10 +122,10 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
         }
       );
       
-      if (res.status === 429) continue;
+      if (res.status === 429) {continue;}
       
       const data = await res.json();
-      if (data.error) continue;
+      if (data.error) {continue;}
       
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (text) { aiText = text; geminiSuccess = true; break; }
@@ -154,8 +154,8 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
       });
       const oaiData = await oaiRes.json();
       const oaiText = oaiData.choices?.[0]?.message?.content;
-      if (oaiText) aiText = oaiText;
-      else console.error('OpenAI error:', oaiData.error);
+      if (oaiText) {aiText = oaiText;}
+      else {console.error('OpenAI error:', oaiData.error);}
     }
     
     if (aiText === '{}' || !aiText) {

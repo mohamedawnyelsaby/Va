@@ -14,7 +14,7 @@ export default function TiltCard({ children, maxTilt = 7, className = '', style 
 
   const onMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const el = ref.current;
-    if (!el) return;
+    if (!el) {return;}
     const { left, top, width, height } = el.getBoundingClientRect();
     const x = ((e.clientX - left) / width  - 0.5) * 2;
     const y = ((e.clientY - top)  / height - 0.5) * 2;
@@ -23,7 +23,7 @@ export default function TiltCard({ children, maxTilt = 7, className = '', style 
 
   const onLeave = useCallback(() => {
     const el = ref.current;
-    if (el) el.style.transform = 'perspective(900px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';
+    if (el) {el.style.transform = 'perspective(900px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';}
   }, []);
 
   return (

@@ -1,5 +1,5 @@
 // PATH: src/app/[locale]/press/page.tsx
-"use client";
+'use client';
 
 export default function PressPage() {
   const PRESS_ITEMS = [

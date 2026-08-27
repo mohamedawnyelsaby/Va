@@ -35,10 +35,10 @@ export async function getTranslations(locale: string, namespace: string = 'commo
 
 // Get locale from headers or default
 export function getLocale(headers?: Headers): Locale {
-  if (!headers) return defaultLocale;
+  if (!headers) {return defaultLocale;}
   
   const acceptLanguage = headers.get('accept-language');
-  if (!acceptLanguage) return defaultLocale;
+  if (!acceptLanguage) {return defaultLocale;}
   
   const preferredLocale = acceptLanguage.split(',')[0].split('-')[0];
   

@@ -8,7 +8,7 @@ import {
   useState, 
   useCallback,
   useRef,
-  ReactNode 
+  ReactNode, 
 } from 'react';
 
 // ============================================
@@ -200,7 +200,7 @@ class SecurityManager {
   sanitizeString(input: string): string {
     return input
       .trim()
-      .replace(/[<>\"']/g, '') // Remove potentially dangerous characters
+      .replace(/[<>"']/g, '') // Remove potentially dangerous characters
       .substring(0, 500); // Limit length
   }
 }
@@ -238,7 +238,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const initializePiSDK = () => {
-      if (!mounted) return;
+      if (!mounted) {return;}
 
       // Check if we're in browser
       if (typeof window === 'undefined') {
@@ -276,8 +276,8 @@ export function PiProvider({ children }: { children: ReactNode }) {
         console.log('🔧 Initializing Pi SDK...');
         
         Pi.init({ 
-          version: "2.0",
-          sandbox: isSandbox
+          version: '2.0',
+          sandbox: isSandbox,
         });
 
         setSdkStatus('available');
@@ -444,7 +444,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
           },
           body: JSON.stringify({ 
             accessToken: auth.accessToken,
-            uid: userData.uid 
+            uid: userData.uid, 
           }),
         });
 
@@ -557,7 +557,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
             setActivePayment(prev => prev ? { 
               ...prev, 
               identifier: paymentId, 
-              status: 'pending' 
+              status: 'pending', 
             } : null);
 
             try {
@@ -566,7 +566,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
               
               setActivePayment(prev => prev ? { 
                 ...prev, 
-                status: 'approved' 
+                status: 'approved', 
               } : null);
               
               console.log('✅ Server approved payment');
@@ -578,7 +578,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
               
               setActivePayment(prev => prev ? { 
                 ...prev, 
-                status: 'failed' 
+                status: 'failed', 
               } : null);
               
               throw error;
@@ -624,7 +624,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
               console.error('❌ Server completion failed:', error);
               setActivePayment(prev => prev ? { 
                 ...prev, 
-                status: 'failed' 
+                status: 'failed', 
               } : null);
               throw error;
             }
@@ -637,7 +637,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
             
             setActivePayment(prev => prev ? { 
               ...prev, 
-              status: 'cancelled' 
+              status: 'cancelled', 
             } : null);
             
             callbacks.onCancel(paymentId);
@@ -656,7 +656,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
             
             setActivePayment(prev => prev ? { 
               ...prev, 
-              status: 'failed' 
+              status: 'failed', 
             } : null);
             
             callbacks.onError(error, payment);
@@ -881,5 +881,5 @@ export type {
   PiPaymentCallbacks, 
   PiPayment,
   PiSDKStatus,
-  PiContextType 
+  PiContextType, 
 };

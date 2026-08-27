@@ -236,7 +236,7 @@ export async function getPayment(paymentId: string): Promise<PiPayment> {
     console.log(`✅ Payment fetched: ${payment.identifier}`);
     return payment;
   } catch (error) {
-    console.error(`❌ Failed to fetch payment:`, error);
+    console.error('❌ Failed to fetch payment:', error);
     throw new Error(`Failed to get payment: ${paymentId}`);
   }
 }
@@ -261,9 +261,9 @@ export async function approvePayment(paymentId: string): Promise<void> {
       },
     });
     
-    console.log(`✅ Payment approved successfully`);
+    console.log('✅ Payment approved successfully');
   } catch (error) {
-    console.error(`❌ Failed to approve payment:`, error);
+    console.error('❌ Failed to approve payment:', error);
     throw new Error(`Failed to approve payment: ${paymentId}`);
   }
 }
@@ -294,9 +294,9 @@ export async function completePayment(
       data: { txid },
     });
     
-    console.log(`✅ Payment completed successfully`);
+    console.log('✅ Payment completed successfully');
   } catch (error) {
-    console.error(`❌ Failed to complete payment:`, error);
+    console.error('❌ Failed to complete payment:', error);
     throw new Error(`Failed to complete payment: ${paymentId}`);
   }
 }
@@ -320,9 +320,9 @@ export async function cancelPayment(paymentId: string): Promise<void> {
       },
     });
     
-    console.log(`✅ Payment cancelled successfully`);
+    console.log('✅ Payment cancelled successfully');
   } catch (error) {
-    console.error(`❌ Failed to cancel payment:`, error);
+    console.error('❌ Failed to cancel payment:', error);
     throw new Error(`Failed to cancel payment: ${paymentId}`);
   }
 }

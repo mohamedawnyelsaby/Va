@@ -55,8 +55,8 @@ export function Navbar({ locale }: { locale: string; isRTL?: boolean }) {
 
   useEffect(() => {
     function onOutsideClick(e: MouseEvent) {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
-      if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false);
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {setNotifOpen(false);}
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {setLangOpen(false);}
     }
     document.addEventListener('mousedown', onOutsideClick);
     return () => document.removeEventListener('mousedown', onOutsideClick);
@@ -163,7 +163,7 @@ export function Navbar({ locale }: { locale: string; isRTL?: boolean }) {
           role="button"
           aria-label="Toggle dark / light mode"
           tabIndex={0}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setTheme(isDark ? 'light' : 'dark'); }}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') {setTheme(isDark ? 'light' : 'dark');} }}
         />
       </div>
     </header>

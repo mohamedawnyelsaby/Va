@@ -25,11 +25,11 @@ export default function AnimatedCounter({
 
   useEffect(() => {
     const el = elRef.current;
-    if (!el) return;
+    if (!el) {return;}
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting || started.current) return;
+        if (!entry.isIntersecting || started.current) {return;}
         started.current = true;
 
         const startTime = performance.now();
@@ -37,7 +37,7 @@ export default function AnimatedCounter({
           const p      = Math.min((now - startTime) / duration, 1);
           const eased  = 1 - Math.pow(1 - p, 3);          // ease-out cubic
           setValue(Math.round(eased * to));
-          if (p < 1) requestAnimationFrame(tick);
+          if (p < 1) {requestAnimationFrame(tick);}
         };
         requestAnimationFrame(tick);
       },

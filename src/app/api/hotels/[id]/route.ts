@@ -66,20 +66,20 @@ export async function PATCH(
     // Only update fields that exist in the schema
     const updateData: any = {};
     
-    if (body.name) updateData.name = body.name;
-    if (body.description) updateData.description = body.description;
-    if (body.shortDescription) updateData.shortDescription = body.shortDescription;
-    if (body.address) updateData.address = body.address;
-    if (body.starRating) updateData.starRating = body.starRating;
-    if (body.amenities) updateData.amenities = body.amenities;
-    if (body.roomTypes) updateData.roomTypes = body.roomTypes;
-    if (body.pricePerNight) updateData.pricePerNight = body.pricePerNight;
-    if (body.currency) updateData.currency = body.currency;
-    if (body.images) updateData.images = body.images;
-    if (body.thumbnail) updateData.thumbnail = body.thumbnail;
-    if (body.isFeatured !== undefined) updateData.isFeatured = body.isFeatured;
-    if (body.rating) updateData.rating = body.rating;
-    if (body.reviewCount) updateData.reviewCount = body.reviewCount;
+    if (body.name) {updateData.name = body.name;}
+    if (body.description) {updateData.description = body.description;}
+    if (body.shortDescription) {updateData.shortDescription = body.shortDescription;}
+    if (body.address) {updateData.address = body.address;}
+    if (body.starRating) {updateData.starRating = body.starRating;}
+    if (body.amenities) {updateData.amenities = body.amenities;}
+    if (body.roomTypes) {updateData.roomTypes = body.roomTypes;}
+    if (body.pricePerNight) {updateData.pricePerNight = body.pricePerNight;}
+    if (body.currency) {updateData.currency = body.currency;}
+    if (body.images) {updateData.images = body.images;}
+    if (body.thumbnail) {updateData.thumbnail = body.thumbnail;}
+    if (body.isFeatured !== undefined) {updateData.isFeatured = body.isFeatured;}
+    if (body.rating) {updateData.rating = body.rating;}
+    if (body.reviewCount) {updateData.reviewCount = body.reviewCount;}
 
     const hotel = await prisma.hotel.update({
       where: { id },

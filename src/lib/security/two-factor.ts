@@ -120,7 +120,7 @@ class SimpleTOTP {
 
     for (let i = 0; i < str.length; i++) {
       const idx = alphabet.indexOf(str[i].toUpperCase());
-      if (idx === -1) continue;
+      if (idx === -1) {continue;}
 
       value = (value << 5) | idx;
       bits += 5;

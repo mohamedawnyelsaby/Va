@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
 
     if (minPrice || maxPrice) {
       where.pricePerNight = {};
-      if (minPrice) where.pricePerNight.gte = parseFloat(minPrice);
-      if (maxPrice) where.pricePerNight.lte = parseFloat(maxPrice);
+      if (minPrice) {where.pricePerNight.gte = parseFloat(minPrice);}
+      if (maxPrice) {where.pricePerNight.lte = parseFloat(maxPrice);}
     }
 
     if (starRating) {

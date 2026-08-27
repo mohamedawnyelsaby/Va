@@ -17,10 +17,12 @@ export default function WalletPage() {
   const handleLogin = async () => {
     setLoading(true);
     try { await authenticate(['username', 'payments']); }
-    catch { } finally { setLoading(false); }
+    catch {
+      // ignore auth errors here; loading state is cleared in `finally`
+    } finally { setLoading(false); }
   };
 
-  if (!isAvailable) return (
+  if (!isAvailable) {return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', paddingTop: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', padding: '3rem 2.5rem', maxWidth: '380px', width: '100%', textAlign: 'center' }}>
         <div style={{ height: '1px', background: 'linear-gradient(to right, transparent, var(--vg-gold), transparent)', marginBottom: '2rem', opacity: 0.6 }} />
@@ -32,9 +34,9 @@ export default function WalletPage() {
         <div style={{ height: '1px', background: 'linear-gradient(to right, transparent, var(--vg-gold), transparent)', marginTop: '2rem', opacity: 0.6 }} />
       </div>
     </div>
-  );
+  );}
 
-  if (!isAuthenticated) return (
+  if (!isAuthenticated) {return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', paddingTop: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-gold-border)', padding: '3rem 2.5rem', maxWidth: '380px', width: '100%', textAlign: 'center' }}>
         <div style={{ height: '2px', background: 'linear-gradient(to right, var(--vg-gold), var(--vg-gold-2))', marginBottom: '2rem' }} />
@@ -55,7 +57,7 @@ export default function WalletPage() {
         </button>
       </div>
     </div>
-  );
+  );}
 
   const statusIcon: Record<string, any> = {
     completed: <CheckCircle size={16} style={{ color: '#10b981' }} />,

@@ -49,8 +49,8 @@ export function PaymentMethods({ amount, currency, onSuccess, onError }: Payment
         metadata: {
           type: 'booking',
           amount,
-          currency
-        }
+          currency,
+        },
       });
 
       // Show Pi Network payment interface

@@ -9,7 +9,7 @@ export default function PageTransition({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const el = curtainRef.current;
-    if (!el) return;
+    if (!el) {return;}
     el.style.animation = 'none';
     void el.offsetHeight;                    // force reflow لإعادة تشغيل الأنيميشن
     el.style.animation = 'vg-curtain 0.85s cubic-bezier(0.76,0,0.24,1) forwards';

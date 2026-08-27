@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
 
     if (minPrice || maxPrice) {
       where.ticketPrice = {};
-      if (minPrice) where.ticketPrice.gte = parseFloat(minPrice);
-      if (maxPrice) where.ticketPrice.lte = parseFloat(maxPrice);
+      if (minPrice) {where.ticketPrice.gte = parseFloat(minPrice);}
+      if (maxPrice) {where.ticketPrice.lte = parseFloat(maxPrice);}
     }
 
     if (isPopular) {

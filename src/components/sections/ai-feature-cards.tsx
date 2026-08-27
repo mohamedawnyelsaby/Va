@@ -91,7 +91,7 @@ function Sparkline({ values, highlightIndex }: { values: number[]; highlightInde
 function hashDistance(from: string, to: string): number {
   const s = (from + to).toLowerCase();
   let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  for (let i = 0; i < s.length; i++) {h = (h * 31 + s.charCodeAt(i)) >>> 0;}
   return 1200 + (h % 6000);
 }
 
@@ -115,7 +115,7 @@ export function AIFeatureCards({ locale }: Props) {
 
   async function runMood() {
     const chosen = moodText.trim() || mood;
-    if (!chosen) return;
+    if (!chosen) {return;}
     setMoodLoading(true);
     setMoodResp(ac.moodFinding);
     try {
@@ -180,7 +180,7 @@ export function AIFeatureCards({ locale }: Props) {
   const [listening, setListening] = useState(false);
 
   async function runTranslate(text: string) {
-    if (!text.trim()) return;
+    if (!text.trim()) {return;}
     setTranslateLoading(true);
     setTranslateOut(ac.translating);
     try {
@@ -195,7 +195,7 @@ export function AIFeatureCards({ locale }: Props) {
 
   function startListening() {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) return;
+    if (!SR) {return;}
     const rec = new SR();
     rec.lang = ar ? 'ar-EG' : 'en-US';
     rec.onresult = (e: any) => {
@@ -225,7 +225,7 @@ export function AIFeatureCards({ locale }: Props) {
   const budgetNum = parseFloat(budget) || 0;
 
   async function runBudget() {
-    if (!budgetNum) return;
+    if (!budgetNum) {return;}
     setBudgetLoading(true);
     setBudgetTip(ac.budgetAnalyzing);
     try {
@@ -363,7 +363,7 @@ export function AIFeatureCards({ locale }: Props) {
             placeholder={ac.translatePlaceholder}
             value={translateIn}
             onChange={e => setTranslateIn(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') runTranslate(translateIn); }}
+            onKeyDown={e => { if (e.key === 'Enter') {runTranslate(translateIn);} }}
           />
           <button className="btn btn-g" style={{ padding: '9px 12px', borderRadius: 'var(--rM)', fontSize: '.76rem' }} onClick={() => runTranslate(translateIn)} disabled={translateLoading}>
             {ac.translateBtn}

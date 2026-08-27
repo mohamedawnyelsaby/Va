@@ -24,7 +24,7 @@ function SkeletonRow() {
           </div>
         ))}
       </div>
-      <style>{`@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
+      <style>{'@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}'}</style>
     </div>
   );
 }
@@ -128,7 +128,7 @@ function SearchContent() {
   }, [query]);
 
   const doSearch = async (q: string) => {
-    if (q.length < 2) return;
+    if (q.length < 2) {return;}
     setLoading(true);
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&type=all&limit=8`);
@@ -206,8 +206,8 @@ function SearchContent() {
             <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.body, color: 'var(--vg-text-3)', marginBottom: '2rem' }}>
               {total > 0
                 ? sr.resultsTemplate.split(/(\{count\}|\{query\})/).map((part, i) => {
-                    if (part === '{count}') return <span key={i} style={{ color: 'var(--vg-gold)', fontFamily: 'var(--font-space-mono)' }}>{total}</span>;
-                    if (part === '{query}') return <span key={i} style={{ color: 'var(--vg-text-2)' }}>{currentQuery}</span>;
+                    if (part === '{count}') {return <span key={i} style={{ color: 'var(--vg-gold)', fontFamily: 'var(--font-space-mono)' }}>{total}</span>;}
+                    if (part === '{query}') {return <span key={i} style={{ color: 'var(--vg-text-2)' }}>{currentQuery}</span>;}
                     return part;
                   })
                 : sr.noResultsTemplate.replace('{query}', currentQuery)
@@ -223,7 +223,7 @@ function SearchContent() {
 
             {SECTIONS.map(({ key, label, icon: Icon }) => {
               const items = results[key];
-              if (!items?.length) return null;
+              if (!items?.length) {return null;}
               return (
                 <div key={key} style={{ marginBottom: '2.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginBottom: '1rem' }}>
@@ -254,7 +254,7 @@ export default function SearchPage() {
     <Suspense fallback={
       <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '60px' }}>
         <div style={{ width: '36px', height: '36px', border: '1px solid var(--vg-gold-border)', borderTop: '1px solid var(--vg-gold)', borderRadius: '50%', animation: 'spin 0.9s linear infinite' }} />
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
       </div>
     }>
       <SearchContent />

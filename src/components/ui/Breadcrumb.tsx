@@ -59,17 +59,19 @@ const STORAGE_KEY = 'va-recently-viewed';
 const MAX_ITEMS = 10;
 
 export function addToRecentlyViewed(item: RecentlyViewedItem): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   try {
     const stored: RecentlyViewedItem[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const filtered = stored.filter(i => i.id !== item.id);
     const updated = [item, ...filtered].slice(0, MAX_ITEMS);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch {}
+  } catch {
+    // ignore malformed localStorage data
+  }
 }
 
 export function getRecentlyViewed(): RecentlyViewedItem[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
   } catch {

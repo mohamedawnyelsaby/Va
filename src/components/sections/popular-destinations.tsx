@@ -24,7 +24,7 @@ export function PopularDestinations({ locale }: { locale: string }) {
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+      entries => entries.forEach(e => { if (e.isIntersecting) {e.target.classList.add('visible');} }),
       { threshold: 0.06 }
     );
     sectionRef.current?.querySelectorAll('.vg-reveal').forEach(el => observer.observe(el));

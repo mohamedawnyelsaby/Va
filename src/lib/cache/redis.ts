@@ -6,7 +6,7 @@ class InMemoryCache {
 
   async get<T>(key: string): Promise<T | null> {
     const item = this.cache.get(key);
-    if (!item) return null;
+    if (!item) {return null;}
     
     if (Date.now() > item.expiry) {
       this.cache.delete(key);
@@ -47,7 +47,7 @@ class InMemoryCache {
 
   async exists(key: string): Promise<boolean> {
     const item = this.cache.get(key);
-    if (!item) return false;
+    if (!item) {return false;}
     if (Date.now() > item.expiry) {
       this.cache.delete(key);
       return false;
@@ -62,7 +62,7 @@ let useInMemory = false;
 const memoryCache = new InMemoryCache();
 
 async function getRedisClient() {
-  if (redisClient) return redisClient;
+  if (redisClient) {return redisClient;}
   
   try {
     // Only import Redis if env vars are set

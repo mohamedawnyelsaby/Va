@@ -22,8 +22,8 @@ interface RateLimitResult {
 function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');
   const real      = request.headers.get('x-real-ip');
-  if (forwarded) return forwarded.split(',')[0].trim();
-  if (real)      return real;
+  if (forwarded) {return forwarded.split(',')[0].trim();}
+  if (real)      {return real;}
   return 'unknown';
 }
 
@@ -94,7 +94,7 @@ function memoryRateLimit(
 setInterval(() => {
   const now = Date.now();
   for (const [key, value] of memoryStore.entries()) {
-    if (now > value.resetAt) memoryStore.delete(key);
+    if (now > value.resetAt) {memoryStore.delete(key);}
   }
 }, 10 * 60 * 1000);
 
@@ -108,7 +108,7 @@ export async function rateLimit(
 
   // Try Redis first, fallback to memory
   const redisResult = await tryRedisRateLimit(key, limits);
-  if (redisResult) return redisResult;
+  if (redisResult) {return redisResult;}
 
   return memoryRateLimit(key, limits);
 }

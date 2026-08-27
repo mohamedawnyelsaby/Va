@@ -15,7 +15,7 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  if (!locales.includes(locale)) notFound();
+  if (!locales.includes(locale)) {notFound();}
 
   const isRTL = rtlLocales.includes(locale);
 

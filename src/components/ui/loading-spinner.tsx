@@ -15,7 +15,7 @@ const sizeClasses = {
 
 export function LoadingSpinner({ 
   size = 'md', 
-  className 
+  className, 
 }: LoadingSpinnerProps) {
   return (
     <Loader2 

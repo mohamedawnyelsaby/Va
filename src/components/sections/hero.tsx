@@ -12,7 +12,7 @@ function MeshBackground() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {return;}
     const ctx = canvas.getContext('2d')!;
     let animId: number;
     let t = 0;

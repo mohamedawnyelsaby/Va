@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     let userId = session?.user?.id;
     if (!userId) {
       const guest = await prisma.user.findFirst({ where: { email: 'guest@pi.network' } });
-      userId = guest?.id || "";
+      userId = guest?.id || '';
     }
 
     const { searchParams } = new URL(request.url);
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     let userId = session?.user?.id;
     if (!userId) {
       let guest = await prisma.user.findFirst({ where: { email: 'guest@pi.network' } });
-      if (!guest) guest = await prisma.user.create({ data: { email: 'guest@pi.network', name: 'Pi User', emailVerified: new Date() } });
+      if (!guest) {guest = await prisma.user.create({ data: { email: 'guest@pi.network', name: 'Pi User', emailVerified: new Date() } });}
       userId = guest.id;
     }
 
@@ -95,15 +95,15 @@ export async function POST(request: NextRequest) {
 
     // Validate item
     let price = 0;
-    let currency = 'USD';
-    let relation: Record<string, string> = {};
+    const currency = 'USD';
+    const relation: Record<string, string> = {};
 
     if (data.type === 'hotel') {
       const hotel = await prisma.hotel.findUnique({
         where: { id: data.itemId },
         select: { pricePerNight: true },
       });
-      if (!hotel) throw new Error('Hotel not found');
+      if (!hotel) {throw new Error('Hotel not found');}
       price = hotel.pricePerNight;
       relation.hotelId = data.itemId;
     }
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
         where: { id: data.itemId },
         select: { ticketPrice: true },
       });
-      if (!attraction) throw new Error('Attraction not found');
+      if (!attraction) {throw new Error('Attraction not found');}
       price = attraction.ticketPrice;
       relation.attractionId = data.itemId;
     }
@@ -161,7 +161,7 @@ export async function PATCH(request: NextRequest) {
     let userId = session?.user?.id;
     if (!userId) {
       const guest = await prisma.user.findFirst({ where: { email: 'guest@pi.network' } });
-      userId = guest?.id || "";
+      userId = guest?.id || '';
     }
 
     const { bookingId } = await request.json();

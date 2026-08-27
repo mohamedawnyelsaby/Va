@@ -32,7 +32,7 @@ export function useOptimisticUpdate<T>(
         );
       });
 
-      if (!onUpdate) return;
+      if (!onUpdate) {return;}
 
       try {
         const updatedData = await onUpdate(
@@ -94,7 +94,7 @@ export function useOptimisticList<T extends { id: string }>(
         setData((prev) => [...prev, item]);
       });
 
-      if (!options.onAdd) return;
+      if (!options.onAdd) {return;}
 
       try {
         const addedItem = await options.onAdd(item);
@@ -126,7 +126,7 @@ export function useOptimisticList<T extends { id: string }>(
         );
       });
 
-      if (!options.onUpdate) return;
+      if (!options.onUpdate) {return;}
 
       try {
         const updatedItem = await options.onUpdate(item);
@@ -156,7 +156,7 @@ export function useOptimisticList<T extends { id: string }>(
         setData((prev) => prev.filter((i) => i.id !== id));
       });
 
-      if (!options.onDelete) return;
+      if (!options.onDelete) {return;}
 
       try {
         await options.onDelete(id);
@@ -213,7 +213,7 @@ export function useOptimisticFavorites() {
         });
       });
 
-      if (!onToggle) return;
+      if (!onToggle) {return;}
 
       try {
         await onToggle(itemId, !wasFavorite);

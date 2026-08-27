@@ -36,7 +36,7 @@ function SkeletonCard() {
           </div>
         ))}
       </div>
-      <style>{`@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
+      <style>{'@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}'}</style>
     </div>
   );
 }
@@ -50,7 +50,7 @@ function PaginationBar({
   totalPages: number;
   onPage: (p: number) => void;
 }) {
-  if (totalPages <= 1) return null;
+  if (totalPages <= 1) {return null;}
 
   const pages: (number | 'ellipsis')[] = [];
   const delta = 2;
@@ -129,13 +129,15 @@ export default function RestaurantsPage() {
         page: currentPage.toString(), limit: '12',
         ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)),
       });
-      if (searchTerm) q.append('search', searchTerm);
+      if (searchTerm) {q.append('search', searchTerm);}
       const res = await fetch(`/api/restaurants?${q}`);
       const data = await res.json();
       setRestaurants(data.restaurants || []);
       setTotalPages(data.pagination?.totalPages || 1);
       setTotalCount(data.pagination?.total || 0);
-    } catch { } finally { setLoading(false); }
+    } catch {
+      // ignore fetch/parsing errors here; loading state is cleared in `finally`
+    } finally { setLoading(false); }
   };
 
   useEffect(() => { fetchRestaurants(); }, [currentPage, filters]);
