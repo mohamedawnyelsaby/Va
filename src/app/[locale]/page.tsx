@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './page.module.css';
 import { AIFeatureCards } from '@/components/sections/ai-feature-cards';
 import { Phase2Features } from '@/components/sections/phase2-features';
@@ -236,7 +237,7 @@ export default function HomePage({ params: { locale } }: Props) {
         {DESTINATIONS.map((d) => (
           <Link key={d.id} href={`/${locale}/attractions`} className={styles.dc}>
             {d.badge && <div className={styles.dBadge}>{d.badge}</div>}
-            <img src={d.img} alt={ar ? d.nameAr : d.nameEn} loading="lazy" />
+            <Image src={d.img} alt={ar ? d.nameAr : d.nameEn} fill sizes="(max-width: 768px) 50vw, 300px" loading="lazy" />
             <button
               className={`${styles.wbtn} ${wishlist.includes(d.id) ? styles.on : ''}`}
               onClick={(e) => { e.preventDefault(); toggleWish(d.id); }}
@@ -261,7 +262,9 @@ export default function HomePage({ params: { locale } }: Props) {
         {HOTELS.map((hotel) => (
           <div key={hotel.id} className={styles.hc}>
             {hotel.priceDrop && <div className={styles.pdrop}>📉 {h.priceDrop}</div>}
-            <img className={styles.hcImg} src={hotel.img} alt={hotel.name} loading="lazy" />
+            <div className={styles.hcImgWrap}>
+              <Image className={styles.hcImg} src={hotel.img} alt={hotel.name} fill sizes="290px" loading="lazy" />
+            </div>
             <div className={styles.hbody}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>

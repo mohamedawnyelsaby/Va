@@ -108,9 +108,11 @@ export async function sendBookingCancellation(
   await sendEmail(to, 'Booking Cancelled — Va Travel', html);
 }
 
-export default {
+const notifications = {
   sendBookingConfirmation,
   sendPaymentConfirmation,
   sendWelcomeEmail,
   sendBookingCancellation,
 };
+
+export default notifications;

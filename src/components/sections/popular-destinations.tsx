@@ -2,6 +2,7 @@
 // PATH: src/components/sections/popular-destinations.tsx
 // REDESIGN: Magazine editorial — hoverable, cinematic image cards
 import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, MapPin } from 'lucide-react';
 import TiltCard from '@/components/ui/TiltCard';
@@ -91,12 +92,13 @@ export function PopularDestinations({ locale }: { locale: string }) {
               className="dest-card"
             >
               {/* Image */}
-              <img
+              <Image
                 src={dest.img}
                 alt={dest.city}
+                fill
+                sizes="(max-width: 768px) 100vw, 25vw"
                 style={{
-                  position: 'absolute', inset: 0,
-                  width: '100%', height: '100%', objectFit: 'cover',
+                  objectFit: 'cover',
                   filter: 'brightness(0.60) saturate(0.70)',
                   transition: 'transform 0.8s cubic-bezier(0.23,1,0.32,1), filter 0.5s ease',
                 }}

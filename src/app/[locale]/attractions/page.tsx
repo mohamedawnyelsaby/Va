@@ -2,7 +2,7 @@
 // PATH: src/app/[locale]/attractions/page.tsx
 // FIX: Skeleton shimmer uses CSS variable — visible in light mode
 // FIX: Image filter via vg-hotel-thumb CSS class (handled in globals.css)
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { Search, MapPin, Star, Clock, Ticket, Heart, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
@@ -131,7 +131,10 @@ export default function AttractionsPage() {
 
   const CATEGORIES = ['Museum', 'Park', 'Monument', 'Beach', 'Mountain', 'Historical Site', 'Theme Park', 'Gallery', 'Theater', 'Zoo'];
 
-  const fetchAttractions = async () => {
+  const searchTermRef = useRef(searchTerm);
+  useEffect(() => { searchTermRef.current = searchTerm; }, [searchTerm]);
+
+  const fetchAttractions = useCallback(async () => {
     try {
       setLoading(true);
       const q = new URLSearchParams({
@@ -139,16 +142,16 @@ export default function AttractionsPage() {
         limit: '12',
         ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)),
       });
-      if (searchTerm) {q.append('search', searchTerm);}
+      if (searchTermRef.current) {q.append('search', searchTermRef.current);}
       const res = await fetch(`/api/attractions?${q}`);
       const data = await res.json();
       setAttractions(data.attractions || []);
       setTotalPages(data.pagination?.totalPages || 1);
       setTotalCount(data.pagination?.total || 0);
     } catch { /* fetch failed silently — loading state cleared in finally below */ } finally { setLoading(false); }
-  };
+  }, [currentPage, filters]);
 
-  useEffect(() => { fetchAttractions(); }, [currentPage, filters]);
+  useEffect(() => { fetchAttractions(); }, [fetchAttractions]);
 
   const toggleFav = (e: React.MouseEvent, id: string) => {
     e.preventDefault(); e.stopPropagation();

@@ -2,6 +2,7 @@
 // PATH: src/app/[locale]/favorites/page.tsx
 
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './page.module.css';
 import { useWishlist, DESTINATIONS } from '@/lib/wishlist';
 import { t } from '@/lib/i18n/translations';
@@ -40,7 +41,7 @@ export default function FavoritesPage({ params: { locale } }: Props) {
         ) : (
           saved.map(d => (
             <div key={d.id} className={styles.dc}>
-              <img src={d.img} alt={ar ? d.nameAr : d.nameEn} loading="lazy" />
+              <Image src={d.img} alt={ar ? d.nameAr : d.nameEn} fill sizes="(max-width: 768px) 50vw, 300px" loading="lazy" />
               <button
                 className={styles.wbtn}
                 onClick={() => toggle(d.id)}
