@@ -10,8 +10,6 @@ type ToastOptions = {
 
 export function useToast() {
   const toast = ({ title, description, variant = 'default', duration = 4000 }: ToastOptions) => {
-    const message = description || title || '';
-    
     switch (variant) {
       case 'destructive':
         return sonnerToast.error(title, {

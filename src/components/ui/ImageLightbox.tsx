@@ -105,7 +105,7 @@ export function ImageLightbox({ images, initialIndex = 0, alt = '', onClose }: I
 }
 
 // Hook to manage lightbox state
-export function useImageLightbox(images: string[]) {
+export function useImageLightbox(_images: string[]) {
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
 

@@ -2,8 +2,8 @@
 // UPDATED: + Breadcrumb, + ReviewModal, + addToRecentlyViewed
 'use client';
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { MapPin, Star, Clock, Ticket, Heart, Share2, ArrowLeft, MessageSquare } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { MapPin, Star, Clock, Ticket, Heart, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';

@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
       id: user.id,
       email: user.email,
       ip,
+      userAgent,
     });
 
     return NextResponse.json(

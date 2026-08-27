@@ -7,7 +7,11 @@ import { NextRequest, NextResponse } from 'next/server';
 const locales = ['en', 'ar', 'fr', 'es', 'de', 'it', 'ru', 'zh', 'ja', 'ko'];
 const defaultLocale = 'en';
 
-// Pi payment routes must NEVER require auth
+// Pi payment routes must NEVER require auth.
+// Currently unused: protected-route enforcement is temporarily disabled
+// (see note above) for Pi Browser compatibility, so nothing reads this
+// list yet. Kept here, ready to wire back in when protection is restored.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PUBLIC_API_PATHS = [
   '/api/auth',
   '/api/payments/pi/approve',

@@ -116,7 +116,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account, profile: _profile }) {
       if (account?.provider === 'google') {
         try {
           const email = user.email!;
@@ -150,7 +150,7 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    async jwt({ token, user, account, profile }) {
+    async jwt({ token, user, account, profile: _profile }) {
       if (user) {
         token.sub = user.id;
         token.id = user.id;

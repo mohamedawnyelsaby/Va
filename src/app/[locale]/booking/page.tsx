@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Calendar, Users, MapPin, AlertCircle, ArrowLeft } from 'lucide-react';
+import { MapPin, AlertCircle, ArrowLeft } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import PaymentFlow from '@/app/components/PaymentFlow';
 import Link from 'next/link';
@@ -24,7 +24,7 @@ export default function BookingPage() {
   const params = useParams();
   const locale = (params.locale as string) || 'en';
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   const [booking, setBooking] = useState<any>(null);
   const [hotel, setHotel] = useState<any>(null);

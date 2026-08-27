@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Star } from 'lucide-react';
-import { VG, monoLabel } from '@/lib/tokens';
+import { monoLabel } from '@/lib/tokens';
 import { getRecentlyViewed, type RecentlyViewedItem } from './Breadcrumb';
 import { formatCurrency } from '@/lib/utils';
 

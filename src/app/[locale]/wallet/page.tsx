@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePi } from '@/components/providers/pi-provider';
 import { History, CheckCircle, XCircle, Clock, ArrowRight } from 'lucide-react';
-import { VG, monoLabel } from '@/lib/tokens';
+import { VG } from '@/lib/tokens';
 
 export default function WalletPage() {
   const params = useParams();
