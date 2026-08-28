@@ -25,14 +25,14 @@ interface PiUser {
 interface PiPaymentData {
   amount: number;
   memo: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface PiPaymentCallbacks {
   onReadyForServerApproval: (paymentId: string) => Promise<void>;
   onReadyForServerCompletion: (paymentId: string, txid: string) => Promise<void>;
   onCancel: (paymentId: string) => void;
-  onError: (error: Error, payment?: any) => void;
+  onError: (error: Error, payment?: PiSdkPayment) => void;
 }
 
 interface PiPayment {
@@ -42,6 +42,49 @@ interface PiPayment {
   status: 'pending' | 'approved' | 'completed' | 'cancelled' | 'failed';
   createdAt: Date;
   txid?: string;
+}
+
+// Raw shape of a payment object as the Pi SDK itself hands it to us
+// (snake_case, matching Pi Network's wire format) — distinct from our
+// own camelCase PiPayment above, which is what we normalize it into.
+interface PiSdkPayment {
+  identifier: string;
+  amount: number;
+  memo?: string;
+  created_at?: string;
+  [key: string]: unknown;
+}
+
+interface PiSdkAuthResult {
+  accessToken?: string;
+  user: {
+    uid: string;
+    username: string;
+  };
+}
+
+interface PiSDK {
+  init: (config: { version: string; sandbox?: boolean }) => void;
+  authenticate: (
+    scopes: string[],
+    onIncompletePaymentFound: (payment: PiSdkPayment) => void
+  ) => Promise<PiSdkAuthResult>;
+  createPayment: (
+    data: PiPaymentData,
+    callbacks: {
+      onReadyForServerApproval: (paymentId: string) => Promise<void>;
+      onReadyForServerCompletion: (paymentId: string, txid: string) => Promise<void>;
+      onCancel: (paymentId: string) => void;
+      onError: (error: Error, payment?: PiSdkPayment) => void;
+    }
+  ) => Promise<void>;
+  openShareDialog: (title: string, message: string) => void;
+}
+
+declare global {
+  interface Window {
+    Pi?: PiSDK;
+  }
 }
 
 type PiSDKStatus = 
@@ -69,7 +112,7 @@ interface PiContextType {
   authenticate: (scopes?: string[]) => Promise<PiUser>;
   logout: () => void;
   createPayment: (data: PiPaymentData, callbacks: PiPaymentCallbacks) => Promise<void>;
-  getPaymentStatus: (paymentId: string) => Promise<any>;
+  getPaymentStatus: (paymentId: string) => Promise<unknown>;
   
   // Utils
   share: (title: string, message: string) => void;
@@ -315,7 +358,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       }
 
       // Check if Pi SDK exists
-      const Pi = (window as any).Pi;
+      const Pi = window.Pi;
       
       if (!Pi) {
         initializationAttempts.current++;
@@ -394,7 +437,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   // Handle incomplete payments
-  const handleIncompletePayment = useCallback((payment: any) => {
+  const handleIncompletePayment = useCallback((payment: PiSdkPayment) => {
     logger.log('🔄 Handling incomplete payment:', payment);
     
     try {
@@ -435,7 +478,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       throw new Error('Pi SDK is not available. Please open this app in Pi Browser.');
     }
 
-    const Pi = (window as any).Pi;
+    const Pi = window.Pi;
     if (!Pi) {
       throw new Error('Pi SDK not found');
     }
@@ -451,7 +494,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
         throw new Error('Invalid authentication scopes');
       }
 
-      const auth = await Pi.authenticate(sanitizedScopes, (payment: any) => {
+      const auth = await Pi.authenticate(sanitizedScopes, (payment: PiSdkPayment) => {
         logger.log('📦 Incomplete payment found during auth:', payment);
         handleIncompletePayment(payment);
       });
@@ -542,7 +585,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       throw new Error('Too many payment attempts. Please try again later.');
     }
 
-    const Pi = (window as any).Pi;
+    const Pi = window.Pi;
     if (!Pi) {
       throw new Error('Pi SDK not found');
     }
@@ -686,7 +729,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
             }, 3000);
           },
 
-          onError: (error: Error, payment?: any) => {
+          onError: (error: Error, payment?: PiSdkPayment) => {
             logger.error('💥 Payment error:', error, payment);
             clearTimeout(timeoutId);
             if (payment?.identifier) {
@@ -717,7 +760,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
   }, [sdkStatus, isAuthenticated, user]);
 
   // Get payment status from server
-  const getPaymentStatus = useCallback(async (paymentId: string) => {
+  const getPaymentStatus = useCallback(async (paymentId: string): Promise<unknown> => {
     if (!paymentId || typeof paymentId !== 'string') {
       throw new Error('Invalid payment ID');
     }
@@ -752,7 +795,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const Pi = (window as any).Pi;
+    const Pi = window.Pi;
     if (!Pi?.openShareDialog) {
       logger.warn('⚠️ Share dialog not available');
       return;
