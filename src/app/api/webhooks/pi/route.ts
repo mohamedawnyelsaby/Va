@@ -13,6 +13,23 @@ export const runtime = 'nodejs';
 const PI_SECRET = process.env.PI_SECRET_KEY;
 const WEBHOOK_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
+// Shape of the payment object Pi Network sends in server-to-server
+// webhooks — distinct from both the browser SDK's payment shape and
+// our own DB Payment model. Covers only the fields these handlers read.
+interface PiWebhookPayment {
+  identifier: string;
+  amount: number;
+  transaction?: {
+    txid: string;
+    verified: boolean;
+  };
+}
+
+interface PiWebhookPayload {
+  event: string;
+  payment: PiWebhookPayment;
+}
+
 /**
  * Verify Pi Network webhook signature
  */
@@ -80,7 +97,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 5. Parse payload
-    const payload = JSON.parse(body);
+    const payload = JSON.parse(body) as PiWebhookPayload;
     const { event, payment } = payload;
 
     logger.log(`[${requestId}] 📦 Event: ${event}`);
@@ -162,7 +179,7 @@ export async function POST(request: NextRequest) {
 /**
  * Handle payment_completed event
  */
-async function handlePaymentCompleted(payment: any, requestId: string) {
+async function handlePaymentCompleted(payment: PiWebhookPayment, requestId: string) {
   logger.log(`[${requestId}] 💰 Processing completed payment`);
 
   const dbPayment = await prisma.payment.findFirst({
@@ -224,7 +241,7 @@ async function handlePaymentCompleted(payment: any, requestId: string) {
 /**
  * Handle payment_cancelled event
  */
-async function handlePaymentCancelled(payment: any, requestId: string) {
+async function handlePaymentCancelled(payment: PiWebhookPayment, requestId: string) {
   logger.log(`[${requestId}] ❌ Processing cancelled payment`);
 
   const dbPayment = await prisma.payment.findFirst({
@@ -254,7 +271,7 @@ async function handlePaymentCancelled(payment: any, requestId: string) {
 /**
  * Handle payment_failed event
  */
-async function handlePaymentFailed(payment: any, requestId: string) {
+async function handlePaymentFailed(payment: PiWebhookPayment, requestId: string) {
   logger.log(`[${requestId}] ⚠️ Processing failed payment`);
 
   const dbPayment = await prisma.payment.findFirst({

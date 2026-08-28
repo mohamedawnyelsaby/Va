@@ -13,6 +13,28 @@ interface Props {
   locale: string;
 }
 
+// Minimal surface for the (non-standard, vendor-prefixed) Web Speech
+// API — not part of TypeScript's standard dom lib, so declared locally
+// covering only what this component actually uses.
+interface SpeechRecognitionResultLike {
+  results: { [index: number]: { [index: number]: { transcript: string } } };
+}
+interface SpeechRecognitionLike {
+  lang: string;
+  onresult: ((event: SpeechRecognitionResultLike) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+  start: () => void;
+}
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
+
 const isAr = (locale: string) => locale === 'ar';
 
 async function askAI(message: string): Promise<string> {
@@ -194,11 +216,11 @@ export function AIFeatureCards({ locale }: Props) {
   }
 
   function startListening() {
-    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {return;}
     const rec = new SR();
     rec.lang = ar ? 'ar-EG' : 'en-US';
-    rec.onresult = (e: any) => {
+    rec.onresult = (e) => {
       const text = e.results[0][0].transcript;
       setTranslateIn(text);
       runTranslate(text);
@@ -427,7 +449,7 @@ export function AIFeatureCards({ locale }: Props) {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 9, alignItems: 'center' }}>
-          <select className="finput" style={{ fontSize: '.79rem', flex: 1 }} value={travelClass} onChange={e => setTravelClass(e.target.value as any)}>
+          <select className="finput" style={{ fontSize: '.79rem', flex: 1 }} value={travelClass} onChange={e => setTravelClass(e.target.value as 'economy' | 'business' | 'first')}>
             <option value="economy">{ac.economy}</option>
             <option value="business">{ac.business}</option>
             <option value="first">{ac.firstClass}</option>
