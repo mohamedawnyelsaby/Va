@@ -14,10 +14,37 @@ import { RecentlyViewed } from '@/components/ui/RecentlyViewed';
 import { addToRecentlyViewed } from '@/components/ui/Breadcrumb';
 import { ImageLightbox, useImageLightbox } from '@/components/ui/ImageLightbox';
 
+interface AttractionDetail {
+  id: string;
+  name: string;
+  description: string;
+  shortDescription?: string | null;
+  category: string;
+  address: string;
+  city: string;
+  country: string;
+  ticketPrice: number;
+  currency: string;
+  openingHours?: unknown;
+  duration?: string | null;
+  bestTimeToVisit?: string | null;
+  accessibility: string[];
+  images: string[];
+  thumbnail?: string | null;
+  isPopular: boolean;
+  rating: number;
+  reviewCount: number;
+}
+
+interface FavoriteStorageItem {
+  id: string;
+  type?: string;
+}
+
 export default function AttractionDetailPage() {
   const params = useParams();
   const locale = (params.locale as string) || 'en';
-  const [attraction, setAttraction] = useState<any>(null);
+  const [attraction, setAttraction] = useState<AttractionDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFav, setIsFav] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -33,12 +60,12 @@ export default function AttractionDetailPage() {
         addToRecentlyViewed({
           id: d.id, type: 'attraction', name: d.name,
           thumbnail: d.thumbnail, rating: d.rating,
-          city: d.city?.name || d.city,
+          city: d.city,
         });
         // Check fav
         try {
           const stored = JSON.parse(localStorage.getItem('va-favorites') || '[]');
-          setIsFav(stored.some((f: any) => f.id === d.id));
+          setIsFav(stored.some((f: FavoriteStorageItem) => f.id === d.id));
         } catch {
           // intentionally ignored: best-effort localStorage read/write; a corrupt or missing value here should not break the page
         }
@@ -47,11 +74,12 @@ export default function AttractionDetailPage() {
   }, [params.id]);
 
   const toggleFav = () => {
+    if (!attraction) {return;}
     try {
       const stored = JSON.parse(localStorage.getItem('va-favorites') || '[]');
-      const exists = stored.some((f: any) => f.id === attraction.id);
+      const exists = stored.some((f: FavoriteStorageItem) => f.id === attraction.id);
       const updated = exists
-        ? stored.filter((f: any) => f.id !== attraction.id)
+        ? stored.filter((f: FavoriteStorageItem) => f.id !== attraction.id)
         : [...stored, { id: attraction.id, type: 'attraction' }];
       localStorage.setItem('va-favorites', JSON.stringify(updated));
       setIsFav(!exists);
@@ -79,7 +107,7 @@ export default function AttractionDetailPage() {
     </div>
   );}
 
-  const images = attraction.images?.length > 0 ? attraction.images : [attraction.thumbnail].filter(Boolean);
+  const images = attraction.images?.length > 0 ? attraction.images : [attraction.thumbnail].filter((img): img is string => Boolean(img));
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', paddingTop: '60px' }}>
@@ -127,7 +155,7 @@ export default function AttractionDetailPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <MapPin size={13} color="rgba(242,238,230,0.6)" />
                   <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'rgba(242,238,230,0.6)' }}>
-                    {attraction.city?.name || attraction.city}, {attraction.city?.country || attraction.country}
+                    {attraction.city}, {attraction.country}
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -160,7 +188,7 @@ export default function AttractionDetailPage() {
             </p>
           </div>
 
-          {(attraction.duration || attraction.openingHours) && (
+          {(attraction.duration || Boolean(attraction.openingHours)) && (
             <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', borderTop: 'none', padding: '1.5rem 2rem', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
               {attraction.duration && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
@@ -171,12 +199,12 @@ export default function AttractionDetailPage() {
                   </div>
                 </div>
               )}
-              {attraction.openingHours && (
+              {Boolean(attraction.openingHours) && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                   <div className="vg-feat-icon" style={{ width: '30px', height: '30px' }}><Clock size={12} /></div>
                   <div>
                     <div style={{ ...monoLabel, marginBottom: '0.2rem' }}>Hours</div>
-                    <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-2)' }}>{attraction.openingHours}</div>
+                    <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-2)' }}>{typeof attraction.openingHours === 'string' ? attraction.openingHours : JSON.stringify(attraction.openingHours)}</div>
                   </div>
                 </div>
               )}

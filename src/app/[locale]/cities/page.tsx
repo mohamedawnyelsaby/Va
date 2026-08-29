@@ -23,9 +23,19 @@ function SkeletonCard() {
   );
 }
 
+interface City {
+  id: string;
+  name: string;
+  country: string;
+  thumbnail?: string | null;
+  images?: string[];
+  rating?: number;
+  _count?: { hotels: number };
+}
+
 export default function CitiesPage() {
   const { locale } = useParams();
-  const [cities, setCities] = useState<any[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -61,7 +71,7 @@ export default function CitiesPage() {
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1px', background: 'var(--vg-border)' }}>
-            {cities.map((city: any) => (
+            {cities.map((city) => (
               <Link key={city.id} href={`/${locale}/hotels?city=${city.name}`}
                 style={{ textDecoration: 'none', display: 'block', background: 'var(--vg-bg-card)' }}
                 className="vg-hotel-card">

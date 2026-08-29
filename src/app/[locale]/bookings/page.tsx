@@ -1,7 +1,7 @@
 'use client';
 // PATH: src/app/[locale]/bookings/page.tsx
 import { useEffect, useState } from 'react';
-import { Calendar, CheckCircle, Clock, AlertCircle, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, AlertCircle, ArrowRight, ChevronLeft, ChevronRight, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatCurrency } from '@/lib/utils';
@@ -86,16 +86,26 @@ function PaginationBar({
   );
 }
 
-const STATUS_CONFIG: Record<string, { color: string; bg: string; Icon: any; label: string }> = {
+const STATUS_CONFIG: Record<string, { color: string; bg: string; Icon: LucideIcon; label: string }> = {
   confirmed: { color: '#10b981', bg: 'rgba(16,185,129,0.08)',  Icon: CheckCircle, label: 'Confirmed' },
   pending:   { color: '#C9A227', bg: 'rgba(201,162,39,0.08)', Icon: Clock,        label: 'Pending' },
   cancelled: { color: '#ef4444', bg: 'rgba(239,68,68,0.08)',  Icon: AlertCircle,  label: 'Cancelled' },
 };
 
+interface Booking {
+  id: string;
+  itemType: string;
+  itemName: string;
+  startDate: string;
+  totalPrice: number;
+  currency: string;
+  status: string;
+}
+
 export default function BookingsPage() {
   const params  = useParams();
   const locale  = (params?.locale as string) || 'en';
-  const [bookings,    setBookings]    = useState<any[]>([]);
+  const [bookings,    setBookings]    = useState<Booking[]>([]);
   const [loading,     setLoading]     = useState(true);
   const [page,        setPage]        = useState(1);
   const [totalPages,  setTotalPages]  = useState(1);
