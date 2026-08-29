@@ -29,9 +29,48 @@ function Spinner() {
   );
 }
 
-const AMENITY_ICONS: Record<string, any> = {
+const AMENITY_ICONS: Record<string, typeof Wifi> = {
   WiFi: Wifi, Breakfast: Coffee, Gym: Dumbbell, Restaurant: Utensils, Pool: Coffee,
 };
+
+interface RoomType {
+  type: string;
+  description?: string;
+  price: number;
+}
+
+interface HotelReview {
+  id: string;
+  user?: { name?: string };
+  rating: number;
+  title?: string | null;
+  comment: string;
+  createdAt: string;
+}
+
+interface HotelDetail {
+  id: string;
+  name: string;
+  description: string;
+  city: string;
+  country: string;
+  currency: string;
+  pricePerNight: number;
+  amenities: string[];
+  images: string[];
+  thumbnail?: string | null;
+  rating: number;
+  reviewCount: number;
+  starRating: number;
+  roomTypes?: RoomType[];
+  reviews?: HotelReview[];
+  cityRelation?: { name: string; country: string };
+}
+
+interface FavoriteStorageItem {
+  id: string;
+  type?: string;
+}
 
 export default function HotelDetailPage() {
   const params = useParams();
@@ -39,9 +78,9 @@ export default function HotelDetailPage() {
   const { toast } = useToast();
   const locale = (params.locale as string) || 'en';
 
-  const [hotel,        setHotel]        = useState<any>(null);
+  const [hotel,        setHotel]        = useState<HotelDetail | null>(null);
   const [loading,      setLoading]      = useState(true);
-  const [selectedRoom, setSelectedRoom] = useState<any>(null);
+  const [selectedRoom, setSelectedRoom] = useState<RoomType | null>(null);
   const [isFav,        setIsFav]        = useState(false);
   const [reviewOpen,   setReviewOpen]   = useState(false);
   const [bookingData,  setBookingData]  = useState({ checkIn: '', checkOut: '', guests: 1, rooms: 1 });
@@ -71,7 +110,7 @@ export default function HotelDetailPage() {
     if (!hotel) {return;}
     try {
       const stored = JSON.parse(localStorage.getItem('va-favorites') || '[]');
-      setIsFav(stored.some((f: any) => f.id === hotel.id));
+      setIsFav(stored.some((f: FavoriteStorageItem) => f.id === hotel.id));
     } catch {
       // ignore malformed localStorage data
     }
@@ -81,9 +120,9 @@ export default function HotelDetailPage() {
     if (!hotel) {return;}
     try {
       const stored = JSON.parse(localStorage.getItem('va-favorites') || '[]');
-      const exists = stored.some((f: any) => f.id === hotel.id);
+      const exists = stored.some((f: FavoriteStorageItem) => f.id === hotel.id);
       const updated = exists
-        ? stored.filter((f: any) => f.id !== hotel.id)
+        ? stored.filter((f: FavoriteStorageItem) => f.id !== hotel.id)
         : [...stored, { id: hotel.id, type: 'hotel' }];
       localStorage.setItem('va-favorites', JSON.stringify(updated));
       setIsFav(!exists);
@@ -101,6 +140,7 @@ export default function HotelDetailPage() {
   };
 
   const handleBooking = () => {
+    if (!hotel) {return;}
     if (!bookingData.checkIn || !bookingData.checkOut) {
       toast({ title: 'Required', description: 'Please select dates', variant: 'destructive' }); return;
     }
@@ -131,7 +171,7 @@ export default function HotelDetailPage() {
     </div>
   );}
 
-  const images = hotel.images?.length > 0 ? hotel.images : [hotel.thumbnail].filter(Boolean);
+  const images = hotel.images?.length > 0 ? hotel.images : [hotel.thumbnail].filter((img): img is string => Boolean(img));
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', paddingTop: '60px' }}>
@@ -162,7 +202,7 @@ export default function HotelDetailPage() {
         onClick={() => lightbox.openAt(0)} title="Click to view gallery">
 
         {/* FIX: objectFit cover, filter via CSS class for light mode adaptation */}
-        <Image src={images[0] || hotel.thumbnail} alt={hotel.name} fill
+        <Image src={images[0] || hotel.thumbnail || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200'} alt={hotel.name} fill
           style={{ objectFit: 'cover', filter: 'var(--vg-hero-filter, brightness(0.55) saturate(0.65))' }} priority />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,2,10,0.9) 0%, transparent 50%)' }} />
 
@@ -200,7 +240,7 @@ export default function HotelDetailPage() {
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
               <div style={{ display: 'flex', gap: '2px', marginBottom: '0.5rem' }}>
-                {Array.from({ length: hotel.starRating || 0 }).map((_: any, s: number) => (
+                {Array.from({ length: hotel.starRating || 0 }).map((_, s: number) => (
                   <span key={s} style={{ color: 'var(--vg-star)', fontSize: '0.8rem' }}>★</span>
                 ))}
               </div>
@@ -266,11 +306,11 @@ export default function HotelDetailPage() {
           )}
 
           {/* Room types */}
-          {hotel.roomTypes?.length > 0 && (
+          {(hotel.roomTypes?.length ?? 0) > 0 && (
             <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', borderTop: 'none', padding: '2rem', marginBottom: '1px' }}>
               <div className="vg-overline" style={{ marginBottom: '1.2rem' }}>Select Room Type</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--vg-border)' }}>
-                {hotel.roomTypes.map((room: any) => (
+                {hotel.roomTypes?.map((room: RoomType) => (
                   <div key={room.type} onClick={() => setSelectedRoom(room)}
                     style={{
                       background: selectedRoom?.type === room.type ? 'var(--vg-gold-dim)' : 'var(--vg-bg-card)',
@@ -294,7 +334,7 @@ export default function HotelDetailPage() {
           )}
 
           {/* Reviews */}
-          {hotel.reviews?.length > 0 && (
+          {(hotel.reviews?.length ?? 0) > 0 && (
             <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', borderTop: 'none', padding: '2rem', marginBottom: '1px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div className="vg-overline">Guest Reviews</div>
@@ -302,13 +342,13 @@ export default function HotelDetailPage() {
                   <MessageSquare size={12} /> Write Review
                 </button>
               </div>
-              {hotel.reviews.slice(0, 5).map((review: any) => (
+              {hotel.reviews?.slice(0, 5).map((review: HotelReview) => (
                 <div key={review.id} style={{ paddingBottom: '1.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--vg-border)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
                     <div>
                       <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.body, color: 'var(--vg-text)', marginBottom: '0.25rem' }}>{review.user?.name}</div>
                       <div style={{ display: 'flex', gap: '2px' }}>
-                        {Array.from({ length: review.rating }).map((_: any, s: number) => (
+                        {Array.from({ length: review.rating }).map((_, s: number) => (
                           <span key={s} style={{ color: 'var(--vg-star)', fontSize: '0.65rem' }}>★</span>
                         ))}
                       </div>
