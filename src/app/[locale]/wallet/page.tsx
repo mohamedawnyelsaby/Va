@@ -1,7 +1,7 @@
 'use client';
 // PATH: src/app/[locale]/wallet/page.tsx
 // FIX: use useParams() for dynamic locale instead of hardcoded '/en/hotels'
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePi } from '@/components/providers/pi-provider';
@@ -59,7 +59,7 @@ export default function WalletPage() {
     </div>
   );}
 
-  const statusIcon: Record<string, any> = {
+  const statusIcon: Record<string, ReactNode> = {
     completed: <CheckCircle size={16} style={{ color: '#10b981' }} />,
     cancelled: <XCircle size={16} style={{ color: '#ef4444' }} />,
     pending:   <Clock size={16} style={{ color: 'var(--vg-gold)' }} />,

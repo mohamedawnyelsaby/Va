@@ -100,11 +100,25 @@ const PRICE_LABELS: Record<string, string> = {
   '$': 'Budget', '$$': 'Moderate', '$$$': 'Upscale', '$$$$': 'Fine Dining',
 };
 
+interface Restaurant {
+  id: string;
+  name: string;
+  cuisine: string | string[];
+  priceRange: string;
+  thumbnail?: string | null;
+  isFeatured?: boolean;
+  city: string;
+  country: string;
+  rating?: number;
+  reviewCount?: number;
+  cityRelation?: { name: string; country: string };
+}
+
 export default function RestaurantsPage() {
   const params = useParams();
   const locale = (params.locale as string) || 'en';
 
-  const [restaurants, setRestaurants] = useState<any[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);

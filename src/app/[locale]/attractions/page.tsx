@@ -109,11 +109,32 @@ function PaginationBar({
   );
 }
 
+interface Attraction {
+  id: string;
+  name: string;
+  category: string;
+  city: string;
+  country: string;
+  thumbnail: string | null;
+  isPopular: boolean;
+  rating: number;
+  duration: string | null;
+  ticketPrice: number;
+  currency: string;
+  cityRelation?: {
+    id: string;
+    name: string;
+    slug: string;
+    country: string;
+    countryCode: string;
+  };
+}
+
 export default function AttractionsPage() {
   const params = useParams();
   const locale = (params.locale as string) || 'en';
 
-  const [attractions, setAttractions] = useState<any[]>([]);
+  const [attractions, setAttractions] = useState<Attraction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -327,7 +348,7 @@ export default function AttractionsPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.6rem' }}>
                     <MapPin size={11} color="var(--vg-text-3)" />
                     <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {attraction.city?.name || attraction.city}, {attraction.city?.country || attraction.country}
+                      {attraction.cityRelation?.name || attraction.city}, {attraction.cityRelation?.country || attraction.country}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0' }}>

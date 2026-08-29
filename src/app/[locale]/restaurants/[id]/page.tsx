@@ -10,10 +10,27 @@ import { VG } from '@/lib/tokens';
 const PRICE_COLOR: Record<string, string> = { '$': '#10b981', '$$': '#C9A227', '$$$': '#f59e0b', '$$$$': '#ef4444' };
 const PRICE_LABEL: Record<string, string> = { '$': 'Budget', '$$': 'Moderate', '$$$': 'Upscale', '$$$$': 'Fine Dining' };
 
+interface RestaurantDetail {
+  id: string;
+  name: string;
+  description: string;
+  cuisine: string[];
+  priceRange: string;
+  city: string;
+  country: string;
+  openingHours?: unknown;
+  reservationRequired: boolean;
+  dressCode?: string | null;
+  features: string[];
+  thumbnail?: string | null;
+  rating: number;
+  reviewCount: number;
+}
+
 export default function RestaurantDetailPage() {
   const params = useParams();
   const locale = (params.locale as string) || 'en';
-  const [restaurant, setRestaurant] = useState<any>(null);
+  const [restaurant, setRestaurant] = useState<RestaurantDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isFav, setIsFav] = useState(false);
@@ -175,13 +192,13 @@ export default function RestaurantDetailPage() {
                 </div>
               </div>
             )}
-            {restaurant.openingHours && (
+            {Boolean(restaurant.openingHours) && (
               <div>
                 <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--vg-text-3)', marginBottom: '0.4rem' }}>
                   Opening Hours
                 </div>
                 <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.body, color: 'var(--vg-text-2)' }}>
-                  {restaurant.openingHours}
+                  {typeof restaurant.openingHours === 'string' ? restaurant.openingHours : JSON.stringify(restaurant.openingHours)}
                 </div>
               </div>
             )}

@@ -40,8 +40,8 @@ export default function SignUpPage() {
       });
       if (result?.error) {router.push(`/${locale}/auth/signin`);}
       else {router.push(`/${locale}/dashboard`);}
-    } catch (error: any) {
-      toast({ title: 'Error', description: error.message || 'Something went wrong', variant: 'destructive' });
+    } catch (error) {
+      toast({ title: 'Error', description: error instanceof Error ? error.message : 'Something went wrong', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
