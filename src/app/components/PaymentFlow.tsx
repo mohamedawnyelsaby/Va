@@ -6,17 +6,7 @@ import { usePi } from '@/components/providers/pi-provider';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { VG, monoLabel } from '@/lib/tokens';
 import { useParams, useRouter } from 'next/navigation';
-
-interface Booking {
-  id?: string;
-  amount?: number;
-  currency?: string;
-  hotelName?: string;
-  itemName?: string;
-  checkIn?: string;
-  checkOut?: string;
-  guests?: number;
-}
+import type { Booking } from '@/types/booking';
 
 export default function PaymentFlow({ booking }: { booking: Booking }) {
   const { isAvailable, authenticate, createPayment, sdkStatus } = usePi();

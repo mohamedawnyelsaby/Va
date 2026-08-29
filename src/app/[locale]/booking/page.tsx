@@ -6,6 +6,7 @@ import { MapPin, AlertCircle, ArrowLeft } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import PaymentFlow from '@/app/components/PaymentFlow';
 import Link from 'next/link';
+import type { Booking, BookingHotelSummary } from '@/types/booking';
 
 function Spinner({ label }: { label?: string }) {
   return (
@@ -26,8 +27,8 @@ export default function BookingPage() {
   const router = useRouter();
   const { status } = useSession();
 
-  const [booking, setBooking] = useState<any>(null);
-  const [hotel, setHotel] = useState<any>(null);
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [hotel, setHotel] = useState<BookingHotelSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -47,7 +48,7 @@ export default function BookingPage() {
       setHotel(hotelData);
 
       const nights = Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000));
-      const roomData = hotelData.roomTypes?.find((r: any) => r.type === roomType) || hotelData.roomTypes?.[0];
+      const roomData = hotelData.roomTypes?.find((r: { type: string; price: number }) => r.type === roomType) || hotelData.roomTypes?.[0];
       const pricePerNight = roomData?.price || hotelData.pricePerNight || 0;
       const subtotal = pricePerNight * nights * rooms;
       const totalPrice = parseFloat((subtotal * 1.1).toFixed(2));
@@ -65,8 +66,8 @@ export default function BookingPage() {
       if (!bookingRes.ok) {throw new Error(bookingData.error || 'Failed to create booking');}
 
       setBooking({ ...bookingData, checkIn, checkOut, nights, pricePerNight, amount: totalPrice, currency: hotelData.currency || 'USD', roomType, hotelName: hotelData.name });
-    } catch (e: any) {
-      setError(e.message || 'Failed to initialize booking');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to initialize booking');
     } finally { setLoading(false); }
   }, [itemId, checkIn, checkOut, roomType, guests, rooms]);
 
@@ -157,20 +158,20 @@ export default function BookingPage() {
             <div style={{ background: 'var(--vg-bg-surface)', padding: '1.2rem', marginTop: '1.2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.8rem', color: 'var(--vg-text-3)' }}>
-                  {formatCurrency(booking.pricePerNight, booking.currency)} × {booking.nights}n × {rooms}rm
+                  {formatCurrency(booking.pricePerNight ?? 0, booking.currency)} × {booking.nights ?? 0}n × {rooms}rm
                 </span>
                 <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.8rem', color: 'var(--vg-text-2)' }}>
-                  {formatCurrency(booking.pricePerNight * booking.nights * rooms, booking.currency)}
+                  {formatCurrency((booking.pricePerNight ?? 0) * (booking.nights ?? 0) * rooms, booking.currency)}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.8rem', color: 'var(--vg-text-3)' }}>Service fee (10%)</span>
-                <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.8rem', color: 'var(--vg-text-2)' }}>{formatCurrency(booking.pricePerNight * booking.nights * rooms * 0.1, booking.currency)}</span>
+                <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.8rem', color: 'var(--vg-text-2)' }}>{formatCurrency((booking.pricePerNight ?? 0) * (booking.nights ?? 0) * rooms * 0.1, booking.currency)}</span>
               </div>
               <div style={{ height: '1px', background: 'var(--vg-gold-border)', margin: '0.75rem 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.5rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--vg-text-2)' }}>Total</span>
-                <span className="vg-stat-num" style={{ fontSize: '1.5rem' }}>{formatCurrency(booking.amount, booking.currency)}</span>
+                <span className="vg-stat-num" style={{ fontSize: '1.5rem' }}>{formatCurrency(booking.amount ?? 0, booking.currency)}</span>
               </div>
             </div>
 
