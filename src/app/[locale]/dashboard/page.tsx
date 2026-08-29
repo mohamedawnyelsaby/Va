@@ -2,13 +2,13 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { Calendar, MapPin, Star, TrendingUp, Heart, Clock, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import { Calendar, MapPin, Star, TrendingUp, Heart, Clock, CheckCircle, AlertCircle, ArrowRight, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 import { VG, monoLabel } from '@/lib/tokens';
 import { useParams } from 'next/navigation';
 
-function StatCard({ num, label, icon: Icon, accent = false }: { num: any, label: string, icon: any, accent?: boolean }) {
+function StatCard({ num, label, icon: Icon, accent = false }: { num: number | string, label: string, icon: LucideIcon, accent?: boolean }) {
   return (
     <div style={{
       background: accent ? 'var(--vg-gold-dim)' : 'var(--vg-bg-card)',
@@ -53,12 +53,21 @@ function EmptyBookings({ locale }: { locale: string }) {
   );
 }
 
+interface DashboardBooking {
+  id: string;
+  itemName: string;
+  startDate: string;
+  totalPrice: number;
+  currency: string;
+  status: string;
+}
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
-  const [userData, setUserData] = useState<any>(null);
-  const [recentBookings, setRecentBookings] = useState<any[]>([]);
+  const [userData, setUserData] = useState<{ name?: string; piBalance?: number; _count?: { bookings: number; reviews: number; favorites: number } } | null>(null);
+  const [recentBookings, setRecentBookings] = useState<DashboardBooking[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -104,7 +113,7 @@ export default function DashboardPage() {
     { href: `/${locale}/bookings`,    label: 'My Bookings',  icon: Calendar },
   ];
 
-  const statusConfig: Record<string, { color: string; icon: any }> = {
+  const statusConfig: Record<string, { color: string; icon: LucideIcon }> = {
     confirmed: { color: '#10b981', icon: CheckCircle },
     pending:   { color: 'var(--vg-gold)', icon: Clock },
     cancelled: { color: '#ef4444', icon: AlertCircle },
