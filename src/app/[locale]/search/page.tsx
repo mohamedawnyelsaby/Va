@@ -11,6 +11,35 @@ import { t } from '@/lib/i18n/translations';
 
 const isAr = (locale: string) => locale === 'ar';
 
+interface SearchResultItem {
+  id: string;
+  name: string;
+  thumbnail?: string | null;
+  city?: string;
+  country?: string;
+  rating?: number;
+  pricePerNight?: number;
+  priceRange?: string;
+  ticketPrice?: number;
+  currency?: string;
+}
+
+interface SearchCityItem {
+  id: string;
+  name: string;
+  country?: string;
+  description?: string;
+  thumbnail?: string | null;
+}
+
+interface SearchResults {
+  query: string;
+  hotels: SearchResultItem[];
+  cities: SearchCityItem[];
+  attractions: SearchResultItem[];
+  restaurants: SearchResultItem[];
+}
+
 function SkeletonRow() {
   return (
     <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', display: 'flex', gap: '1rem', padding: '1rem', overflow: 'hidden' }}>
@@ -29,7 +58,7 @@ function SkeletonRow() {
   );
 }
 
-function ResultCard({ item, type, locale, sr }: { item: any; type: string; locale: string; sr: ReturnType<typeof t>['search'] }) {
+function ResultCard({ item, type, locale, sr }: { item: SearchResultItem; type: string; locale: string; sr: ReturnType<typeof t>['search'] }) {
   const href = `/${locale}/${type}/${item.id}`;
   const img = item.thumbnail || (
     type === 'hotels' ? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=200' :
@@ -84,7 +113,7 @@ function ResultCard({ item, type, locale, sr }: { item: any; type: string; local
   );
 }
 
-function CityCard({ city, locale }: { city: any; locale: string }) {
+function CityCard({ city, locale }: { city: SearchCityItem; locale: string }) {
   return (
     <Link href={`/${locale}/hotels?city=${city.name}`} style={{ textDecoration: 'none', display: 'flex', gap: '1.1rem', background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', padding: '1.1rem', transition: 'border-color 0.2s' }}
       onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--vg-gold-border)'}
@@ -118,7 +147,7 @@ function SearchContent() {
   const sr = tr.search;
   const query = searchParams.get('q') || '';
 
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<SearchResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [localQuery, setLocalQuery] = useState(query);
   const [currentQuery, setCurrentQuery] = useState(query);
@@ -222,7 +251,7 @@ function SearchContent() {
             )}
 
             {SECTIONS.map(({ key, label, icon: Icon }) => {
-              const items = results[key];
+              const items = results[key as keyof Omit<SearchResults, 'query'>];
               if (!items?.length) {return null;}
               return (
                 <div key={key} style={{ marginBottom: '2.5rem' }}>
@@ -235,8 +264,8 @@ function SearchContent() {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--vg-border)' }}>
                     {key === 'cities'
-                      ? items.map((item: any) => <CityCard key={item.id} city={item} locale={locale} />)
-                      : items.map((item: any) => <ResultCard key={item.id} item={item} type={key} locale={locale} sr={sr} />)
+                      ? items.map((item) => <CityCard key={item.id} city={item as SearchCityItem} locale={locale} />)
+                      : items.map((item) => <ResultCard key={item.id} item={item as SearchResultItem} type={key} locale={locale} sr={sr} />)
                     }
                   </div>
                 </div>
