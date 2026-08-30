@@ -246,13 +246,13 @@ export async function POST(request: Request) {
       },
     });
 
-  } catch (error: any) {
+  } catch (error) {
     logger.error('❌ Seed error:', error);
     return NextResponse.json(
       { 
         error: 'Seed failed', 
-        message: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+        message: error instanceof Error ? error.message : String(error),
+        stack: process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );
