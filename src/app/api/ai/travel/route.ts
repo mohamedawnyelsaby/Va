@@ -4,6 +4,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { logger } from '@/lib/logger';
+import type { RapidApiHotel } from '@/types/rapidapi';
+
+interface ChatMessage {
+  role: string;
+  content: string;
+}
+
+interface AiResponse {
+  message: string;
+  action: 'chat' | 'search_hotels';
+  searchParams?: {
+    destination: string;
+    checkIn: string;
+    checkOut: string;
+    budget?: number;
+    guests?: number;
+  };
+}
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = 'booking-com15.p.rapidapi.com';
 
@@ -37,7 +55,7 @@ async function searchRealHotels(destination: string, checkIn: string, checkOut: 
     const hotelsData = await hotelsRes.json();
     if (!hotelsData.data?.hotels) {return [];}
 
-    let hotels = hotelsData.data.hotels.slice(0, 10).map((h: any) => ({
+    let hotels = hotelsData.data.hotels.slice(0, 10).map((h: RapidApiHotel) => ({
       id: h.hotel_id?.toString(),
       name: h.property?.name,
       rating: h.property?.reviewScore,
@@ -53,7 +71,7 @@ async function searchRealHotels(destination: string, checkIn: string, checkOut: 
       checkOut,
     }));
 
-    if (budget) {hotels = hotels.filter((h: any) => h.price <= budget);}
+    if (budget) {hotels = hotels.filter((h: { price: number }) => h.price <= budget);}
     return hotels;
   } catch (err) {
     logger.error('Hotel search error:', err);
@@ -96,7 +114,7 @@ If just chatting: {"message":"response","action":"chat"}
 If missing dates, ask in user's language: {"message":"ask for dates","action":"chat"}`;
 
     // Build Gemini messages
-    const geminiMessages = messages.map((m: any) => ({
+    const geminiMessages = messages.map((m: ChatMessage) => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) }],
     }));
@@ -145,7 +163,7 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
           max_tokens: 1000,
           messages: [
             { role: 'system', content: systemPrompt },
-            ...messages.map((m: any) => ({
+            ...messages.map((m: ChatMessage) => ({
               role: m.role === 'assistant' ? 'assistant' : 'user',
               content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
             })),
@@ -170,7 +188,7 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
     
     const aiText2 = aiText;
 
-    let aiResponse: any = {};
+    let aiResponse: AiResponse = { message: '', action: 'chat' };
     try {
       const jsonMatch = aiText2.match(/\{[\s\S]*\}/);
       aiResponse = jsonMatch ? JSON.parse(jsonMatch[0]) : { message: aiText2, action: 'chat' };

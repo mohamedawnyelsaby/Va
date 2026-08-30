@@ -2,6 +2,7 @@
 // Real hotels from Booking.com via RapidAPI
 
 import { NextRequest, NextResponse } from 'next/server';
+import type { RapidApiHotel } from '@/types/rapidapi';
 
 import { logger } from '@/lib/logger';
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
@@ -76,23 +77,6 @@ export async function GET(request: NextRequest) {
         hotels: [],
         destination,
       });
-    }
-
-    interface RapidApiHotel {
-      hotel_id?: number | string;
-      property?: {
-        name?: string;
-        countryCode?: string;
-        wishlistName?: string;
-        latitude?: number;
-        longitude?: number;
-        propertyClass?: number;
-        reviewScore?: number;
-        reviewCount?: number;
-        reviewScoreWord?: string;
-        priceBreakdown?: { grossPrice?: { value?: number; currency?: string } };
-        photoUrls?: string[];
-      };
     }
 
     // Format hotels
