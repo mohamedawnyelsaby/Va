@@ -29,6 +29,18 @@ const PUBLIC_API_PATHS = [
   '/api/search',
 ];
 
+// Origins allowed to make cross-origin requests to this app's API routes.
+// The app's own frontend calling its own /api/* routes is same-origin and
+// never needs CORS headers at all — this allowlist exists only for the
+// rare legitimate cross-origin case (e.g. Pi Browser's own domains), not
+// as a general-purpose open API. Add the production custom domain here
+// once it's live (e.g. https://va.pi).
+const ALLOWED_ORIGINS = [
+  'https://va-pied.vercel.app',
+  'https://sdk.minepi.com',
+  'https://app-cdn.minepi.com',
+];
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -48,7 +60,11 @@ export async function middleware(request: NextRequest) {
   // ✅ API routes: add CORS headers but don't redirect
   if (pathname.startsWith('/api/')) {
     const response = NextResponse.next();
-    response.headers.set('Access-Control-Allow-Origin', '*');
+    const origin = request.headers.get('origin');
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+      response.headers.set('Access-Control-Allow-Origin', origin);
+      response.headers.set('Vary', 'Origin');
+    }
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
