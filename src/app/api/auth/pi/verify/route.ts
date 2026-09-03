@@ -18,13 +18,11 @@ import { captureException, captureMessage } from '@/lib/monitoring/sentry';
 // ============================================
 
 import { logger } from '@/lib/logger';
+import { checkRateLimit } from '@/lib/rate-limit';
 const TOKEN_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-const MAX_VERIFICATION_ATTEMPTS = 5;
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 
 // In-memory cache for verified tokens (production should use Redis)
 const tokenCache = new Map<string, { uid: string; username: string; timestamp: number }>();
-const verificationAttempts = new Map<string, { count: number; resetAt: number }>();
 
 // ============================================
 // SECURITY UTILITIES
@@ -40,31 +38,6 @@ function generateSessionToken(uid: string): string {
     .createHash('sha256')
     .update(`${uid}:${timestamp}:${random}`)
     .digest('hex');
-}
-
-/**
- * Rate limiting check
- */
-function checkRateLimit(identifier: string): boolean {
-  const now = Date.now();
-  const attempts = verificationAttempts.get(identifier);
-
-  if (!attempts) {
-    verificationAttempts.set(identifier, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
-    return true;
-  }
-
-  if (now > attempts.resetAt) {
-    verificationAttempts.set(identifier, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
-    return true;
-  }
-
-  if (attempts.count >= MAX_VERIFICATION_ATTEMPTS) {
-    return false;
-  }
-
-  attempts.count++;
-  return true;
 }
 
 /**
@@ -84,6 +57,9 @@ function cleanExpiredCache() {
 // ============================================
 
 export async function POST(request: NextRequest) {
+  const limited = await checkRateLimit(request, 'auth');
+  if (limited) {return limited;}
+
   const requestId = crypto.randomUUID();
   const startTime = Date.now();
   const clientIp = request.headers.get('x-forwarded-for') || 'unknown';
@@ -109,15 +85,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Invalid user identifier format' },
         { status: 400 }
-      );
-    }
-
-    // Rate limiting
-    if (!checkRateLimit(clientIp)) {
-      logger.warn(`[${requestId}] 🚫 Rate limit exceeded for ${clientIp}`);
-      return NextResponse.json(
-        { error: 'Too many verification attempts. Please try again later.' },
-        { status: 429 }
       );
     }
 
@@ -337,8 +304,7 @@ export async function GET() {
       ttl: TOKEN_CACHE_TTL,
     },
     rateLimit: {
-      maxAttempts: MAX_VERIFICATION_ATTEMPTS,
-      window: RATE_LIMIT_WINDOW,
+      backend: 'redis (shared, see @/lib/rate-limit)',
     },
   });
 }
@@ -351,6 +317,5 @@ if (typeof process !== 'undefined') {
   process.on('SIGTERM', () => {
     logger.log('🧹 Cleaning up verification cache...');
     tokenCache.clear();
-    verificationAttempts.clear();
   });
 }

@@ -7,6 +7,7 @@
 // ============================================
 
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { prisma } from '@/lib/db';
@@ -102,6 +103,9 @@ function isValidPiPaymentId(id: string): boolean {
 // ============================================
 
 export async function POST(request: NextRequest) {
+  const limited = await checkRateLimit(request, 'payment');
+  if (limited) {return limited;}
+
   const requestId = crypto.randomUUID();
   const startTime = Date.now();
   const clientIp = request.headers.get('x-forwarded-for') || 'unknown';

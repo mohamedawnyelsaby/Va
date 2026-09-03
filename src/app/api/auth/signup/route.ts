@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
 import { logger } from '@/lib/logger';
+import { checkRateLimit } from '@/lib/rate-limit';
 const passwordSchema = z
   .string()
   .min(8, 'Password must be at least 8 characters')
@@ -30,6 +31,9 @@ const signupSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const limited = await checkRateLimit(request, 'auth');
+  if (limited) {return limited;}
+
   const ip = request.headers.get('x-forwarded-for') || 'unknown';
   const userAgent = request.headers.get('user-agent') || 'unknown';
 

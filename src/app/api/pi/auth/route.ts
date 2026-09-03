@@ -10,8 +10,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyPiUser } from '@/lib/pi-network/platform-api';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  const limited = await checkRateLimit(request, 'auth');
+  if (limited) {return limited;}
+
   try {
     const { accessToken, uid } = await request.json();
     if (!accessToken || !uid) {
