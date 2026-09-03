@@ -6,11 +6,15 @@
 // Now: no valid session -> reject immediately. No exceptions.
 
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { prisma } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
+  const limited = await checkRateLimit(request, 'payment');
+  if (limited) {return limited;}
+
   try {
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;

@@ -13,6 +13,7 @@
 //    failures where we got no response at all.
 
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { prisma } from '@/lib/db';
@@ -29,6 +30,9 @@ const IS_SANDBOX =
 const CASHBACK_RATE = 0.02;
 
 export async function POST(request: NextRequest) {
+  const limited = await checkRateLimit(request, 'payment');
+  if (limited) {return limited;}
+
   const requestId = crypto.randomUUID();
 
   logger.log(`[${requestId}] 📥 Payment completion request received`);

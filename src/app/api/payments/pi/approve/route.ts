@@ -10,6 +10,7 @@
 //    a health check never needs to expose part of a real secret.
 
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { prisma } from '@/lib/db';
@@ -72,6 +73,9 @@ async function updateDbBackground(
 }
 
 export async function POST(request: NextRequest) {
+  const limited = await checkRateLimit(request, 'payment');
+  if (limited) {return limited;}
+
   const requestId = crypto.randomUUID();
   logger.log(`[${requestId}] 📥 v8 ${new Date().toISOString()} sandbox=${IS_SANDBOX} apiKey=${!!PI_API_KEY}`);
 
