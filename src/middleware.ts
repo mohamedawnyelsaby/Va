@@ -37,12 +37,40 @@ const PUBLIC_API_PATHS = [
 // once it's live (e.g. https://va.pi).
 const ALLOWED_ORIGINS = [
   'https://va-pied.vercel.app',
+  'https://va-mainnet.vercel.app',
   'https://sdk.minepi.com',
   'https://app-cdn.minepi.com',
 ];
 
+// Pi domain-ownership validation keys, one per registered app. Both
+// va-pied.vercel.app (Testnet app) and va-mainnet.vercel.app (Mainnet
+// app) are aliases of this same Vercel deployment, so a single static
+// public/validation-key.txt can't serve both — Pi checks
+// https://<domain>/validation-key.txt and expects a different value
+// per domain. These values are meant to be public (that's the whole
+// point of the file), so hardcoding them here is fine.
+const VALIDATION_KEYS: Record<string, string> = {
+  'va-pied.vercel.app': 'ff33e9722c38cad2f0ff491e01f3e70d21c695368d78af8299537117183c830762b90b777d192b4a9704c48c4e302225f601e2604056043d4a3f59a1e362e301',
+  'va-mainnet.vercel.app': 'd94228e67abeffc15c2ad34a613cfd7af51201db1e5502a7767807cdae9a1904393a0d011dd22f83412da289a1cbc973853b1f1d642e5920d460812aa828f3b3',
+};
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // ✅ Serve the correct per-domain Pi validation key before any of the
+  // generic static-file/dotted-path skip logic below would otherwise
+  // catch this same path and pass it straight to the single static file.
+  if (pathname === '/validation-key.txt') {
+    const host = request.headers.get('host')?.split(':')[0] ?? '';
+    const key = VALIDATION_KEYS[host];
+    if (key) {
+      return new NextResponse(key, {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain' },
+      });
+    }
+    // Unknown host — fall through to the static public/validation-key.txt file.
+  }
 
   // ✅ Skip static files and images
   if (
