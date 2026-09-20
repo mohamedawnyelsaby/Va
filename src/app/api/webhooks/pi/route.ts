@@ -1,21 +1,32 @@
 // src/app/api/webhooks/pi/route.ts
-// ✅ PRODUCTION-READY PI WEBHOOK HANDLER
+//
+// FIXES
+// - payment_completed now goes through finalizePayment(): the payment is
+//   finished ONCE. Before, this handler credited cashback again even when
+//   /api/payments/pi/complete had already done it (double cashback), computed
+//   it from the webhook payload instead of our own record, and could be
+//   replayed.
+// - The payload amount must match our stored amount.
+// - cancelled / failed events can no longer overwrite a payment that is
+//   already completed (or a booking that is already paid).
+// - A non-numeric timestamp no longer bypasses the replay window.
+// - Uses the shared verifyPiSignature (was duplicated).
+// NOTE: pi-app.json currently has an empty paymentWebhookUrl, so this handler
+// only runs if you configure the webhook in the Pi Developer Portal.
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
 import crypto from 'crypto';
-
-// Force dynamic route (no caching)
+import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { verifyPiSignature } from '@/lib/pi-network/platform-api';
+import { finalizePayment } from '@/lib/payments/finalize';
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const PI_SECRET = process.env.PI_SECRET_KEY;
 const WEBHOOK_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+const AMOUNT_TOLERANCE = 1e-6;
 
-// Shape of the payment object Pi Network sends in server-to-server
-// webhooks — distinct from both the browser SDK's payment shape and
-// our own DB Payment model. Covers only the fields these handlers read.
 interface PiWebhookPayment {
   identifier: string;
   amount: number;
@@ -30,278 +41,151 @@ interface PiWebhookPayload {
   payment: PiWebhookPayment;
 }
 
-/**
- * Verify Pi Network webhook signature
- */
-function verifyPiSignature(body: string, signature: string, timestamp: string): boolean {
-  try {
-    if (!PI_SECRET) {
-      logger.error('❌ PI_SECRET not configured');
-      return false;
-    }
-
-    const payload = `${timestamp}.${body}`;
-    const expectedSignature = crypto
-      .createHmac('sha256', PI_SECRET)
-      .update(payload)
-      .digest('hex');
-
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expectedSignature)
-    );
-  } catch (error) {
-    logger.error('❌ Signature verification failed:', error);
-    return false;
-  }
-}
-
-/**
- * POST /api/webhooks/pi
- * Handle Pi Network payment webhooks
- */
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
   const startTime = Date.now();
 
   try {
-    logger.log(`[${requestId}] 📥 Pi webhook received`);
-
-    // 1. Get headers
     const signature = request.headers.get('x-pi-signature');
     const timestamp = request.headers.get('x-pi-timestamp');
 
     if (!signature || !timestamp) {
-      logger.error(`[${requestId}] ❌ Missing headers`);
       return NextResponse.json({ error: 'Missing headers' }, { status: 400 });
     }
 
-    // 2. Read body
     const body = await request.text();
     if (!body) {
-      logger.error(`[${requestId}] ❌ Empty body`);
       return NextResponse.json({ error: 'Empty body' }, { status: 400 });
     }
 
-    // 3. Verify signature
     if (!verifyPiSignature(body, signature, timestamp)) {
-      logger.error(`[${requestId}] ❌ Invalid signature`);
+      logger.error(`[${requestId}] ❌ Invalid webhook signature`);
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    // 4. Check timestamp (prevent replay attacks)
-    const timestampAge = Date.now() - parseInt(timestamp);
-    if (timestampAge > WEBHOOK_TIMEOUT) {
-      logger.error(`[${requestId}] ❌ Webhook too old`);
-      return NextResponse.json({ error: 'Webhook expired' }, { status: 400 });
+    // Replay protection: the timestamp must be numeric and recent.
+    const timestampMs = Number.parseInt(timestamp, 10);
+    if (!Number.isFinite(timestampMs) || Math.abs(Date.now() - timestampMs) > WEBHOOK_TIMEOUT) {
+      return NextResponse.json({ error: 'Webhook expired or invalid timestamp' }, { status: 400 });
     }
 
-    // 5. Parse payload
     const payload = JSON.parse(body) as PiWebhookPayload;
     const { event, payment } = payload;
 
-    logger.log(`[${requestId}] 📦 Event: ${event}`);
-    logger.log(`[${requestId}] 💳 Payment ID: ${payment.identifier}`);
+    if (!payment?.identifier || typeof payment.identifier !== 'string') {
+      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+    }
 
-    // 6. Check for duplicate processing
+    logger.log(`[${requestId}] 📦 Event: ${event} payment=${payment.identifier}`);
+
+    // Duplicate delivery guard (finalizePayment is itself idempotent too).
     const existingLog = await prisma.auditLog.findFirst({
       where: {
         action: 'pi_webhook_processed',
         entityType: 'payment',
         entityId: payment.identifier,
+        changes: { contains: `"event":"${event}"` },
       },
     });
-
     if (existingLog) {
-      logger.log(`[${requestId}] ⚠️ Duplicate webhook - already processed`);
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Already processed',
-        requestId, 
-      });
+      return NextResponse.json({ success: true, message: 'Already processed', requestId });
     }
 
-    // 7. Process event
     let result;
-
     switch (event) {
       case 'payment_completed':
         result = await handlePaymentCompleted(payment, requestId);
         break;
-
       case 'payment_cancelled':
-        result = await handlePaymentCancelled(payment, requestId);
+        result = await handlePaymentClosed(payment, 'cancelled');
         break;
-
       case 'payment_failed':
-        result = await handlePaymentFailed(payment, requestId);
+        result = await handlePaymentClosed(payment, 'failed');
         break;
-
       default:
-        logger.warn(`[${requestId}] ⚠️ Unknown event: ${event}`);
         return NextResponse.json({ error: 'Unknown event' }, { status: 400 });
     }
 
-    // 8. Log success
     const duration = Date.now() - startTime;
     await prisma.auditLog.create({
       data: {
         action: 'pi_webhook_processed',
         entityType: 'payment',
         entityId: payment.identifier,
-        changes: JSON.stringify({
-          event,
-          result,
-          processingTime: duration,
-          requestId,
-        }),
+        changes: JSON.stringify({ event, result, processingTime: duration, requestId }),
       },
     });
 
-    logger.log(`[${requestId}] ✅ Processed in ${duration}ms`);
-
-    return NextResponse.json({
-      success: true,
-      requestId,
-      processingTime: duration,
-      result,
-    });
-
+    return NextResponse.json({ success: true, requestId, processingTime: duration, result });
   } catch (error) {
     logger.error(`[${requestId}] ❌ Webhook error:`, error);
-    return NextResponse.json(
-      { error: 'Internal error', requestId },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal error', requestId }, { status: 500 });
   }
 }
 
-/**
- * Handle payment_completed event
- */
 async function handlePaymentCompleted(payment: PiWebhookPayment, requestId: string) {
-  logger.log(`[${requestId}] 💰 Processing completed payment`);
-
   const dbPayment = await prisma.payment.findFirst({
     where: { piPaymentId: payment.identifier },
-    include: { booking: true, user: true },
+    select: { id: true, amount: true, bookingId: true },
   });
-
   if (!dbPayment) {
     throw new Error('Payment not found');
   }
 
-  // Verify transaction
   if (!payment.transaction?.txid || !payment.transaction?.verified) {
     throw new Error('Transaction not verified');
   }
-
-  // Update payment
-  await prisma.payment.update({
-    where: { id: dbPayment.id },
-    data: {
-      status: 'completed',
-      piTxid: payment.transaction.txid,
-      metadata: {
-        ...(dbPayment.metadata as object),
-        completedAt: new Date().toISOString(),
-        transaction: payment.transaction,
-      },
-    },
-  });
-
-  // Update booking
-  if (dbPayment.booking) {
-    await prisma.booking.update({
-      where: { id: dbPayment.booking.id },
-      data: {
-        status: 'confirmed',
-        paymentStatus: 'paid',
-      },
-    });
+  if (Math.abs(payment.amount - dbPayment.amount) > AMOUNT_TOLERANCE) {
+    throw new Error('Amount mismatch');
   }
 
-  // Credit cashback (2%)
-  const cashback = payment.amount * 0.02;
-  await prisma.user.update({
-    where: { id: dbPayment.userId },
-    data: { piBalance: { increment: cashback } },
+  const result = await finalizePayment({
+    paymentId: dbPayment.id,
+    txid: payment.transaction.txid,
+    requestId,
+    allowedFrom: ['pending', 'approved'],
+    source: 'webhook',
   });
-
-  logger.log(`[${requestId}] 🎁 Cashback: ${cashback} Pi`);
 
   return {
     paymentId: dbPayment.id,
-    bookingId: dbPayment.booking?.id,
-    cashback,
-    txid: payment.transaction.txid,
+    bookingId: dbPayment.bookingId,
+    finalized: result.finalized,
+    cashback: result.cashback,
   };
 }
 
-/**
- * Handle payment_cancelled event
- */
-async function handlePaymentCancelled(payment: PiWebhookPayment, requestId: string) {
-  logger.log(`[${requestId}] ❌ Processing cancelled payment`);
-
+/** payment_cancelled / payment_failed: never touches a completed payment. */
+async function handlePaymentClosed(payment: PiWebhookPayment, status: 'cancelled' | 'failed') {
   const dbPayment = await prisma.payment.findFirst({
     where: { piPaymentId: payment.identifier },
-    include: { booking: true },
+    select: { id: true, bookingId: true },
   });
-
   if (!dbPayment) {
     return { status: 'not_found' };
   }
 
-  await prisma.payment.update({
-    where: { id: dbPayment.id },
-    data: { status: 'cancelled' },
-  });
-
-  if (dbPayment.booking) {
-    await prisma.booking.update({
-      where: { id: dbPayment.booking.id },
-      data: { status: 'cancelled', paymentStatus: 'failed' },
+  return prisma.$transaction(async (tx) => {
+    const updated = await tx.payment.updateMany({
+      where: { id: dbPayment.id, status: { in: ['pending', 'approved'] } },
+      data: {
+        status,
+        ...(status === 'failed' ? { errorMessage: 'Payment failed' } : {}),
+      },
     });
-  }
 
-  return { paymentId: dbPayment.id, status: 'cancelled' };
-}
+    if (updated.count > 0 && dbPayment.bookingId) {
+      await tx.booking.updateMany({
+        where: { id: dbPayment.bookingId, paymentStatus: { not: 'paid' } },
+        data: { status: 'cancelled', paymentStatus: 'failed' },
+      });
+    }
 
-/**
- * Handle payment_failed event
- */
-async function handlePaymentFailed(payment: PiWebhookPayment, requestId: string) {
-  logger.log(`[${requestId}] ⚠️ Processing failed payment`);
-
-  const dbPayment = await prisma.payment.findFirst({
-    where: { piPaymentId: payment.identifier },
-    include: { booking: true },
+    return { paymentId: dbPayment.id, status: updated.count > 0 ? status : 'unchanged' };
   });
-
-  if (!dbPayment) {
-    return { status: 'not_found' };
-  }
-
-  await prisma.payment.update({
-    where: { id: dbPayment.id },
-    data: { status: 'failed', errorMessage: 'Payment failed' },
-  });
-
-  if (dbPayment.booking) {
-    await prisma.booking.update({
-      where: { id: dbPayment.booking.id },
-      data: { status: 'cancelled', paymentStatus: 'failed' },
-    });
-  }
-
-  return { paymentId: dbPayment.id, status: 'failed' };
 }
 
 // Block other HTTP methods
 export async function GET() {
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405, headers: { 'Allow': 'POST' } }
-  );
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405, headers: { Allow: 'POST' } });
 }

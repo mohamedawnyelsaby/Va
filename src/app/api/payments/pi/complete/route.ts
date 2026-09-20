@@ -1,33 +1,38 @@
 // src/app/api/payments/pi/complete/route.ts
-// SECURITY FIX (2026-07-13):
-// 1) No ownership check existed before completing a payment — anyone who
-//    knew a paymentId/piPaymentId + txid (both visible during a normal Pi
-//    payment flow) could complete someone else's payment and trigger their
-//    cashback. Now requires a real session that matches payment.userId.
-// 2) The sandbox fallback used to auto-succeed on ANY network error while
-//    calling Pi's API ("if (IS_SANDBOX) piCompleteSuccess = true" inside the
-//    catch block). That meant a dropped connection — not just a real
-//    sandbox-specific response from Pi — was enough to mark a payment
-//    completed. That auto-success now only applies to real, documented
-//    sandbox response codes (400/409) coming back FROM Pi, never to network
-//    failures where we got no response at all.
+//
+// Server-side completion of a Pi payment (Pi SDK: onReadyForServerCompletion).
+//
+// SECURITY FIXES
+// - The payment is re-fetched from Pi and must match our record (amount,
+//   linked piPaymentId, metadata reference) and the client-supplied txid must
+//   equal the transaction Pi recorded. Before, the txid was trusted.
+// - REMOVED the sandbox shortcuts that treated Pi error responses 400/409 —
+//   and a missing PI_API_KEY — as a successful payment. Completion now needs
+//   Pi to genuinely confirm, in every environment.
+// - Completion is atomic and idempotent (see lib/payments/finalize.ts):
+//   concurrent / repeated calls (and the webhook) can no longer credit the
+//   cashback more than once.
+// - Error details are no longer echoed to the client.
 
 import { NextRequest, NextResponse } from 'next/server';
-import { checkRateLimit } from '@/lib/rate-limit';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/options';
-import { prisma } from '@/lib/db';
+import { z } from 'zod';
 import crypto from 'crypto';
-import { Prisma } from '@prisma/client';
-import { captureException } from '@/lib/monitoring/sentry';
-
+import { checkRateLimit } from '@/lib/rate-limit';
+import { requireUser } from '@/lib/auth/guards';
+import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
-const PI_API_URL = 'https://api.minepi.com';
-const PI_API_KEY = process.env.PI_API_KEY;
-const IS_SANDBOX =
-  process.env.PI_SANDBOX === 'true' ||
-  process.env.NEXT_PUBLIC_PI_SANDBOX === 'true';
-const CASHBACK_RATE = 0.02;
+import { captureException } from '@/lib/monitoring/sentry';
+import { getPayment, completePayment } from '@/lib/pi-network/platform-api';
+import { finalizePayment } from '@/lib/payments/finalize';
+import { CASHBACK_RATE, roundPi } from '@/lib/pricing';
+
+const AMOUNT_TOLERANCE = 1e-6;
+
+const bodySchema = z.object({
+  paymentId: z.string().min(1).max(64),
+  piPaymentId: z.string().min(10).max(200).optional(),
+  txid: z.string().min(1).max(200),
+});
 
 export async function POST(request: NextRequest) {
   const limited = await checkRateLimit(request, 'payment');
@@ -35,228 +40,134 @@ export async function POST(request: NextRequest) {
 
   const requestId = crypto.randomUUID();
 
-  logger.log(`[${requestId}] 📥 Payment completion request received`);
+  const guard = await requireUser();
+  if ('response' in guard) {return guard.response;}
+  const { userId } = guard;
+
+  let body: z.infer<typeof bodySchema>;
+  try {
+    body = bodySchema.parse(await request.json());
+  } catch {
+    return NextResponse.json({ error: 'Invalid request', requestId }, { status: 400 });
+  }
+  const { paymentId, txid } = body;
 
   try {
-    // ✅ FIX: require a real, verified session before touching any payment.
-    const session = await getServerSession(authOptions);
-    const sessionUserId = session?.user?.id;
-    if (!sessionUserId) {
-      return NextResponse.json({ error: 'Unauthorized', requestId }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const { paymentId, piPaymentId, txid } = body;
-
-    logger.log(`[${requestId}] paymentId=${paymentId}, piPaymentId=${piPaymentId}, txid=${txid}`);
-
-    if (!txid) {
-      return NextResponse.json(
-        { error: 'Transaction ID (txid) is required', requestId },
-        { status: 400 }
-      );
-    }
-
-    if (!paymentId && !piPaymentId) {
-      return NextResponse.json(
-        { error: 'paymentId or piPaymentId is required', requestId },
-        { status: 400 }
-      );
-    }
-
-    // Find payment
-    const payment = await prisma.payment.findFirst({
-      where: paymentId ? { id: paymentId } : { piPaymentId },
-      include: {
-        booking: {
-          include: { hotel: true, attraction: true, restaurant: true },
-        },
-        user: true,
-      },
-    });
+    const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
 
     if (!payment) {
-      return NextResponse.json(
-        { error: 'Payment not found', requestId },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Payment not found', requestId }, { status: 404 });
     }
-
-    // ✅ FIX: ownership check — only the payment's own user can complete it.
-    if (payment.userId !== sessionUserId) {
+    if (payment.userId !== userId) {
       return NextResponse.json({ error: 'Forbidden', requestId }, { status: 403 });
     }
 
-    logger.log(`[${requestId}] ✅ Payment found: ${payment.id}, status: ${payment.status}`);
-
-    const piPaymentIdToUse = piPaymentId || payment.piPaymentId;
+    const expectedCashback = roundPi(payment.amount * CASHBACK_RATE);
 
     // Idempotency
     if (payment.status === 'completed') {
-      if (!payment.piTxid || payment.piTxid === txid) {
-        return NextResponse.json({
-          success: true,
-          alreadyCompleted: true,
-          paymentId: payment.id,
-          txid,
-          cashback: payment.amount * CASHBACK_RATE,
-          requestId,
-        });
+      if (payment.piTxid && payment.piTxid !== txid) {
+        return NextResponse.json({ error: 'Payment completed with different txid', requestId }, { status: 409 });
       }
+      return NextResponse.json({
+        success: true,
+        alreadyCompleted: true,
+        paymentId: payment.id,
+        bookingId: payment.bookingId,
+        txid,
+        amount: payment.amount,
+        cashback: expectedCashback,
+        requestId,
+      });
+    }
+
+    if (payment.status !== 'approved' || !payment.piPaymentId) {
       return NextResponse.json(
-        { error: 'Payment completed with different txid', requestId },
+        { error: `Cannot complete payment in '${payment.status}' state. Must be approved first.`, requestId },
         { status: 409 }
       );
     }
-
-    // Must be approved first
-    if (payment.status !== 'approved') {
-      return NextResponse.json(
-        {
-          error: `Cannot complete payment in '${payment.status}' state. Must be approved first.`,
-          requestId,
-        },
-        { status: 409 }
-      );
+    if (body.piPaymentId && body.piPaymentId !== payment.piPaymentId) {
+      return NextResponse.json({ error: 'Pi payment mismatch', requestId }, { status: 409 });
     }
 
-    // Call Pi Platform
-    let piCompleteSuccess = false;
-    let piCompleteError = '';
+    // ---- Verify against Pi's own record ---------------------------------
+    let piPayment;
+    try {
+      piPayment = await getPayment(payment.piPaymentId);
+    } catch (err) {
+      logger.error(`[${requestId}] Pi getPayment failed:`, err instanceof Error ? err.message : err);
+      return NextResponse.json({ error: 'Could not verify payment with Pi Network', requestId }, { status: 502 });
+    }
 
-    if (piPaymentIdToUse && PI_API_KEY) {
+    const referencedPaymentId = (piPayment.metadata as { paymentId?: string } | undefined)?.paymentId;
+    const problems: string[] = [];
+    if (Math.abs(piPayment.amount - payment.amount) > AMOUNT_TOLERANCE) {problems.push('amount mismatch');}
+    if (referencedPaymentId !== payment.id) {problems.push('payment reference mismatch');}
+    if (piPayment.status?.cancelled || piPayment.status?.user_cancelled) {problems.push('payment cancelled');}
+    if (!piPayment.status?.developer_approved) {problems.push('not approved on Pi');}
+    if (!piPayment.transaction?.txid) {problems.push('no transaction recorded yet');}
+    else if (piPayment.transaction.txid !== txid) {problems.push('txid mismatch');}
+
+    if (problems.length > 0) {
+      logger.warn(`[${requestId}] Completion rejected: ${problems.join(', ')}`);
+      return NextResponse.json({ error: 'Payment verification failed', requestId }, { status: 400 });
+    }
+
+    // ---- Complete on Pi (skip if Pi already has it completed) ------------
+    if (!piPayment.status.developer_completed) {
       try {
-        logger.log(`[${requestId}] 🌐 Calling Pi Platform complete...`);
-
-        const piRes = await fetch(
-          `${PI_API_URL}/v2/payments/${piPaymentIdToUse}/complete`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Key ${PI_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ txid }),
-          }
-        );
-
-        const piResText = await piRes.text();
-        logger.log(`[${requestId}] Pi Platform: ${piRes.status} - ${piResText}`);
-
-        if (piRes.ok) {
-          piCompleteSuccess = true;
-        } else {
-          piCompleteError = `Pi API ${piRes.status}: ${piResText}`;
-          // Only known sandbox-specific response codes FROM Pi count as success.
-          // This branch only runs when we actually got a response back.
-          if (IS_SANDBOX && (piRes.status === 400 || piRes.status === 409)) {
-            piCompleteSuccess = true;
-          }
-        }
+        await completePayment(payment.piPaymentId, txid);
       } catch (err) {
-        // ✅ FIX: a network error means we got NO response from Pi at all —
-        // this must never be treated as success, sandbox or not.
-        piCompleteError = err instanceof Error ? err.message : 'Network error';
-        captureException(err instanceof Error ? err : new Error(piCompleteError), {
-          requestId, paymentId: payment.id, piPaymentIdToUse,
-        });
-        logger.error(`[${requestId}] ❌ Pi Platform error: ${piCompleteError}`);
-      }
-    } else {
-      if (IS_SANDBOX) {
-        piCompleteSuccess = true;
-      } else {
-        return NextResponse.json(
-          { error: 'Payment gateway not configured', requestId },
-          { status: 503 }
-        );
-      }
-    }
-
-    if (!piCompleteSuccess) {
-      return NextResponse.json(
-        {
-          error: 'Pi Network completion failed. Please try again.',
-          details: piCompleteError,
-          requestId,
-        },
-        { status: 502 }
-      );
-    }
-
-    const cashback = parseFloat((payment.amount * CASHBACK_RATE).toFixed(7));
-
-    // Database transaction
-    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const updated = await tx.payment.update({
-        where: { id: payment.id },
-        data: {
-          piTxid: txid,
-          piPaymentId: piPaymentIdToUse || payment.piPaymentId,
-          status: 'completed',
-          metadata: {
-            ...(payment.metadata as object || {}),
-            completedAt: new Date().toISOString(),
-            txid,
-            cashback,
+        let completedNow = false;
+        try {
+          completedNow = Boolean((await getPayment(payment.piPaymentId)).status?.developer_completed);
+        } catch {
+          /* fall through */
+        }
+        if (!completedNow) {
+          captureException(err instanceof Error ? err : new Error(String(err)), {
             requestId,
-            sandboxMode: IS_SANDBOX,
-          },
-        },
-      });
-
-      if (payment.booking) {
-        await tx.booking.update({
-          where: { id: payment.booking.id },
-          data: { status: 'confirmed', paymentStatus: 'paid' },
-        });
-        logger.log(`[${requestId}] ✅ Booking confirmed`);
+            paymentId: payment.id,
+          });
+          return NextResponse.json({ error: 'Pi Network completion failed. Please try again.', requestId }, { status: 502 });
+        }
       }
+    }
 
-      await tx.user.update({
-        where: { id: payment.userId },
-        data: { piBalance: { increment: cashback } },
+    // ---- Persist exactly once -------------------------------------------
+    let result;
+    try {
+      result = await finalizePayment({
+        paymentId: payment.id,
+        txid,
+        requestId,
+        allowedFrom: ['approved'],
+        source: 'client',
       });
-
-      logger.log(`[${requestId}] 💰 Cashback ${cashback} Pi credited`);
-      return updated;
-    });
-
-    logger.log(`[${requestId}] 🎉 Payment completed!`);
+    } catch (err) {
+      if (err instanceof Error && err.message === 'TXID_ALREADY_USED') {
+        return NextResponse.json({ error: 'Transaction already used', requestId }, { status: 409 });
+      }
+      throw err;
+    }
 
     return NextResponse.json({
       success: true,
-      alreadyCompleted: false,
-      paymentId: result.id,
-      piPaymentId: piPaymentIdToUse,
+      alreadyCompleted: !result.finalized,
+      paymentId: payment.id,
+      piPaymentId: payment.piPaymentId,
       txid,
-      status: result.status,
+      status: 'completed',
       bookingId: payment.bookingId,
       amount: payment.amount,
-      cashback,
-      message: `Payment completed! You earned ${cashback} Pi cashback.`,
+      cashback: expectedCashback,
+      message: `Payment completed! You earned ${expectedCashback} Pi cashback.`,
       requestId,
-    }, { status: 201 });
-
+    });
   } catch (error) {
-    logger.error(`[${requestId}] ❌ Unexpected error:`, error);
+    logger.error(`[${requestId}] complete error:`, error);
     captureException(error instanceof Error ? error : new Error(String(error)), { requestId });
-    return NextResponse.json(
-      {
-        error: 'Payment completion failed',
-        requestId,
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Payment completion failed', requestId }, { status: 500 });
   }
-}
-
-export async function GET() {
-  return NextResponse.json({
-    service: 'Payment Completion v5',
-    status: 'operational',
-    sandbox: IS_SANDBOX,
-    piApiKeySet: !!PI_API_KEY,
-  });
 }
