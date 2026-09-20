@@ -1,19 +1,27 @@
 // src/lib/rate-limit.ts
-// Redis-backed rate limiting for sensitive endpoints (signup, Pi auth,
-// Pi payments) using Upstash's sliding-window algorithm — durable across
-// serverless function invocations and regions, unlike an in-memory
-// counter (which resets per cold start and isn't shared across
-// concurrent instances).
+// Rate limiting for sensitive / costly endpoints.
 //
-// Fails OPEN if Redis isn't configured (UPSTASH_REDIS_REST_URL/TOKEN
-// missing): requests are allowed through rather than the app breaking,
-// but a warning is logged so misconfiguration is visible rather than
-// silently leaving every request unprotected forever.
+// - With UPSTASH_REDIS_REST_URL/TOKEN configured: Upstash sliding window,
+//   shared across serverless instances (the real protection).
+// - Without Redis: a per-instance in-memory fixed window. It is NOT shared
+//   across instances and resets on cold start, so it only slows abuse — but
+//   that is strictly better than the previous behaviour (no limiting at all).
+//   A warning is logged so the missing Redis config stays visible.
 
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
+
+export type RateLimitTier = 'auth' | 'payment' | 'ai' | 'search';
+
+// tier -> [max requests, window in seconds]
+const TIER_CONFIG: Record<RateLimitTier, [number, number]> = {
+  auth: [10, 60],
+  payment: [5, 60],
+  ai: [10, 60],
+  search: [30, 60],
+};
 
 const redis =
   process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
@@ -25,47 +33,67 @@ const redis =
 
 if (!redis) {
   logger.warn(
-    '⚠️ UPSTASH_REDIS_REST_URL/TOKEN not configured — rate limiting is DISABLED (fail-open). ' +
-    'Sensitive endpoints (signup, Pi auth, Pi payments) are currently unprotected against abuse.'
+    '⚠️ UPSTASH_REDIS_REST_URL/TOKEN not configured — using per-instance in-memory rate limiting only. ' +
+      'Configure Redis for effective protection of auth, payment, AI and search endpoints.'
   );
 }
 
-// Separate limiters per sensitivity tier. Payment creation is the most
-// abuse-sensitive (each request can trigger a real Pi Network API call),
-// so it gets the tightest limit.
 const limiters = redis
-  ? {
-      auth: new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(10, '1 m'),
-        prefix: 'ratelimit:auth',
-      }),
-      payment: new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(5, '1 m'),
-        prefix: 'ratelimit:payment',
-      }),
-    }
+  ? (Object.fromEntries(
+      (Object.keys(TIER_CONFIG) as RateLimitTier[]).map((tier) => {
+        const [max, windowSec] = TIER_CONFIG[tier];
+        return [
+          tier,
+          new Ratelimit({
+            redis,
+            limiter: Ratelimit.slidingWindow(max, `${windowSec} s`),
+            prefix: `ratelimit:${tier}`,
+          }),
+        ];
+      })
+    ) as Record<RateLimitTier, Ratelimit>)
   : null;
 
-export type RateLimitTier = 'auth' | 'payment';
+// ---- in-memory fallback -------------------------------------------------
+const memoryBuckets = new Map<string, { count: number; resetAt: number }>();
+const MEMORY_MAX_KEYS = 5000;
 
-/**
- * Extracts a best-effort client identifier for rate-limit keying.
- * Vercel sets x-forwarded-for; falls back to a shared bucket if absent
- * (better to rate-limit too broadly than not at all).
- */
+function memoryLimit(identifier: string, max: number, windowSec: number) {
+  const now = Date.now();
+
+  if (memoryBuckets.size > MEMORY_MAX_KEYS) {
+    for (const [key, bucket] of memoryBuckets) {
+      if (bucket.resetAt <= now) {memoryBuckets.delete(key);}
+    }
+    // Still huge after pruning -> drop everything rather than grow unbounded.
+    if (memoryBuckets.size > MEMORY_MAX_KEYS) {memoryBuckets.clear();}
+  }
+
+  const existing = memoryBuckets.get(identifier);
+  if (!existing || existing.resetAt <= now) {
+    const resetAt = now + windowSec * 1000;
+    memoryBuckets.set(identifier, { count: 1, resetAt });
+    return { success: true, limit: max, remaining: max - 1, reset: resetAt };
+  }
+
+  existing.count += 1;
+  return {
+    success: existing.count <= max,
+    limit: max,
+    remaining: Math.max(0, max - existing.count),
+    reset: existing.resetAt,
+  };
+}
+
 function getClientId(request: Request): string {
   const forwardedFor = request.headers.get('x-forwarded-for');
   return forwardedFor?.split(',')[0]?.trim() || 'unknown';
 }
 
 /**
- * Call at the top of a route handler. Returns a 429 NextResponse to
- * return immediately if the limit was exceeded, or null if the request
- * should proceed normally.
+ * Call at the top of a route handler. Returns a 429 NextResponse to return
+ * immediately if the limit was exceeded, or null if the request may proceed.
  *
- * Usage:
  *   const limited = await checkRateLimit(request, 'payment');
  *   if (limited) return limited;
  */
@@ -73,21 +101,31 @@ export async function checkRateLimit(
   request: Request,
   tier: RateLimitTier
 ): Promise<NextResponse | null> {
-  if (!limiters) {return null;} // fail open — see warning above
-
   const identifier = `${tier}:${getClientId(request)}`;
-  const { success, limit, remaining, reset } = await limiters[tier].limit(identifier);
+  const [max, windowSec] = TIER_CONFIG[tier];
 
-  if (!success) {
+  let result: { success: boolean; limit: number; remaining: number; reset: number };
+  try {
+    result = limiters
+      ? await limiters[tier].limit(identifier)
+      : memoryLimit(identifier, max, windowSec);
+  } catch (error) {
+    // Redis outage must not take the app down: fall back to memory.
+    logger.error('[rate-limit] backend error, using in-memory fallback:', error);
+    result = memoryLimit(identifier, max, windowSec);
+  }
+
+  if (!result.success) {
     logger.warn(`🚫 Rate limit exceeded: ${identifier}`);
     return NextResponse.json(
       { error: 'Too many requests. Please try again shortly.' },
       {
         status: 429,
         headers: {
-          'X-RateLimit-Limit': String(limit),
-          'X-RateLimit-Remaining': String(remaining),
-          'X-RateLimit-Reset': String(reset),
+          'Retry-After': String(Math.max(1, Math.ceil((result.reset - Date.now()) / 1000))),
+          'X-RateLimit-Limit': String(result.limit),
+          'X-RateLimit-Remaining': String(result.remaining),
+          'X-RateLimit-Reset': String(result.reset),
         },
       }
     );
