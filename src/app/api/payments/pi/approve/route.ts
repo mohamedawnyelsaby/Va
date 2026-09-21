@@ -12,6 +12,7 @@
 //   `success: true`, and the DB is only moved to 'approved' after Pi accepted.
 // - The GET diagnostic handler (which exposed configuration state) is gone.
 
+import type { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import crypto from 'crypto';
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ---- Persist ---------------------------------------------------------
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.payment.updateMany({
         where: { id: payment.id, status: 'pending' },
         data: {

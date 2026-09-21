@@ -1,6 +1,17 @@
 import sgMail from '@sendgrid/mail';
 
 import { logger } from '@/lib/logger';
+
+/** Escapes text before it is placed inside an HTML email (names, hotel names, ids are user-controlled). */
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 }
@@ -43,14 +54,14 @@ export async function sendBookingConfirmation(
 ): Promise<void> {
   const html = baseTemplate(`
     <h2>🎉 Booking Confirmed!</h2>
-    <p>Dear <strong>${userName}</strong>,</p>
+    <p>Dear <strong>${escapeHtml(userName)}</strong>,</p>
     <p>Your booking is confirmed! Here are the details:</p>
     <div class="box">
-      <p><strong>Hotel:</strong> ${hotelName}</p>
-      <p><strong>Check-in:</strong> ${checkIn}</p>
-      <p><strong>Check-out:</strong> ${checkOut}</p>
+      <p><strong>Hotel:</strong> ${escapeHtml(hotelName)}</p>
+      <p><strong>Check-in:</strong> ${escapeHtml(checkIn)}</p>
+      <p><strong>Check-out:</strong> ${escapeHtml(checkOut)}</p>
       <p><strong>Amount:</strong> π ${amount}</p>
-      <p><strong>Booking ID:</strong> ${bookingId}</p>
+      <p><strong>Booking ID:</strong> ${escapeHtml(bookingId)}</p>
     </div>
     <p style="text-align:center">
       <a href="https://va-pied.vercel.app/en/dashboard" class="btn">View My Bookings</a>
@@ -65,10 +76,10 @@ export async function sendPaymentConfirmation(
 ): Promise<void> {
   const html = baseTemplate(`
     <h2>💰 Payment Successful!</h2>
-    <p>Dear <strong>${userName}</strong>,</p>
+    <p>Dear <strong>${escapeHtml(userName)}</strong>,</p>
     <div class="box">
       <p><strong>Amount:</strong> π ${amount}</p>
-      ${txid ? `<p><strong>Transaction:</strong> ${txid.slice(0, 16)}...</p>` : ''}
+      ${txid ? `<p><strong>Transaction:</strong> ${escapeHtml(txid.slice(0, 16))}...</p>` : ''}
       <p><strong>Cashback:</strong> π ${(amount * 0.02).toFixed(4)} credited to your wallet 🎁</p>
     </div>
     <p>Your Pi payment was processed successfully on the blockchain.</p>
@@ -79,7 +90,7 @@ export async function sendPaymentConfirmation(
 export async function sendWelcomeEmail(to: string, userName: string): Promise<void> {
   const html = baseTemplate(`
     <h2>Welcome to Va Travel! 🌍</h2>
-    <p>Dear <strong>${userName}</strong>,</p>
+    <p>Dear <strong>${escapeHtml(userName)}</strong>,</p>
     <p>You've joined the world's first autonomous AI travel platform powered by Pi Network.</p>
     <div class="box">
       <p>✅ Book hotels worldwide with Pi</p>
@@ -99,8 +110,8 @@ export async function sendBookingCancellation(
 ): Promise<void> {
   const html = baseTemplate(`
     <h2>Booking Cancelled</h2>
-    <p>Dear <strong>${userName}</strong>,</p>
-    <p>Your booking <strong>${bookingId.slice(0, 8)}...</strong> has been cancelled.</p>
+    <p>Dear <strong>${escapeHtml(userName)}</strong>,</p>
+    <p>Your booking <strong>${escapeHtml(bookingId.slice(0, 8))}...</strong> has been cancelled.</p>
     <p>If you paid with Pi, your refund will be processed within 24 hours.</p>
     <p style="text-align:center">
       <a href="https://va-pied.vercel.app/en/hotels" class="btn">Book Again</a>

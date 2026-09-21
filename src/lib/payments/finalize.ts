@@ -7,6 +7,7 @@
 // transition is a single atomic `updateMany` guarded by the current status,
 // and cashback is only credited by the caller whose update actually matched.
 
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { CASHBACK_RATE, roundPi } from '@/lib/pricing';
 
@@ -26,7 +27,7 @@ export async function finalizePayment(params: {
 }): Promise<FinalizeResult> {
   const { paymentId, txid, requestId, allowedFrom, source } = params;
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // A txid can only ever settle ONE payment.
     const txidReused = await tx.payment.findFirst({
       where: { piTxid: txid, id: { not: paymentId } },

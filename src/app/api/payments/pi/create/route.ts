@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
-    if (booking.payments.some((p) => ['approved', 'completed'].includes(p.status))) {
+    if (booking.payments.some((p: { status: string }) => ['approved', 'completed'].includes(p.status))) {
       return NextResponse.json({ error: 'Booking already paid' }, { status: 400 });
     }
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     const memo = `Va Travel - ${booking.itemName}`.slice(0, 100);
 
     // Reuse a not-yet-linked pending payment for this booking.
-    const reusable = booking.payments.find((p) => p.status === 'pending' && !p.piPaymentId);
+    const reusable = booking.payments.find((p: { status: string; piPaymentId: string | null }) => p.status === 'pending' && !p.piPaymentId);
     const payment = reusable
       ? await prisma.payment.update({
           where: { id: reusable.id },

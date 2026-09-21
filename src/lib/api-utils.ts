@@ -44,3 +44,12 @@ export function getClientIp(request: Request): string {
   const forwarded = request.headers.get('x-forwarded-for');
   return forwarded?.split(',')[0]?.trim() || 'unknown';
 }
+
+/** True for Prisma "unique constraint failed" errors (code P2002), without needing a Prisma import. */
+export function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    (error as { code?: unknown }).code === 'P2002'
+  );
+}

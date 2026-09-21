@@ -30,7 +30,8 @@ export interface RoomType {
 /**
  * Resolves the nightly price for a hotel.
  * - roomType given and found  -> that room's price
- * - roomType given, not found -> throws (tampered / stale request)
+ * - roomType given, not found -> throws (tampered / stale request),
+ *   except the default placeholder 'Standard' which maps to the first room
  * - no roomType / no rooms    -> hotel.pricePerNight
  */
 export function resolveNightlyPrice(
@@ -48,8 +49,11 @@ export function resolveNightlyPrice(
 
   if (roomType && rooms.length > 0) {
     const match = rooms.find((r) => r.type === roomType);
-    if (!match) {throw new Error('UNKNOWN_ROOM_TYPE');}
-    return { roomType: match.type, price: match.price };
+    if (match) {return { roomType: match.type, price: match.price };}
+    // The booking page sends the placeholder 'Standard' when the user did not
+    // pick a room; that means "the first listed room" (previous behaviour).
+    if (roomType === 'Standard') {return { roomType: rooms[0].type, price: rooms[0].price };}
+    throw new Error('UNKNOWN_ROOM_TYPE');
   }
   return { roomType: roomType || 'Standard', price: hotel.pricePerNight };
 }

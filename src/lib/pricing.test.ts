@@ -32,6 +32,11 @@ describe('pricing', () => {
     expect(() => resolveNightlyPrice(hotel, 'Penthouse')).toThrow('UNKNOWN_ROOM_TYPE');
   });
 
+  it("maps the default 'Standard' placeholder to the first listed room", () => {
+    const hotel = { pricePerNight: 300, roomTypes: [{ type: 'Deluxe', price: 300 }] };
+    expect(resolveNightlyPrice(hotel, 'Standard')).toEqual({ roomType: 'Deluxe', price: 300 });
+  });
+
   it('falls back to the base price when the hotel has no room list', () => {
     expect(resolveNightlyPrice({ pricePerNight: 120, roomTypes: [] }, 'Standard')).toEqual({
       roomType: 'Standard',

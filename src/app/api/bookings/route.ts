@@ -13,6 +13,7 @@
 // - Re-opening the booking page reuses a recent identical pending booking
 //   instead of creating a new one on every page load.
 
+import type { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
     let currency = 'USD';
     let totalPrice = 0;
     let nights: number | undefined;
+    let nightlyPrice: number | undefined;
     let roomTypeLabel: string | undefined;
     const relation: { hotelId?: string; attractionId?: string; restaurantId?: string } = {};
 
@@ -136,6 +138,7 @@ export async function POST(request: NextRequest) {
 
       const room = resolveNightlyPrice(hotel, data.roomType);
       roomTypeLabel = room.roomType;
+      nightlyPrice = room.price;
       totalPrice = computeHotelTotal({
         nightlyPrice: room.price,
         nights,
@@ -199,7 +202,7 @@ export async function POST(request: NextRequest) {
           data: { totalPrice, currency, itemName },
         });
         return NextResponse.json(
-          { ...refreshed, piAmount, nights, roomType: roomTypeLabel },
+          { ...refreshed, piAmount, nights, nightlyPrice, roomType: roomTypeLabel },
           { status: 200 }
         );
       }
@@ -229,7 +232,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { ...booking, piAmount, nights, roomType: roomTypeLabel },
+      { ...booking, piAmount, nights, nightlyPrice, roomType: roomTypeLabel },
       { status: 201 }
     );
   } catch (error) {
@@ -266,7 +269,7 @@ export async function PATCH(request: NextRequest) {
 
     // Only bookings that are still pending AND unpaid can be cancelled here.
     // (A payment that is approved / processing must be handled as a refund.)
-    const cancelled = await prisma.$transaction(async (tx) => {
+    const cancelled = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const res = await tx.booking.updateMany({
         where: { id: bookingId, userId, status: 'pending', paymentStatus: 'unpaid' },
         data: { status: 'cancelled' },

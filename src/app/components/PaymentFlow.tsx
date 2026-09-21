@@ -30,11 +30,8 @@ export default function PaymentFlow({ booking }: { booking: Booking }) {
 
       const createRes = await fetch('/api/payments/pi/create', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          bookingId: booking.id,
-          amount: booking.amount,
-          memo: `Va Travel - ${booking.hotelName || booking.itemName || 'Booking'}`,
-        }),
+        // The server decides amount and memo from the stored booking.
+        body: JSON.stringify({ bookingId: booking.id }),
       });
       if (!createRes.ok) {throw new Error((await createRes.json()).error || 'Failed to create payment');}
       const { paymentId, amount, memo } = await createRes.json();

@@ -17,7 +17,6 @@ const PUBLIC_API_PATHS = [
   '/api/payments/pi/approve',
   '/api/payments/pi/complete',
   '/api/payments/pi/create',
-  '/api/payments/pi/link',
   '/api/auth/pi/verify',
   '/api/pi/auth',
   '/api/webhooks/pi',

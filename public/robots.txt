@@ -22,6 +22,13 @@ Disallow: /_next/
 Disallow: /auth/
 Disallow: /dashboard/
 Disallow: /settings/
+Disallow: /*/auth/
+Disallow: /*/dashboard
+Disallow: /*/settings
+Disallow: /*/wallet
+Disallow: /*/profile
+Disallow: /*/bookings
+Disallow: /*/booking
 
 # IMPORTANT:
 # Do NOT block query params.
@@ -32,9 +39,6 @@ Disallow: /settings/
 # ===========================================
 
 Sitemap: https://va-pied.vercel.app/sitemap.xml
-Sitemap: https://va-pied.vercel.app/sitemap-hotels.xml
-Sitemap: https://va-pied.vercel.app/sitemap-cities.xml
-Sitemap: https://va-pied.vercel.app/sitemap-attractions.xml
 
 # ===========================================
 # MAJOR SEARCH ENGINES
@@ -44,21 +48,49 @@ User-agent: Googlebot
 Allow: /
 Disallow: /api/
 Disallow: /admin/
+Disallow: /*/auth/
+Disallow: /*/dashboard
+Disallow: /*/settings
+Disallow: /*/wallet
+Disallow: /*/profile
+Disallow: /*/bookings
+Disallow: /*/booking
 
 User-agent: Bingbot
 Allow: /
 Disallow: /api/
 Disallow: /admin/
+Disallow: /*/auth/
+Disallow: /*/dashboard
+Disallow: /*/settings
+Disallow: /*/wallet
+Disallow: /*/profile
+Disallow: /*/bookings
+Disallow: /*/booking
 
 User-agent: Yandexbot
 Allow: /
 Disallow: /api/
 Disallow: /admin/
+Disallow: /*/auth/
+Disallow: /*/dashboard
+Disallow: /*/settings
+Disallow: /*/wallet
+Disallow: /*/profile
+Disallow: /*/bookings
+Disallow: /*/booking
 
 User-agent: Baiduspider
 Allow: /
 Disallow: /api/
 Disallow: /admin/
+Disallow: /*/auth/
+Disallow: /*/dashboard
+Disallow: /*/settings
+Disallow: /*/wallet
+Disallow: /*/profile
+Disallow: /*/bookings
+Disallow: /*/booking
 
 # ===========================================
 # BLOCK AGGRESSIVE SCRAPERS

@@ -280,9 +280,9 @@ model Payment {
   status          String   @default("pending")
 
   // Pi Network Details
-  piPaymentId     String?
+  piPaymentId     String?         @unique
   piAmount        Float?
-  piTxid          String?
+  piTxid          String?         @unique
 
   // Stripe Details
   stripePaymentId String?
@@ -350,6 +350,8 @@ model Review {
   @@index([hotelId])
   @@index([attractionId])
   @@index([restaurantId])
+
+  @@unique([userId, itemId, itemType])
 }
 
 // ============================================

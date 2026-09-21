@@ -47,16 +47,13 @@ export default function BookingPage() {
       const hotelData = await hotelRes.json();
       setHotel(hotelData);
 
-      const nights = Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000));
-      const roomData = hotelData.roomTypes?.find((r: { type: string; price: number }) => r.type === roomType) || hotelData.roomTypes?.[0];
-      const pricePerNight = roomData?.price || hotelData.pricePerNight || 0;
-      const subtotal = pricePerNight * nights * rooms;
-      const totalPrice = parseFloat((subtotal * 1.1).toFixed(2));
-
+      // The SERVER computes the price (room x nights x rooms + tax). We only
+      // send what the user chose and display what the server returns, so the
+      // amount shown here is always the amount that will be charged.
       const bookingRes = await fetch('/api/bookings', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: 'hotel', itemId, itemName: hotelData.name,
+          type: 'hotel', itemId, roomType,
           startDate: new Date(checkIn).toISOString(), endDate: new Date(checkOut).toISOString(),
           checkInDate: new Date(checkIn).toISOString(), checkOutDate: new Date(checkOut).toISOString(),
           guests, rooms,
@@ -65,7 +62,17 @@ export default function BookingPage() {
       const bookingData = await bookingRes.json();
       if (!bookingRes.ok) {throw new Error(bookingData.error || 'Failed to create booking');}
 
-      setBooking({ ...bookingData, checkIn, checkOut, nights, pricePerNight, amount: totalPrice, currency: hotelData.currency || 'USD', roomType, hotelName: hotelData.name });
+      const nights = bookingData.nights ?? Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000));
+      setBooking({
+        ...bookingData,
+        checkIn, checkOut, nights,
+        pricePerNight: bookingData.nightlyPrice ?? hotelData.pricePerNight,
+        amount: bookingData.piAmount,          // what will be charged, in Pi
+        totalPrice: bookingData.totalPrice,    // same total in the hotel currency
+        currency: bookingData.currency,
+        roomType: bookingData.roomType || roomType,
+        hotelName: hotelData.name,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to initialize booking');
     } finally { setLoading(false); }
@@ -73,11 +80,15 @@ export default function BookingPage() {
 
   useEffect(() => {
     if (status === 'loading') {return;}
+    if (status === 'unauthenticated') {
+      router.replace(`/${locale}/auth/signin`);
+      return;
+    }
     if (!itemId || !checkIn || !checkOut) {
       setError('Missing booking details. Please go back and select dates.'); setLoading(false); return;
     }
     initBooking();
-  }, [status, itemId, checkIn, checkOut, initBooking]);
+  }, [status, itemId, checkIn, checkOut, initBooking, router, locale]);
 
   if (status === 'loading' || loading) {return <Spinner label="Preparing Your Booking" />;}
 
@@ -171,7 +182,7 @@ export default function BookingPage() {
               <div style={{ height: '1px', background: 'var(--vg-gold-border)', margin: '0.75rem 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.5rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--vg-text-2)' }}>Total</span>
-                <span className="vg-stat-num" style={{ fontSize: '1.5rem' }}>{formatCurrency(booking.amount ?? 0, booking.currency)}</span>
+                <span className="vg-stat-num" style={{ fontSize: '1.5rem' }}>{formatCurrency(booking.totalPrice ?? 0, booking.currency)} <span style={{ fontSize: '0.8rem' }}>≈ π {booking.amount ?? 0}</span></span>
               </div>
             </div>
 

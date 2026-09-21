@@ -14,6 +14,7 @@
 // NOTE: pi-app.json currently has an empty paymentWebhookUrl, so this handler
 // only runs if you configure the webhook in the Pi Developer Portal.
 
+import type { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/db';
@@ -165,7 +166,7 @@ async function handlePaymentClosed(payment: PiWebhookPayment, status: 'cancelled
     return { status: 'not_found' };
   }
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const updated = await tx.payment.updateMany({
       where: { id: dbPayment.id, status: { in: ['pending', 'approved'] } },
       data: {
