@@ -126,6 +126,7 @@ async function main() {
         email: 'admin@vatravel.com',
         password: hashedPassword,
         name: 'Admin User',
+        role: 'admin',
       },
     }),
     prisma.user.create({

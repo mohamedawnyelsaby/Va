@@ -15,7 +15,11 @@ export interface BookingHotelSummary {
 
 export interface Booking {
   id?: string;
+  /** Amount to pay, in Pi (computed by the server) */
   amount?: number;
+  /** Total in the hotel's own currency (computed by the server) */
+  totalPrice?: number;
+  /** Currency of `totalPrice` / `pricePerNight` */
   currency?: string;
   hotelName?: string;
   itemName?: string;

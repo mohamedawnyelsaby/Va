@@ -1,4 +1,9 @@
-version: '3.8'
+# Local / self-hosted stack.
+# Required in your .env (no insecure defaults any more):
+#   POSTGRES_PASSWORD, REDIS_PASSWORD, NEXTAUTH_SECRET
+# Postgres and Redis are bound to 127.0.0.1 only — they are not reachable
+# from other machines. Apply the database schema with `npx prisma db push`
+# from a machine that has the repo (the runtime image has no Prisma CLI).
 
 services:
   postgres:
@@ -7,10 +12,10 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-vatravel}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vatravel123}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: ${POSTGRES_DB:-vatravel}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -24,15 +29,17 @@ services:
     container_name: va-travel-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
 
   app:
     build:
@@ -42,20 +49,20 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-vatravel}:${POSTGRES_PASSWORD:-vatravel123}@postgres:5432/${POSTGRES_DB:-vatravel}
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-vatravel}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vatravel}
+      - DIRECT_URL=postgresql://${POSTGRES_USER:-vatravel}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vatravel}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:?Set NEXTAUTH_SECRET in .env}
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./prisma:/app/prisma
-    command: sh -c "npx prisma migrate deploy && node server.js"
 
 volumes:
   postgres_data:

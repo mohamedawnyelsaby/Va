@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import { logger } from '@/lib/logger';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { isUniqueViolation } from '@/lib/api-utils';
 const passwordSchema = z
   .string()
   .min(8, 'Password must be at least 8 characters')
@@ -18,7 +19,10 @@ const signupSchema = z.object({
   email: z
     .string()
     .email('Invalid email address')
-    .toLowerCase(),
+    .toLowerCase()
+    // '<uid>@pi.network' addresses are reserved for Pi Network accounts;
+    // allowing them here would let someone squat a real Pi user's account.
+    .refine((e) => !e.endsWith('@pi.network'), 'This email domain is not allowed'),
   password: passwordSchema,
   confirmPassword: z.string(),
   name: z
@@ -71,12 +75,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    logger.log('✅ New user created:', {
-      id: user.id,
-      email: user.email,
-      ip,
-      userAgent,
-    });
+    // No email in logs (PII).
+    logger.log('✅ New user created:', { id: user.id, ip, userAgent });
 
     return NextResponse.json(
       {
@@ -98,6 +98,15 @@ export async function POST(request: NextRequest) {
           error: firstError.message,
           field: firstError.path.join('.'),
         },
+        { status: 400 }
+      );
+    }
+
+    // Two simultaneous signups with the same email: the loser hits the unique
+    // constraint. That is a 400, not a server error.
+    if (isUniqueViolation(error)) {
+      return NextResponse.json(
+        { error: 'An account with this email already exists' },
         { status: 400 }
       );
     }

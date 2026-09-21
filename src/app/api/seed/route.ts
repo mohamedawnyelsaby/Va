@@ -151,6 +151,7 @@ export async function POST(request: Request) {
           email: 'admin@vatravel.com',
           password: adminHash,
           name: 'Admin User',
+          role: 'admin',
         },
       }),
       prisma.user.create({

@@ -6,9 +6,18 @@ import { authOptions } from '@/lib/auth/options';
 import { z } from 'zod';
 
 const updateProfileSchema = z.object({
-  name: z.string().min(2).optional(),
-  image: z.string().url().optional(),
+  name: z.string().trim().min(2).max(100).optional(),
+  image: z
+    .string()
+    .url()
+    .max(2048)
+    .refine((u) => u.startsWith('https://'), 'Image URL must use https')
+    .optional(),
 });
+
+// Deleting an account cascades to bookings and payments, so it must be an
+// explicit, deliberate request.
+const deleteSchema = z.object({ confirm: z.literal('DELETE') });
 
 export async function GET(_request: NextRequest) {
   try {
@@ -85,12 +94,20 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-export async function DELETE(_request: NextRequest) {
+export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const confirmation = deleteSchema.safeParse(await request.json().catch(() => null));
+    if (!confirmation.success) {
+      return NextResponse.json(
+        { error: 'Confirmation required: send { "confirm": "DELETE" }' },
+        { status: 400 }
+      );
     }
 
     await prisma.user.delete({ where: { id: session.user.id } });

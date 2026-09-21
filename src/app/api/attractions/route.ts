@@ -1,21 +1,28 @@
+// src/app/api/attractions/route.ts
+// SECURITY FIXES: POST requires an ADMIN and validated input; GET pagination
+// is clamped and `sortBy` is allow-listed.
+
 import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/options';
+import { requireAdmin } from '@/lib/auth/guards';
+import { attractionBaseSchema } from '@/lib/validation/catalog';
+import { parsePagination, pickAllowed, parseFiniteNumber } from '@/lib/api-utils';
+
+const SORT_FIELDS = ['rating', 'reviewCount', 'ticketPrice', 'name', 'createdAt'] as const;
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '12');
+    const { page, limit, skip } = parsePagination(searchParams, 12, 50);
     const cityId = searchParams.get('cityId');
     const category = searchParams.get('category');
-    const minPrice = searchParams.get('minPrice');
-    const maxPrice = searchParams.get('maxPrice');
-    const sortBy = searchParams.get('sortBy') || 'rating';
+    const minPrice = parseFiniteNumber(searchParams.get('minPrice'));
+    const maxPrice = parseFiniteNumber(searchParams.get('maxPrice'));
+    const sortBy = pickAllowed(searchParams.get('sortBy'), SORT_FIELDS, 'rating');
     const order: 'asc' | 'desc' = searchParams.get('order') === 'asc' ? 'asc' : 'desc';
-    const search = searchParams.get('search');
+    const search = searchParams.get('search')?.slice(0, 100);
     const isPopular = searchParams.get('popular') === 'true';
 
     const where: Prisma.AttractionWhereInput = {};
@@ -28,10 +35,10 @@ export async function GET(request: NextRequest) {
       where.category = category;
     }
 
-    if (minPrice || maxPrice) {
+    if (minPrice !== undefined || maxPrice !== undefined) {
       where.ticketPrice = {};
-      if (minPrice) {where.ticketPrice.gte = parseFloat(minPrice);}
-      if (maxPrice) {where.ticketPrice.lte = parseFloat(maxPrice);}
+      if (minPrice !== undefined) {where.ticketPrice.gte = minPrice;}
+      if (maxPrice !== undefined) {where.ticketPrice.lte = maxPrice;}
     }
 
     if (isPopular) {
@@ -46,24 +53,15 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const orderBy: Record<string, 'asc' | 'desc'> = {};
-    orderBy[sortBy] = order;
-
     const [attractions, total] = await Promise.all([
       prisma.attraction.findMany({
         where,
-        orderBy,
-        skip: (page - 1) * limit,
+        orderBy: { [sortBy]: order },
+        skip,
         take: limit,
         include: {
           cityRelation: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              country: true,
-              countryCode: true,
-            },
+            select: { id: true, name: true, slug: true, country: true, countryCode: true },
           },
         },
       }),
@@ -72,76 +70,56 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       attractions,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
     console.error('Attractions API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch attractions' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch attractions' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const guard = await requireAdmin();
+    if ('response' in guard) {return guard.response;}
 
-    const body = await request.json();
+    const data = attractionBaseSchema.parse(await request.json());
 
-    const city = await prisma.city.findUnique({
-      where: { id: body.cityId },
-    });
-
+    const city = await prisma.city.findUnique({ where: { id: data.cityId } });
     if (!city) {
-      return NextResponse.json(
-        { error: 'City not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'City not found' }, { status: 404 });
     }
 
     const attraction = await prisma.attraction.create({
       data: {
-        name: body.name,
-        description: body.description,
-        shortDescription: body.shortDescription || body.description.substring(0, 150),
-        category: body.category,
-        subcategory: body.subcategory,
-        address: body.address,
+        name: data.name,
+        description: data.description,
+        shortDescription: data.shortDescription || data.description.substring(0, 150),
+        category: data.category,
+        subcategory: data.subcategory,
+        address: data.address,
         city: city.name,
         country: city.country,
-        latitude: body.latitude,
-        longitude: body.longitude,
-        ticketPrice: body.ticketPrice,
-        currency: body.currency || city.currency,
-        openingHours: body.openingHours,
-        duration: body.duration,
-        accessibility: body.accessibility || [],
-        images: body.images || [],
-        thumbnail: body.thumbnail || (body.images?.[0] || ''),
-        cityId: body.cityId,
-        isPopular: body.isPopular || false,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        ticketPrice: data.ticketPrice,
+        currency: data.currency || city.currency,
+        openingHours: data.openingHours as Prisma.InputJsonValue | undefined,
+        duration: data.duration,
+        accessibility: data.accessibility ?? [],
+        images: data.images ?? [],
+        thumbnail: data.thumbnail || data.images?.[0] || '',
+        cityId: data.cityId,
+        isPopular: data.isPopular ?? false,
       },
     });
 
     return NextResponse.json(attraction, { status: 201 });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors[0].message, field: error.errors[0].path.join('.') }, { status: 400 });
+    }
     console.error('Create attraction error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create attraction' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create attraction' }, { status: 500 });
   }
 }

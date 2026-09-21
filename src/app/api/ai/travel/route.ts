@@ -3,8 +3,36 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { checkRateLimit } from '@/lib/rate-limit';
 import type { RapidApiHotel } from '@/types/rapidapi';
+
+// SECURITY / COST FIXES
+// - Rate limited (this endpoint spends paid Gemini / OpenAI / RapidAPI quota
+//   and used to be completely open).
+// - Input validated & capped: message length, history length, and roles are
+//   restricted to user/assistant (a client could previously inject arbitrary
+//   roles / huge histories).
+// - The Gemini key travels in a header, not in the URL (URLs end up in logs).
+// - Every outbound request has a timeout.
+// - LLM-produced search params are validated before reaching RapidAPI.
+
+const FETCH_TIMEOUT_MS = 15_000;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+const requestSchema = z.object({
+  message: z.string().trim().min(1).max(2000),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant']),
+        content: z.string().max(4000),
+      })
+    )
+    .max(20)
+    .default([]),
+});
 
 interface ChatMessage {
   role: string;
@@ -27,10 +55,15 @@ const RAPIDAPI_HOST = 'booking-com15.p.rapidapi.com';
 
 async function searchRealHotels(destination: string, checkIn: string, checkOut: string, budget?: number, guests?: number) {
   if (!RAPIDAPI_KEY) {return [];}
+  // Never forward unvalidated model output to a paid API.
+  if (!DATE_RE.test(checkIn) || !DATE_RE.test(checkOut) || checkOut <= checkIn) {return [];}
+  destination = String(destination).slice(0, 100);
+  guests = Math.min(20, Math.max(1, Math.trunc(Number(guests)) || 2));
+  budget = Number.isFinite(Number(budget)) && Number(budget) > 0 ? Number(budget) : undefined;
   try {
     const destRes = await fetch(
       `https://${RAPIDAPI_HOST}/api/v1/hotels/searchDestination?query=${encodeURIComponent(destination)}`,
-      { headers: { 'X-RapidAPI-Key': RAPIDAPI_KEY, 'X-RapidAPI-Host': RAPIDAPI_HOST } }
+      { headers: { 'X-RapidAPI-Key': RAPIDAPI_KEY, 'X-RapidAPI-Host': RAPIDAPI_HOST }, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }
     );
     const destData = await destRes.json();
     if (!destData.data?.length) {return [];}
@@ -50,7 +83,7 @@ async function searchRealHotels(destination: string, checkIn: string, checkOut: 
         currency_code: 'USD',
         languagecode: 'en-us',
       }),
-      { headers: { 'X-RapidAPI-Key': RAPIDAPI_KEY, 'X-RapidAPI-Host': RAPIDAPI_HOST } }
+      { headers: { 'X-RapidAPI-Key': RAPIDAPI_KEY, 'X-RapidAPI-Host': RAPIDAPI_HOST }, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }
     );
     const hotelsData = await hotelsRes.json();
     if (!hotelsData.data?.hotels) {return [];}
@@ -80,9 +113,15 @@ async function searchRealHotels(destination: string, checkIn: string, checkOut: 
 }
 
 export async function POST(request: NextRequest) {
+  const limited = await checkRateLimit(request, 'ai');
+  if (limited) {return limited;}
+
   try {
-    const body = await request.json();
-    const { message, history = [] } = body;
+    const parsed = requestSchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+    }
+    const { message, history } = parsed.data;
 
     const today = new Date().toISOString().split('T')[0];
     const messages = [...history, { role: 'user', content: message }];
@@ -128,10 +167,11 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
     const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
     for (const model of models) {
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemPrompt }] },
             contents: geminiMessages,
@@ -154,6 +194,7 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
       logger.log('Falling back to OpenAI...');
       const oaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${OPENAI_API_KEY}`,

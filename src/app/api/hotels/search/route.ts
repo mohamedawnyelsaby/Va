@@ -5,17 +5,36 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { RapidApiHotel } from '@/types/rapidapi';
 
 import { logger } from '@/lib/logger';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { clampInt } from '@/lib/api-utils';
+
+// FIXES: rate limited (paid RapidAPI quota), inputs validated instead of
+// being forwarded blindly, request timeouts, internal error text no longer
+// returned to the client.
+const FETCH_TIMEOUT_MS = 15_000;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = 'booking-com15.p.rapidapi.com';
 
 export async function GET(request: NextRequest) {
+  const limited = await checkRateLimit(request, 'search');
+  if (limited) {return limited;}
+
   const { searchParams } = new URL(request.url);
-  
-  const destination = searchParams.get('destination') || 'Dubai';
+
+  const destination = (searchParams.get('destination') || 'Dubai').trim().slice(0, 100);
   const checkIn = searchParams.get('checkIn') || getTomorrow();
   const checkOut = searchParams.get('checkOut') || getDayAfter();
-  const adults = searchParams.get('adults') || '1';
-  const rooms = searchParams.get('rooms') || '1';
+  const adults = String(clampInt(searchParams.get('adults'), 1, 1, 20));
+  const rooms = String(clampInt(searchParams.get('rooms'), 1, 1, 10));
+
+  if (!destination) {
+    return NextResponse.json({ error: 'Destination is required', hotels: [] }, { status: 400 });
+  }
+  if (!DATE_RE.test(checkIn) || !DATE_RE.test(checkOut) || checkOut <= checkIn) {
+    return NextResponse.json({ error: 'Invalid dates', hotels: [] }, { status: 400 });
+  }
 
   if (!RAPIDAPI_KEY) {
     return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
@@ -32,6 +51,7 @@ export async function GET(request: NextRequest) {
           'X-RapidAPI-Key': RAPIDAPI_KEY,
           'X-RapidAPI-Host': RAPIDAPI_HOST,
         },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       }
     );
 
@@ -66,6 +86,7 @@ export async function GET(request: NextRequest) {
           'X-RapidAPI-Key': RAPIDAPI_KEY,
           'X-RapidAPI-Host': RAPIDAPI_HOST,
         },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       }
     );
 
@@ -116,7 +137,7 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     logger.error('Hotels search error:', msg);
-    return NextResponse.json({ error: msg, hotels: [] }, { status: 500 });
+    return NextResponse.json({ error: 'Hotel search failed', hotels: [] }, { status: 502 });
   }
 }
 

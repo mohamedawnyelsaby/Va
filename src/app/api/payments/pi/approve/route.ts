@@ -1,179 +1,167 @@
 // src/app/api/payments/pi/approve/route.ts
-// SECURITY FIX (2026-07-13):
-// 1) No session/ownership check existed — anyone who knew a paymentId or
-//    piPaymentId could trigger an "approve" call against Pi's API and flip
-//    the payment/booking into 'approved'/'processing' state for a payment
-//    that wasn't theirs. Now requires a session whose userId matches the
-//    payment's owner before calling Pi at all.
-// 2) The GET diagnostic endpoint returned the first 8 characters of the
-//    real PI_API_KEY to any visitor (`piApiKeyPrefix`). Removed entirely —
-//    a health check never needs to expose part of a real secret.
+//
+// Server-side approval of a Pi payment (Pi SDK: onReadyForServerApproval).
+//
+// SECURITY FIXES (on top of the earlier session + ownership checks)
+// - The Pi payment is fetched from Pi's own API and must MATCH our internal
+//   payment: same amount, not cancelled, and its metadata must reference this
+//   internal payment id. Before, any piPaymentId sent by the client was
+//   approved and attached, whatever it was worth.
+// - A piPaymentId can be bound to ONE internal payment only.
+// - A failed call to Pi is now reported (502) instead of returning
+//   `success: true`, and the DB is only moved to 'approved' after Pi accepted.
+// - The GET diagnostic handler (which exposed configuration state) is gone.
 
+import type { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-import { checkRateLimit } from '@/lib/rate-limit';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/options';
-import { prisma } from '@/lib/db';
+import { z } from 'zod';
 import crypto from 'crypto';
-
+import { checkRateLimit } from '@/lib/rate-limit';
+import { requireUser } from '@/lib/auth/guards';
+import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
-const PI_API_URL = 'https://api.minepi.com';
-const PI_API_KEY = process.env.PI_API_KEY;
-const IS_SANDBOX =
-  process.env.PI_SANDBOX === 'true' ||
-  process.env.NEXT_PUBLIC_PI_SANDBOX === 'true';
+import { getPayment, approvePayment } from '@/lib/pi-network/platform-api';
 
-async function updateDbBackground(
-  internalPaymentId: string | undefined,
-  piPaymentId: string | undefined,
-  requestId: string
-): Promise<void> {
-  try {
-    if (!internalPaymentId && !piPaymentId) {return;}
+const AMOUNT_TOLERANCE = 1e-6;
 
-    const payment = await prisma.payment.findFirst({
-      where: internalPaymentId
-        ? { id: internalPaymentId }
-        : { piPaymentId },
-    });
-
-    if (!payment && internalPaymentId) {
-      const p2 = await prisma.payment.findFirst({ where: { piPaymentId: internalPaymentId } });
-      if (!p2) { logger.error(`[${requestId}] DB: payment not found`); return; }
-      await prisma.payment.update({
-        where: { id: p2.id },
-        data: { status: 'approved', piPaymentId: piPaymentId || internalPaymentId,
-          metadata: { ...((p2.metadata as object) || {}), approvedAt: new Date().toISOString(), requestId } },
-      });
-      if (p2.bookingId) {await prisma.booking.update({ where: { id: p2.bookingId }, data: { paymentStatus: 'processing' } });}
-      logger.log(`[${requestId}] DB: approved via piPaymentId fallback`);
-      return;
-    }
-
-    if (!payment) { logger.error(`[${requestId}] DB: not found`); return; }
-    if (payment.status === 'approved' || payment.status === 'completed') {
-      logger.log(`[${requestId}] DB: already approved`); return;
-    }
-
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        status: 'approved',
-        piPaymentId: piPaymentId || payment.piPaymentId,
-        metadata: { ...((payment.metadata as object) || {}), approvedAt: new Date().toISOString(), requestId, sandboxMode: IS_SANDBOX },
-      },
-    });
-    if (payment.bookingId) {
-      await prisma.booking.update({ where: { id: payment.bookingId }, data: { paymentStatus: 'processing' } });
-    }
-    logger.log(`[${requestId}] DB: payment approved ✅`);
-  } catch (err) {
-    logger.error(`[${requestId}] DB error:`, err instanceof Error ? err.message : err);
-  }
-}
+const bodySchema = z.object({
+  paymentId: z.string().min(1).max(64),
+  piPaymentId: z.string().min(10).max(200),
+});
 
 export async function POST(request: NextRequest) {
   const limited = await checkRateLimit(request, 'payment');
   if (limited) {return limited;}
 
   const requestId = crypto.randomUUID();
-  logger.log(`[${requestId}] 📥 v8 ${new Date().toISOString()} sandbox=${IS_SANDBOX} apiKey=${!!PI_API_KEY}`);
 
-  // ✅ FIX: require a real, verified session before doing anything.
-  const session = await getServerSession(authOptions);
-  const sessionUserId = session?.user?.id;
-  if (!sessionUserId) {
-    return NextResponse.json({ error: 'Unauthorized', requestId }, { status: 401 });
+  const guard = await requireUser();
+  if ('response' in guard) {return guard.response;}
+  const { userId } = guard;
+
+  let body: z.infer<typeof bodySchema>;
+  try {
+    body = bodySchema.parse(await request.json());
+  } catch {
+    return NextResponse.json({ error: 'Invalid request', requestId }, { status: 400 });
   }
-
-  let paymentId: string | undefined;
-  let piPaymentId: string | undefined;
+  const { paymentId, piPaymentId } = body;
 
   try {
-    const body = await request.json();
-    paymentId = body?.paymentId;
-    piPaymentId = body?.piPaymentId;
-    logger.log(`[${requestId}] body: paymentId=${paymentId} piPaymentId=${piPaymentId}`);
-  } catch (err) {
-    logger.error(`[${requestId}] parse error:`, err);
-    return NextResponse.json({ success: true, requestId, warning: 'parse error' });
-  }
+    const payment = await prisma.payment.findUnique({
+      where: { id: paymentId },
+      include: { booking: { select: { status: true, paymentStatus: true } } },
+    });
 
-  if (!paymentId && !piPaymentId) {
-    return NextResponse.json({ error: 'paymentId or piPaymentId is required', requestId }, { status: 400 });
-  }
-
-  // ✅ FIX: ownership check — look the payment up and confirm it belongs
-  // to the current session before ever calling Pi's API.
-  const existingPayment = await prisma.payment.findFirst({
-    where: paymentId ? { id: paymentId } : { piPaymentId },
-  });
-
-  if (!existingPayment) {
-    return NextResponse.json({ error: 'Payment not found', requestId }, { status: 404 });
-  }
-
-  if (existingPayment.userId !== sessionUserId) {
-    return NextResponse.json({ error: 'Forbidden', requestId }, { status: 403 });
-  }
-
-  // KEY: In Pi SDK, onReadyForServerApproval receives paymentId = Pi payment ID
-  // So if piPaymentId not sent, use paymentId as the Pi payment ID
-  const piIdToApprove = piPaymentId || paymentId;
-
-  logger.log(`[${requestId}] will call Pi API with: ${piIdToApprove}`);
-
-  // Call Pi Platform SYNCHRONOUSLY — this is what Pi wallet waits for
-  if (piIdToApprove && PI_API_KEY) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 7000);
-
-    try {
-      logger.log(`[${requestId}] 🌐 POST ${PI_API_URL}/v2/payments/${piIdToApprove}/approve`);
-      const piRes = await fetch(
-        `${PI_API_URL}/v2/payments/${piIdToApprove}/approve`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Key ${PI_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          signal: controller.signal,
-        }
-      );
-      clearTimeout(timer);
-      const text = await piRes.text();
-      logger.log(`[${requestId}] Pi API response: ${piRes.status} — ${text.slice(0, 400)}`);
-    } catch (err) {
-      clearTimeout(timer);
-      logger.error(`[${requestId}] Pi API error:`, err instanceof Error ? err.message : err);
+    if (!payment) {
+      return NextResponse.json({ error: 'Payment not found', requestId }, { status: 404 });
     }
-  } else {
-    logger.warn(`[${requestId}] ⚠️ skipping Pi API — piId=${piIdToApprove} apiKey=${!!PI_API_KEY}`);
+    if (payment.userId !== userId) {
+      return NextResponse.json({ error: 'Forbidden', requestId }, { status: 403 });
+    }
+
+    // Idempotent retry of an already-approved payment.
+    if (payment.status === 'approved' && payment.piPaymentId === piPaymentId) {
+      return NextResponse.json({ success: true, paymentId, piPaymentId, status: 'approved', requestId });
+    }
+    if (payment.status !== 'pending') {
+      return NextResponse.json(
+        { error: `Cannot approve a payment in '${payment.status}' state`, requestId },
+        { status: 409 }
+      );
+    }
+    if (payment.booking && payment.booking.status === 'cancelled') {
+      return NextResponse.json({ error: 'Booking was cancelled', requestId }, { status: 409 });
+    }
+    if (payment.piPaymentId && payment.piPaymentId !== piPaymentId) {
+      return NextResponse.json({ error: 'Payment already linked to another Pi payment', requestId }, { status: 409 });
+    }
+
+    const conflict = await prisma.payment.findFirst({
+      where: { piPaymentId, id: { not: payment.id } },
+      select: { id: true },
+    });
+    if (conflict) {
+      return NextResponse.json({ error: 'Pi payment already in use', requestId }, { status: 409 });
+    }
+
+    // ---- Verify against Pi's own record ---------------------------------
+    let piPayment;
+    try {
+      piPayment = await getPayment(piPaymentId);
+    } catch (err) {
+      logger.error(`[${requestId}] Pi getPayment failed:`, err instanceof Error ? err.message : err);
+      return NextResponse.json({ error: 'Could not verify payment with Pi Network', requestId }, { status: 502 });
+    }
+
+    const referencedPaymentId = (piPayment.metadata as { paymentId?: string } | undefined)?.paymentId;
+    const problems: string[] = [];
+    if (Math.abs(piPayment.amount - payment.amount) > AMOUNT_TOLERANCE) {problems.push('amount mismatch');}
+    if (referencedPaymentId !== payment.id) {problems.push('payment reference mismatch');}
+    if (piPayment.direction && piPayment.direction !== 'user_to_app') {problems.push('wrong direction');}
+    if (piPayment.status?.cancelled || piPayment.status?.user_cancelled) {problems.push('payment cancelled');}
+
+    if (problems.length > 0) {
+      logger.warn(`[${requestId}] Pi payment rejected: ${problems.join(', ')}`);
+      return NextResponse.json({ error: 'Payment verification failed', requestId }, { status: 400 });
+    }
+
+    // ---- Bind piPaymentId to this payment (atomic) -----------------------
+    const bound = await prisma.payment.updateMany({
+      where: {
+        id: payment.id,
+        status: 'pending',
+        OR: [{ piPaymentId: null }, { piPaymentId }],
+      },
+      data: { piPaymentId },
+    });
+    if (bound.count === 0) {
+      return NextResponse.json({ error: 'Payment state changed, retry', requestId }, { status: 409 });
+    }
+
+    // ---- Approve on Pi ---------------------------------------------------
+    if (!piPayment.status?.developer_approved) {
+      try {
+        await approvePayment(piPaymentId);
+      } catch (err) {
+        // Pi may reject a duplicate approve; re-check its real state.
+        let approvedNow = false;
+        try {
+          approvedNow = Boolean((await getPayment(piPaymentId)).status?.developer_approved);
+        } catch {
+          /* fall through */
+        }
+        if (!approvedNow) {
+          logger.error(`[${requestId}] Pi approve failed:`, err instanceof Error ? err.message : err);
+          return NextResponse.json({ error: 'Pi Network approval failed', requestId }, { status: 502 });
+        }
+      }
+    }
+
+    // ---- Persist ---------------------------------------------------------
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      await tx.payment.updateMany({
+        where: { id: payment.id, status: 'pending' },
+        data: {
+          status: 'approved',
+          metadata: {
+            ...((payment.metadata as object) || {}),
+            approvedAt: new Date().toISOString(),
+            requestId,
+          },
+        },
+      });
+      if (payment.bookingId) {
+        await tx.booking.updateMany({
+          where: { id: payment.bookingId, paymentStatus: 'unpaid' },
+          data: { paymentStatus: 'processing' },
+        });
+      }
+    });
+
+    return NextResponse.json({ success: true, paymentId, piPaymentId, status: 'approved', requestId });
+  } catch (error) {
+    logger.error(`[${requestId}] approve error:`, error);
+    return NextResponse.json({ error: 'Payment approval failed', requestId }, { status: 500 });
   }
-
-  // Background DB update (non-blocking)
-  updateDbBackground(paymentId, piPaymentId || paymentId, requestId).catch(e =>
-    logger.error(`[${requestId}] BG:`, e)
-  );
-
-  logger.log(`[${requestId}] ✅ returning 200`);
-  return NextResponse.json({
-    success: true,
-    paymentId,
-    piPaymentId: piIdToApprove,
-    status: 'approved',
-    requestId,
-  });
-}
-
-export async function GET() {
-  return NextResponse.json({
-    service: 'Payment Approval v8',
-    status: 'operational',
-    sandbox: IS_SANDBOX,
-    piApiKeySet: !!PI_API_KEY,
-    // ✅ FIX: no longer exposes any part of the real API key.
-    note: 'v8: ownership-checked, piId = piPaymentId || paymentId',
-  });
 }
