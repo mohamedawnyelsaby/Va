@@ -19,6 +19,8 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth/guards';
 import { parsePagination } from '@/lib/api-utils';
+import { logger } from '@/lib/logger';
+import { captureException } from '@/lib/monitoring/sentry';
 import {
   computeHotelTotal,
   countNights,
@@ -244,6 +246,14 @@ export async function POST(request: NextRequest) {
     }
     if (error instanceof Error && error.message === 'UNKNOWN_ROOM_TYPE') {
       return NextResponse.json({ error: 'Unknown room type' }, { status: 400 });
+    }
+    if (error instanceof Error && error.message.startsWith('PI_PER_')) {
+      logger.error('Create booking error: missing conversion rate:', error.message);
+      captureException(error, { context: 'bookings POST - missing PI_PER_ rate' });
+      return NextResponse.json(
+        { error: 'Bookings in this currency are temporarily unavailable. Please try again later.' },
+        { status: 503 }
+      );
     }
     console.error('Create booking error:', error);
     return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 });

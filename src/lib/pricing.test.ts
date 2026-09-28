@@ -44,13 +44,36 @@ describe('pricing', () => {
     });
   });
 
-  it('converts to Pi with an env rate, and 1:1 without one', () => {
+  it('converts to Pi with an env rate, and 1:1 in development without one', () => {
     delete process.env.PI_PER_EUR;
     expect(toPiAmount(100, 'EUR')).toBe(100);
     process.env.PI_PER_EUR = '3.5';
     expect(toPiAmount(100, 'eur')).toBe(350);
     expect(toPiAmount(12.5, 'PI')).toBe(12.5);
     delete process.env.PI_PER_EUR;
+  });
+
+  it('refuses to charge/credit Pi in production with no configured rate', () => {
+    const original = process.env.NODE_ENV;
+    delete process.env.PI_PER_GBP;
+    process.env.NODE_ENV = 'production';
+    try {
+      expect(() => toPiAmount(100, 'GBP')).toThrow(/PI_PER_GBP/);
+    } finally {
+      process.env.NODE_ENV = original;
+    }
+  });
+
+  it('still converts correctly in production when the rate IS configured', () => {
+    const original = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    process.env.PI_PER_GBP = '4';
+    try {
+      expect(toPiAmount(50, 'GBP')).toBe(200);
+    } finally {
+      process.env.NODE_ENV = original;
+      delete process.env.PI_PER_GBP;
+    }
   });
 
   it('round2 avoids float noise', () => {

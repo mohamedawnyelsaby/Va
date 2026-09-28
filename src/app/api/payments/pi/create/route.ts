@@ -14,6 +14,8 @@ import { z } from 'zod';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { requireUser } from '@/lib/auth/guards';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
+import { captureException } from '@/lib/monitoring/sentry';
 import { toPiAmount } from '@/lib/pricing';
 
 const bodySchema = z.object({ bookingId: z.string().min(1).max(64) });
@@ -98,6 +100,17 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
+    }
+    if (error instanceof Error && error.message.startsWith('PI_PER_')) {
+      // Missing conversion rate for this currency: surfaced loudly so it gets
+      // fixed immediately, and the user gets a clear reason instead of a
+      // generic 500.
+      logger.error('Create Pi payment error: missing conversion rate:', error.message);
+      captureException(error, { context: 'payments/pi/create - missing PI_PER_ rate' });
+      return NextResponse.json(
+        { error: 'Pi payments are temporarily unavailable for this currency. Please try again later.' },
+        { status: 503 }
+      );
     }
     console.error('Create Pi payment error:', error);
     return NextResponse.json({ error: 'Failed to create payment' }, { status: 500 });

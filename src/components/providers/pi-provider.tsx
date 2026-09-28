@@ -436,10 +436,19 @@ export function PiProvider({ children }: { children: ReactNode }) {
   // Authentication (Secure)
   // ============================================
 
-  // Handle incomplete payments
+  // Handle incomplete payments.
+  //
+  // The Pi SDK calls this when the user has a payment left open from a
+  // previous session (app closed mid-flow, network drop, etc). Pi will not
+  // let the user start a new payment until this one is resolved. This used
+  // to only be stored in local React state — the server never found out,
+  // so the payment could stay stuck forever, or (worse) could have actually
+  // gone through on the blockchain with the booking never confirmed and the
+  // cashback never credited. Now it's handed straight to the server, which
+  // asks Pi for the real status and finalizes/cancels it accordingly.
   const handleIncompletePayment = useCallback((payment: PiSdkPayment) => {
     logger.log('🔄 Handling incomplete payment:', payment);
-    
+
     try {
       // Validate incomplete payment data
       if (!payment?.identifier || !payment?.amount) {
@@ -463,6 +472,31 @@ export function PiProvider({ children }: { children: ReactNode }) {
         }
         return [incompletePayment, ...prev];
       });
+
+      fetch('/api/payments/pi/recover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ piPaymentId: payment.identifier }),
+      })
+        .then(async (res) => {
+          const result = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            logger.error('❌ Incomplete payment recovery failed:', result);
+            return;
+          }
+          logger.log('✅ Incomplete payment recovered:', result);
+          setActivePayment(prev =>
+            prev && prev.identifier === incompletePayment.identifier
+              ? { ...prev, status: result.resolved === 'finalized' || result.resolved === 'already_completed' ? 'completed' : 'cancelled' }
+              : prev
+          );
+        })
+        .catch((err) => {
+          // The user can still use the app; the SDK will report this same
+          // incomplete payment again next time it authenticates, so this
+          // isn't a lost cause — just log it.
+          logger.error('❌ Incomplete payment recovery request failed:', err);
+        });
     } catch (error) {
       logger.error('❌ Failed to handle incomplete payment:', error);
     }

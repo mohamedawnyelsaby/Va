@@ -28,6 +28,12 @@ const __dirname = path.dirname(__filename);
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Required for Docker/Railway: the Dockerfile copies .next/standalone and
+  // runs `node server.js` from it. Without this, `next build` never
+  // produces that directory and the Docker image build fails at the COPY
+  // step. Vercel deployments are unaffected either way (Vercel ignores
+  // `output` and uses its own build output).
+  output: 'standalone',
 
   experimental: {
     scrollRestoration: true,

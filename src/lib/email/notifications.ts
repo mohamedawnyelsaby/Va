@@ -120,11 +120,27 @@ export async function sendBookingCancellation(
   await sendEmail(to, 'Booking Cancelled — Va Travel', html);
 }
 
+export async function sendPasswordResetEmail(
+  to: string, userName: string, resetUrl: string
+): Promise<void> {
+  const html = baseTemplate(`
+    <h2>Reset your password</h2>
+    <p>Dear <strong>${escapeHtml(userName)}</strong>,</p>
+    <p>We received a request to reset your Va Travel password. This link expires in 1 hour and can only be used once.</p>
+    <p style="text-align:center">
+      <a href="${escapeHtml(resetUrl)}" class="btn">Reset Password</a>
+    </p>
+    <p style="font-size:13px;color:#6b7280">If you didn't request this, you can safely ignore this email — your password will not be changed.</p>
+  `);
+  await sendEmail(to, 'Reset your Va Travel password', html);
+}
+
 const notifications = {
   sendBookingConfirmation,
   sendPaymentConfirmation,
   sendWelcomeEmail,
   sendBookingCancellation,
+  sendPasswordResetEmail,
 };
 
 export default notifications;

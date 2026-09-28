@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { captureException, captureMessage } from '@/lib/monitoring/sentry';
 import type { RapidApiHotel } from '@/types/rapidapi';
 
 // SECURITY / COST FIXES
@@ -17,9 +18,24 @@ import type { RapidApiHotel } from '@/types/rapidapi';
 // - The Gemini key travels in a header, not in the URL (URLs end up in logs).
 // - Every outbound request has a timeout.
 // - LLM-produced search params are validated before reaching RapidAPI.
+// - Model names are configurable via env instead of hardcoded, so a
+//   deprecated/retired model (Gemini has retired several `-latest` and
+//   preview aliases before) doesn't silently take the whole assistant down
+//   until someone notices and redeploys.
+// - When every provider fails, this is now reported to Sentry instead of
+//   only logging locally — previously the user just saw a generic "I am a
+//   bit busy" message forever with nobody alerted.
 
 const FETCH_TIMEOUT_MS = 15_000;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+// One or more comma-separated Gemini model ids, tried in order. Configure
+// via GEMINI_MODELS if Google retires/renames a model without notice.
+const GEMINI_MODELS = (process.env.GEMINI_MODELS || 'gemini-2.0-flash,gemini-1.5-flash')
+  .split(',')
+  .map((m) => m.trim())
+  .filter(Boolean);
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
 const requestSchema = z.object({
   message: z.string().trim().min(1).max(2000),
@@ -163,9 +179,9 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
     
     // Try Gemini first, fallback to OpenAI
     let geminiSuccess = false;
-    
-    const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
-    for (const model of models) {
+    const geminiErrors: string[] = [];
+
+    for (const model of GEMINI_MODELS) {
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
         {
@@ -180,44 +196,64 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
         }
       );
       
-      if (res.status === 429) {continue;}
-      
+      if (res.status === 429) {geminiErrors.push(`${model}: rate limited`); continue;}
+
       const data = await res.json();
-      if (data.error) {continue;}
-      
+      if (data.error) {geminiErrors.push(`${model}: ${data.error?.message || 'unknown error'}`); continue;}
+
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (text) { aiText = text; geminiSuccess = true; break; }
+      geminiErrors.push(`${model}: empty response`);
     }
-    
+
+    let openAiError: string | undefined;
+
     // Fallback to OpenAI if Gemini failed
     if (!geminiSuccess && OPENAI_API_KEY) {
       logger.log('Falling back to OpenAI...');
-      const oaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          max_tokens: 1000,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            ...messages.map((m: ChatMessage) => ({
-              role: m.role === 'assistant' ? 'assistant' : 'user',
-              content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
-            })),
-          ],
-        }),
-      });
-      const oaiData = await oaiRes.json();
-      const oaiText = oaiData.choices?.[0]?.message?.content;
-      if (oaiText) {aiText = oaiText;}
-      else {logger.error('OpenAI error:', oaiData.error);}
+      try {
+        const oaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: OPENAI_MODEL,
+            max_tokens: 1000,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              ...messages.map((m: ChatMessage) => ({
+                role: m.role === 'assistant' ? 'assistant' : 'user',
+                content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+              })),
+            ],
+          }),
+        });
+        const oaiData = await oaiRes.json();
+        const oaiText = oaiData.choices?.[0]?.message?.content;
+        if (oaiText) {aiText = oaiText;}
+        else {
+          openAiError = oaiData.error?.message || 'empty response';
+          logger.error('OpenAI error:', oaiData.error);
+        }
+      } catch (err) {
+        openAiError = err instanceof Error ? err.message : String(err);
+        logger.error('OpenAI request failed:', err);
+      }
     }
-    
+
     if (aiText === '{}' || !aiText) {
+      // Every configured provider failed (or none are configured beyond the
+      // required GEMINI_API_KEY) — this needs a human, not just a log line.
+      const summary = [
+        `Gemini: ${geminiErrors.length ? geminiErrors.join('; ') : 'no models attempted'}`,
+        OPENAI_API_KEY ? `OpenAI: ${openAiError || 'not attempted'}` : 'OpenAI: not configured',
+      ].join(' | ');
+      logger.error('[ai/travel] All providers failed:', summary);
+      captureMessage(`Logy AI: all providers failed — ${summary}`, 'error');
+
       return NextResponse.json({
         success: true,
         message: 'I am a bit busy. Please try again in a moment! 🙏',
@@ -257,6 +293,7 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
 
   } catch (err) {
     logger.error('AI Travel error:', err);
+    captureException(err instanceof Error ? err : new Error(String(err)), { context: 'ai/travel route' });
     return NextResponse.json({
       error: 'AI error',
       message: 'Sorry, an error occurred. Please try again.',

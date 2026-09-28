@@ -67,13 +67,19 @@ export function computeHotelTotal(params: {
   return round2(subtotal * (1 + TAX_RATE));
 }
 
-let warnedDefaultRate = false;
+const warnedRates = new Set<string>();
 
 /**
  * Converts a fiat amount to Pi.
  * Rate comes from env `PI_PER_<CURRENCY>` = how many Pi equal 1 unit of that
- * currency (e.g. PI_PER_USD=3.1416). If unset, 1:1 is used — which is what the
- * app already did implicitly — and a warning is logged once.
+ * currency (e.g. PI_PER_USD=3.1416).
+ *
+ * SECURITY: a missing/invalid rate used to silently fall back to 1:1, which
+ * would charge or credit the wrong amount of real Pi for a JPY or EUR
+ * booking. In production this now throws instead — better to fail the
+ * request than move real money at the wrong rate. In development, 1:1 is
+ * used so local work doesn't require every rate to be configured, with a
+ * one-time warning per currency.
  */
 export function toPiAmount(amount: number, currency: string): number {
   const cur = (currency || 'USD').toUpperCase();
@@ -86,11 +92,18 @@ export function toPiAmount(amount: number, currency: string): number {
     return roundPi(amount * rate);
   }
 
-  if (!warnedDefaultRate) {
-    warnedDefaultRate = true;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      `PI_PER_${cur} is not configured. Refusing to charge/credit Pi using an ` +
+        'unconfigured conversion rate.'
+    );
+  }
+
+  if (!warnedRates.has(cur)) {
+    warnedRates.add(cur);
     logger.warn(
-      `[pricing] PI_PER_${cur} is not set — using 1 ${cur} = 1 Pi. ` +
-        'Set PI_PER_<CURRENCY> in the environment to charge the correct amount.'
+      `[pricing] PI_PER_${cur} is not set — using 1 ${cur} = 1 Pi for local development. ` +
+        'Set PI_PER_<CURRENCY> in the environment before deploying.'
     );
   }
   return roundPi(amount);
