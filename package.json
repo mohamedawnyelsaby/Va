@@ -2,6 +2,9 @@
   "name": "va-travel",
   "version": "1.0.1",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",

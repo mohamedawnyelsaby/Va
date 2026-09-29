@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
       
       - name: Install dependencies
@@ -29,6 +29,21 @@ jobs:
         run: npm run test
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Build
+        run: npm run build
+        env:
+          # Build-time only — no real secrets needed for `next build` to
+          # succeed, just non-empty values so nothing throws on undefined.
+          # Real values live in Vercel's own environment for the actual
+          # deploy; this only proves the build compiles.
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: 'ci-build-placeholder-not-a-real-secret'
+          NEXTAUTH_URL: 'http://localhost:3000'
+          ENCRYPTION_KEY: 'ci-build-placeholder-not-a-real-secret'
+          PI_API_KEY: 'ci-build-placeholder'
+          PI_SECRET_KEY: 'ci-build-placeholder'
+          NEXT_PUBLIC_PI_APP_ID: 'ci-build-placeholder'
 
   deploy:
     needs: test

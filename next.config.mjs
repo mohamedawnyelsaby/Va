@@ -14,9 +14,12 @@
 // 4) Added standard security headers and disabled the X-Powered-By header.
 //
 // NOT CHANGED ON PURPOSE:
-// - typescript.ignoreBuildErrors stays true for now. Turn it to false only
-//   after `prisma generate && tsc --noEmit` passes in CI (Next 15 async
-//   `params` migration in [locale] pages is still pending).
+// - typescript.ignoreBuildErrors stays true for now. CI now runs a full
+//   `next build` in addition to `tsc --noEmit` (see .github/workflows/
+//   deploy.yml), so a broken build gets caught there even with this flag
+//   on. Flip this to false once a clean CI build has been observed for a
+//   while and the Next 15 async `params` migration in [locale] pages is
+//   confirmed complete.
 
 import path from 'path';
 import { fileURLToPath } from 'url';
