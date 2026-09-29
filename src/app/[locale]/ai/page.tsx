@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, use } from 'react';
 import styles from './page.module.css';
 
 interface Message {
@@ -27,8 +27,8 @@ function formatTime(date: Date): string {
   return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
-export default function AIPage({ params }: { params: { locale: string } }) {
-  const locale = params?.locale ?? 'en';
+export default function AIPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = use(params);
   const isAr = locale === 'ar';
 
   const [messages, setMessages] = useState<Message[]>([

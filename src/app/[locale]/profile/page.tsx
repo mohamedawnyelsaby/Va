@@ -2,17 +2,19 @@
 // PATH: src/app/[locale]/profile/page.tsx
 
 import Link from 'next/link';
+import { use } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import styles from './page.module.css';
 import { t } from '@/lib/i18n/translations';
 
 interface Props {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }
 
 const isAr = (locale: string) => locale === 'ar';
 
-export default function ProfilePage({ params: { locale } }: Props) {
+export default function ProfilePage({ params }: Props) {
+  const { locale } = use(params);
   const ar = isAr(locale);
   const tr = t(locale);
   const p = tr.profile;

@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import styles from './page.module.css';
 
 interface Hotel {
@@ -30,8 +30,8 @@ const MOCK_HOTELS: Hotel[] = [
 
 const FILTERS = ['All', 'Luxury', 'Budget', '5★', '4★', 'Pool', 'Breakfast'];
 
-export default function HotelsPage({ params }: { params: { locale: string } }) {
-  const locale = params?.locale ?? 'en';
+export default function HotelsPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = use(params);
   const isAr = locale === 'ar';
   const [activeFilter, setActiveFilter] = useState('All');
   const [sortBy, setSortBy] = useState<'rating' | 'price'>('rating');

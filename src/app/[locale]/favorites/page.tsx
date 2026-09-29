@@ -3,17 +3,19 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { use } from 'react';
 import styles from './page.module.css';
 import { useWishlist, DESTINATIONS } from '@/lib/wishlist';
 import { t } from '@/lib/i18n/translations';
 
 interface Props {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }
 
 const isAr = (locale: string) => locale === 'ar';
 
-export default function FavoritesPage({ params: { locale } }: Props) {
+export default function FavoritesPage({ params }: Props) {
+  const { locale } = use(params);
   const ar = isAr(locale);
   const tr = t(locale);
   const f = tr.favorites;
