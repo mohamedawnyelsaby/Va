@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import {
   computeHotelTotal,
   countNights,
@@ -6,6 +6,10 @@ import {
   toPiAmount,
   round2,
 } from '@/lib/pricing';
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe('pricing', () => {
   it('counts at least one night and rounds partial days up', () => {
@@ -54,24 +58,17 @@ describe('pricing', () => {
   });
 
   it('refuses to charge/credit Pi in production with no configured rate', () => {
-    const original = process.env.NODE_ENV;
     delete process.env.PI_PER_GBP;
-    process.env.NODE_ENV = 'production';
-    try {
-      expect(() => toPiAmount(100, 'GBP')).toThrow(/PI_PER_GBP/);
-    } finally {
-      process.env.NODE_ENV = original;
-    }
+    vi.stubEnv('NODE_ENV', 'production');
+    expect(() => toPiAmount(100, 'GBP')).toThrow(/PI_PER_GBP/);
   });
 
   it('still converts correctly in production when the rate IS configured', () => {
-    const original = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    vi.stubEnv('NODE_ENV', 'production');
     process.env.PI_PER_GBP = '4';
     try {
       expect(toPiAmount(50, 'GBP')).toBe(200);
     } finally {
-      process.env.NODE_ENV = original;
       delete process.env.PI_PER_GBP;
     }
   });

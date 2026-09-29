@@ -148,14 +148,12 @@ export async function POST(request: NextRequest) {
         where: { piWalletId: piUser.uid },
         update: {
           piUsername: piUser.username,
-          piAccessToken: accessToken,
           updatedAt: new Date(),
         },
         create: {
           email: `${piUser.uid}@pi.network`,
           piWalletId: piUser.uid,
           piUsername: piUser.username,
-          piAccessToken: accessToken,
           name: piUser.username,
           emailVerified: new Date(),
         },

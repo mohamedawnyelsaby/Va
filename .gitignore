@@ -39,7 +39,14 @@ yarn-error.log*
 next-env.d.ts
 
 # prisma
-/prisma/migrations
+# NOTE: /prisma/migrations is intentionally NOT ignored — this project has
+# been running on `prisma db push` (schema pushed directly, no migration
+# history), which means `npm run db:migrate` (`prisma migrate deploy`) has
+# never actually applied anything. To fix this, run ONCE against your real
+# database (see prisma/manual-migrations/003_baseline_instructions.md):
+#   npx prisma migrate dev --name baseline
+# then commit the generated prisma/migrations/ folder. After that, use
+# `prisma migrate dev` for schema changes instead of `db push`.
 /prisma/*.db
 
 # storybook

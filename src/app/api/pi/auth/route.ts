@@ -6,6 +6,12 @@
 // send someone else's uid with any accessToken and, if the verification
 // call happened to fail, get authenticated as that user.
 // Now: any verification failure rejects the request outright.
+//
+// SECURITY FIX (2026-09-29): stopped persisting the raw Pi accessToken to
+// the database. It was written here and in /api/auth/pi/verify but never
+// read anywhere — a live bearer credential sitting at rest for no
+// functional purpose. (schema.prisma User.piAccessToken can be dropped
+// once both writers are gone; kept for now to avoid an extra migration.)
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
@@ -47,14 +53,13 @@ export async function POST(request: NextRequest) {
           name: piUsername,
           piWalletId: uid,
           piUsername: piUsername,
-          piAccessToken: accessToken,
           emailVerified: new Date(),
         },
       });
     } else {
       user = await prisma.user.update({
         where: { id: user.id },
-        data: { piAccessToken: accessToken, piUsername: piUsername },
+        data: { piUsername: piUsername },
       });
     }
 
