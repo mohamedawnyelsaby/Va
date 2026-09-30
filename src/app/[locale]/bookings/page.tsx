@@ -109,6 +109,8 @@ export default function BookingsPage() {
   const [loading,     setLoading]     = useState(true);
   const [page,        setPage]        = useState(1);
   const [totalPages,  setTotalPages]  = useState(1);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancelError,  setCancelError]  = useState('');
 
   useEffect(() => {
     setLoading(true);
@@ -118,6 +120,27 @@ export default function BookingsPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [page]);
+
+  const cancelBooking = async (bookingId: string) => {
+    setCancelError('');
+    setCancellingId(bookingId);
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || 'This booking can no longer be cancelled.');
+      }
+      setBookings(prev => prev.map(b => (b.id === bookingId ? { ...b, status: 'cancelled' } : b)));
+    } catch (err) {
+      setCancelError(err instanceof Error ? err.message : 'Failed to cancel booking.');
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', paddingTop: '60px' }}>
@@ -163,6 +186,15 @@ export default function BookingsPage() {
           </div>
         ) : (
           <>
+            {cancelError && (
+              <div style={{
+                background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.25)',
+                padding: '0.75rem 1rem', marginBottom: '1.2rem',
+                fontFamily: 'var(--font-dm-sans)', fontSize: '0.8rem', color: '#ef4444',
+              }}>
+                {cancelError}
+              </div>
+            )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--vg-border)', marginBottom: '2rem' }}>
               {bookings.map(b => {
                 const cfg = STATUS_CONFIG[b.status] || STATUS_CONFIG.pending;
@@ -202,6 +234,21 @@ export default function BookingsPage() {
                         <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro, letterSpacing: VG.tracking.tight, textTransform: 'uppercase', color: 'var(--vg-text-3)', marginTop: '0.2rem' }}>
                           {b.itemType}
                         </div>
+                      )}
+                      {b.status === 'pending' && (
+                        <button
+                          onClick={() => cancelBooking(b.id)}
+                          disabled={cancellingId === b.id}
+                          style={{
+                            marginTop: '0.6rem', background: 'none', border: '1px solid var(--vg-border)',
+                            padding: '0.35rem 0.7rem', cursor: cancellingId === b.id ? 'not-allowed' : 'pointer',
+                            fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro,
+                            letterSpacing: VG.tracking.tight, textTransform: 'uppercase',
+                            color: '#ef4444', opacity: cancellingId === b.id ? 0.5 : 1,
+                          }}
+                        >
+                          {cancellingId === b.id ? 'Cancelling…' : 'Cancel'}
+                        </button>
                       )}
                     </div>
                   </div>
