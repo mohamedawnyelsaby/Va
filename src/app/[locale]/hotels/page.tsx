@@ -4,43 +4,98 @@
 
 'use client';
 
-import { useState, use } from 'react';
+import { useState, useEffect, useCallback, useRef, use } from 'react';
+import Link from 'next/link';
 import styles from './page.module.css';
 
-interface Hotel {
+interface ApiHotel {
   id: string;
   name: string;
-  location: string;
-  stars: number;
+  city: string;
+  country: string;
+  starRating: number;
   rating: number;
-  reviews: number;
-  price: number;
+  reviewCount: number;
+  pricePerNight: number;
   currency: string;
-  tag?: string;
-  emoji: string;
+  thumbnail?: string | null;
+  isFeatured?: boolean;
+  discountRate?: number;
 }
 
-const MOCK_HOTELS: Hotel[] = [
-  { id: '1', name: 'Four Seasons Cairo', location: 'Garden City, Cairo', stars: 5, rating: 9.2, reviews: 1840, price: 320, currency: 'USD', tag: 'TOP PICK', emoji: '🏙️' },
-  { id: '2', name: 'Kempinski Nile Hotel', location: 'Garden City, Cairo', stars: 5, rating: 8.9, reviews: 1230, price: 275, currency: 'USD', emoji: '🌊' },
-  { id: '3', name: 'Marriott Mena House', location: 'Giza, Cairo', stars: 5, rating: 9.0, reviews: 2100, price: 295, currency: 'USD', tag: 'ICONIC', emoji: '🏛️' },
-  { id: '4', name: 'Sheraton Cairo Hotel', location: 'Galaa Square, Cairo', stars: 4, rating: 8.4, reviews: 980, price: 150, currency: 'USD', emoji: '🌆' },
-  { id: '5', name: 'Le Méridien Cairo', location: 'Airport Road, Cairo', stars: 4, rating: 8.1, reviews: 760, price: 130, currency: 'USD', tag: 'GREAT VALUE', emoji: '✈️' },
+interface HotelsResponse {
+  hotels: ApiHotel[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+const STAR_FILTERS = [
+  { label: 'All', ar: 'الكل', stars: 0 },
+  { label: '5★', ar: '5★', stars: 5 },
+  { label: '4★', ar: '4★', stars: 4 },
 ];
 
-const FILTERS = ['All', 'Luxury', 'Budget', '5★', '4★', 'Pool', 'Breakfast'];
+const CURRENCY_SYMBOL: Record<string, string> = { USD: '$', EUR: '€', AED: 'د.إ', GBP: '£' };
 
 export default function HotelsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = use(params);
   const isAr = locale === 'ar';
-  const [activeFilter, setActiveFilter] = useState('All');
+
+  const [hotels, setHotels] = useState<ApiHotel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [starFilter, setStarFilter] = useState(0);
   const [sortBy, setSortBy] = useState<'rating' | 'price'>('rating');
 
-  const AR_FILTERS = ['الكل', 'فاخر', 'اقتصادي', '5★', '4★', 'حمام سباحة', 'إفطار'];
+  // Debounce the search box so every keystroke doesn't fire a request.
+  useEffect(() => {
+    const t = setTimeout(() => { setSearch(searchInput); setPage(1); }, 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
-  const sorted = [...MOCK_HOTELS].sort((a, b) =>
-    sortBy === 'rating' ? b.rating - a.rating : a.price - b.price
-  );
+  const fetchAbort = useRef<AbortController | null>(null);
+
+  const fetchHotels = useCallback(async () => {
+    fetchAbort.current?.abort();
+    const controller = new AbortController();
+    fetchAbort.current = controller;
+
+    setLoading(true);
+    setError(false);
+    try {
+      const q = new URLSearchParams({
+        page: String(page),
+        limit: '12',
+        sortBy: sortBy === 'rating' ? 'rating' : 'pricePerNight',
+        order: sortBy === 'rating' ? 'desc' : 'asc',
+      });
+      if (search) {q.set('search', search);}
+      if (starFilter > 0) {q.set('starRating', String(starFilter));}
+
+      const res = await fetch(`/api/hotels?${q}`, { signal: controller.signal });
+      if (!res.ok) {throw new Error('request failed');}
+      const data: HotelsResponse = await res.json();
+      setHotels(data.hotels || []);
+      setTotal(data.pagination?.total ?? 0);
+      setTotalPages(data.pagination?.totalPages ?? 1);
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {return;}
+      setError(true);
+      setHotels([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, sortBy, search, starFilter]);
+
+  useEffect(() => { fetchHotels(); }, [fetchHotels]);
+
+  const FILTERS_EN = STAR_FILTERS.map((f) => f.label);
+  const FILTERS_AR = STAR_FILTERS.map((f) => f.ar);
 
   return (
     <main className={styles.main} dir={isAr ? 'rtl' : 'ltr'}>
@@ -72,6 +127,8 @@ export default function HotelsPage({ params }: { params: Promise<{ locale: strin
           </svg>
           <input
             type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             placeholder={isAr ? 'ابحث عن فندق أو مدينة...' : 'Search hotels or cities...'}
             className={styles.searchInput}
           />
@@ -80,13 +137,13 @@ export default function HotelsPage({ params }: { params: Promise<{ locale: strin
 
       {/* ── Filters ── */}
       <div className={styles.filtersRow}>
-        {(isAr ? AR_FILTERS : FILTERS).map((f, i) => (
+        {(isAr ? FILTERS_AR : FILTERS_EN).map((label, i) => (
           <button
-            key={f}
-            onClick={() => setActiveFilter(FILTERS[i])}
-            className={`${styles.filterChip} ${activeFilter === FILTERS[i] ? styles.filterActive : ''}`}
+            key={STAR_FILTERS[i].label}
+            onClick={() => { setStarFilter(STAR_FILTERS[i].stars); setPage(1); }}
+            className={`${styles.filterChip} ${starFilter === STAR_FILTERS[i].stars ? styles.filterActive : ''}`}
           >
-            {f}
+            {label}
           </button>
         ))}
       </div>
@@ -94,7 +151,7 @@ export default function HotelsPage({ params }: { params: Promise<{ locale: strin
       {/* ── Sort Row ── */}
       <div className={styles.sortRow}>
         <span className="text-small muted">
-          {sorted.length} {isAr ? 'نتيجة' : 'results'}
+          {loading ? '...' : `${total} ${isAr ? 'نتيجة' : 'results'}`}
         </span>
         <div className={styles.sortBtns}>
           <button
@@ -112,58 +169,118 @@ export default function HotelsPage({ params }: { params: Promise<{ locale: strin
         </div>
       </div>
 
+      {/* ── States ── */}
+      {loading && (
+        <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
+          {isAr ? 'جاري التحميل...' : 'Loading hotels...'}
+        </div>
+      )}
+
+      {!loading && error && (
+        <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
+          {isAr ? 'حدث خطأ في تحميل الفنادق. حاول مرة أخرى.' : 'Could not load hotels. Please try again.'}
+        </div>
+      )}
+
+      {!loading && !error && hotels.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
+          {isAr ? 'لا توجد فنادق مطابقة لبحثك.' : 'No hotels match your search.'}
+        </div>
+      )}
+
       {/* ── Hotel Cards ── */}
-      <div className={styles.list}>
-        {sorted.map((hotel, i) => (
-          <div
-            key={hotel.id}
-            className={styles.hotelCard}
-            style={{ animationDelay: `${i * 60}ms` }}
+      {!loading && !error && hotels.length > 0 && (
+        <div className={styles.list}>
+          {hotels.map((hotel, i) => (
+            <Link
+              key={hotel.id}
+              href={`/${locale}/hotels/${hotel.id}`}
+              className={styles.hotelCard}
+              style={{ animationDelay: `${i * 60}ms`, textDecoration: 'none', color: 'inherit' }}
+            >
+              <div className={styles.hotelImg}>
+                {hotel.thumbnail ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={hotel.thumbnail}
+                    alt={hotel.name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <span className={styles.hotelEmoji}>🏨</span>
+                )}
+                {hotel.isFeatured && (
+                  <span className={styles.hotelTag}>{isAr ? 'مميز' : 'FEATURED'}</span>
+                )}
+              </div>
+
+              <div className={styles.hotelInfo}>
+                <div className={styles.hotelTop}>
+                  <div>
+                    <h3 className={styles.hotelName}>{hotel.name}</h3>
+                    <p className={`text-small muted ${styles.hotelLoc}`}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      </svg>
+                      {hotel.city}{hotel.country ? `, ${hotel.country}` : ''}
+                    </p>
+                  </div>
+                  <div className={styles.hotelRating}>
+                    <span className={styles.ratingNum}>{hotel.rating?.toFixed(1) ?? '—'}</span>
+                    <span className={styles.ratingLabel}>
+                      {(hotel.rating ?? 0) >= 9 ? (isAr ? 'استثنائي' : 'Exceptional')
+                        : (hotel.rating ?? 0) >= 8 ? (isAr ? 'ممتاز' : 'Excellent')
+                        : (isAr ? 'جيد' : 'Good')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className={styles.hotelStars}>
+                  {'★'.repeat(hotel.starRating || 0)}{'☆'.repeat(5 - (hotel.starRating || 0))}
+                  <span className="text-small muted">({(hotel.reviewCount ?? 0).toLocaleString()})</span>
+                </div>
+
+                <div className={styles.hotelFooter}>
+                  <div className={styles.hotelPrice}>
+                    <span className={styles.priceNum}>
+                      {CURRENCY_SYMBOL[hotel.currency] ?? hotel.currency}{hotel.pricePerNight}
+                    </span>
+                    <span className="text-small muted"> / {isAr ? 'ليلة' : 'night'}</span>
+                  </div>
+                  <span className={`btn btn-primary ${styles.bookBtn}`}>
+                    {isAr ? 'عرض التفاصيل' : 'View Details'}
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* ── Pagination ── */}
+      {!loading && !error && totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', margin: '2rem 0' }}>
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className={styles.sortBtn}
+            style={{ opacity: page <= 1 ? 0.4 : 1, cursor: page <= 1 ? 'not-allowed' : 'pointer' }}
           >
-            {/* Image placeholder */}
-            <div className={styles.hotelImg}>
-              <span className={styles.hotelEmoji}>{hotel.emoji}</span>
-              {hotel.tag && (
-                <span className={styles.hotelTag}>{hotel.tag}</span>
-              )}
-            </div>
-
-            {/* Info */}
-            <div className={styles.hotelInfo}>
-              <div className={styles.hotelTop}>
-                <div>
-                  <h3 className={styles.hotelName}>{hotel.name}</h3>
-                  <p className={`text-small muted ${styles.hotelLoc}`}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                    </svg>
-                    {hotel.location}
-                  </p>
-                </div>
-                <div className={styles.hotelRating}>
-                  <span className={styles.ratingNum}>{hotel.rating}</span>
-                  <span className={styles.ratingLabel}>{isAr ? 'ممتاز' : 'Excellent'}</span>
-                </div>
-              </div>
-
-              <div className={styles.hotelStars}>
-                {'★'.repeat(hotel.stars)}{'☆'.repeat(5 - hotel.stars)}
-                <span className={'text-small muted'}>({hotel.reviews.toLocaleString()})</span>
-              </div>
-
-              <div className={styles.hotelFooter}>
-                <div className={styles.hotelPrice}>
-                  <span className={styles.priceNum}>${hotel.price}</span>
-                  <span className={'text-small muted'}>/ {isAr ? 'ليلة' : 'night'}</span>
-                </div>
-                <button className={`btn btn-primary ${styles.bookBtn}`}>
-                  {isAr ? 'احجز الآن' : 'Book Now'}
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            {isAr ? 'السابق' : 'Previous'}
+          </button>
+          <span className="text-small muted" style={{ alignSelf: 'center' }}>
+            {page} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className={styles.sortBtn}
+            style={{ opacity: page >= totalPages ? 0.4 : 1, cursor: page >= totalPages ? 'not-allowed' : 'pointer' }}
+          >
+            {isAr ? 'التالي' : 'Next'}
+          </button>
+        </div>
+      )}
 
       <div style={{ height: '100px' }} />
     </main>

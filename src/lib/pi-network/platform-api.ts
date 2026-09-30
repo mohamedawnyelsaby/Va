@@ -13,9 +13,11 @@ import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 // ============================================
 
 import { logger } from '@/lib/logger';
-const PI_API_URL = process.env.PI_SANDBOX === 'true'
-  ? 'https://api.minepi.com'
-  : 'https://api.minepi.com';
+// Both Testnet and Mainnet Pi apps use the same Platform API base path —
+// the distinction is made by which PI_API_KEY/PI_SECRET_KEY you use (tied
+// to how the app is registered in the Pi Developer Portal), not by URL.
+// Confirmed against https://github.com/pi-apps/pi-platform-docs.
+const PI_API_URL = 'https://api.minepi.com';
 
 const PI_API_KEY = process.env.PI_API_KEY;
 const PI_SECRET = process.env.PI_SECRET_KEY;

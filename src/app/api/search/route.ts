@@ -1,17 +1,27 @@
 // src/app/api/search/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { clampInt } from '@/lib/api-utils';
+import { logger } from '@/lib/logger';
 
 // Mark as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
+  // FIX: this endpoint had no rate limiting at all, and `limit` was an
+  // unbounded parseInt (?limit=999999999 would ask Prisma for that many
+  // rows across 4 tables). Both fixed to match every other search/list
+  // endpoint in the app.
+  const limited = await checkRateLimit(request, 'search');
+  if (limited) {return limited;}
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('q') || '';
     const type = searchParams.get('type');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = clampInt(searchParams.get('limit'), 10, 1, 50);
 
     if (!query || query.length < 2) {
       return NextResponse.json(
@@ -159,7 +169,7 @@ export async function GET(request: NextRequest) {
       totalResults,
     });
   } catch (error) {
-    console.error('Search API error:', error);
+    logger.error('Search API error:', error);
     return NextResponse.json(
       { error: 'Search failed' },
       { status: 500 }

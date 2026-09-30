@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { parsePagination, isUniqueViolation } from '@/lib/api-utils';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const createReviewSchema = z.object({
   itemId:   z.string().min(1).max(64),
@@ -16,6 +17,11 @@ const createReviewSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  // FIX: review creation had no rate limiting — a signed-in account could
+  // otherwise flood any hotel/attraction/restaurant with reviews.
+  const limited = await checkRateLimit(request, 'search');
+  if (limited) {return limited;}
+
   try {
     const session = await getServerSession(authOptions);
 
