@@ -13,6 +13,7 @@ import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { RecentlyViewed } from '@/components/ui/RecentlyViewed';
 import { addToRecentlyViewed } from '@/components/ui/Breadcrumb';
 import { ImageLightbox, useImageLightbox } from '@/components/ui/ImageLightbox';
+import { useFavorite } from '@/hooks/use-favorite';
 
 interface AttractionDetail {
   id: string;
@@ -36,19 +37,14 @@ interface AttractionDetail {
   reviewCount: number;
 }
 
-interface FavoriteStorageItem {
-  id: string;
-  type?: string;
-}
-
 export default function AttractionDetailPage() {
   const params = useParams();
   const locale = (params.locale as string) || 'en';
   const [attraction, setAttraction] = useState<AttractionDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isFav, setIsFav] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const lightbox = useImageLightbox([]);
+  const { isFavorited: isFav, toggle: toggleFavorite } = useFavorite(attraction?.id, 'attraction');
 
   useEffect(() => {
     fetch(`/api/attractions/${params.id}`)
@@ -62,31 +58,11 @@ export default function AttractionDetailPage() {
           thumbnail: d.thumbnail, rating: d.rating,
           city: d.city,
         });
-        // Check fav
-        try {
-          const stored = JSON.parse(localStorage.getItem('va-favorites') || '[]');
-          setIsFav(stored.some((f: FavoriteStorageItem) => f.id === d.id));
-        } catch {
-          // intentionally ignored: best-effort localStorage read/write; a corrupt or missing value here should not break the page
-        }
       })
       .catch(() => setLoading(false));
   }, [params.id]);
 
-  const toggleFav = () => {
-    if (!attraction) {return;}
-    try {
-      const stored = JSON.parse(localStorage.getItem('va-favorites') || '[]');
-      const exists = stored.some((f: FavoriteStorageItem) => f.id === attraction.id);
-      const updated = exists
-        ? stored.filter((f: FavoriteStorageItem) => f.id !== attraction.id)
-        : [...stored, { id: attraction.id, type: 'attraction' }];
-      localStorage.setItem('va-favorites', JSON.stringify(updated));
-      setIsFav(!exists);
-    } catch {
-      // intentionally ignored: best-effort localStorage read/write; a corrupt or missing value here should not break the page
-    }
-  };
+  const toggleFav = () => { toggleFavorite(); };
 
   if (loading) {return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '60px' }}>

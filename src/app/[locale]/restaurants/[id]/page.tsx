@@ -6,6 +6,7 @@ import { MapPin, Star, Utensils, Heart, Share2, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { VG } from '@/lib/tokens';
+import { useFavorite } from '@/hooks/use-favorite';
 
 const PRICE_COLOR: Record<string, string> = { '$': '#10b981', '$$': '#C9A227', '$$$': '#f59e0b', '$$$$': '#ef4444' };
 const PRICE_LABEL: Record<string, string> = { '$': 'Budget', '$$': 'Moderate', '$$$': 'Upscale', '$$$$': 'Fine Dining' };
@@ -33,7 +34,11 @@ export default function RestaurantDetailPage() {
   const [restaurant, setRestaurant] = useState<RestaurantDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isFav, setIsFav] = useState(false);
+  // FIX: this used to be local-only state (setIsFav(!isFav)) that saved
+  // nothing anywhere — the heart visually toggled and forgot itself on
+  // reload. Now backed by the real /api/favorites endpoint, same as the
+  // hotel and attraction detail pages.
+  const { isFavorited: isFav, toggle: toggleFavorite } = useFavorite(restaurant?.id, 'restaurant');
 
   useEffect(() => {
     fetch(`/api/restaurants/${params.id}`)
@@ -145,7 +150,7 @@ export default function RestaurantDetailPage() {
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
-                onClick={() => setIsFav(!isFav)}
+                onClick={() => toggleFavorite()}
                 style={{ width: '40px', height: '40px', background: 'rgba(3,2,10,0.7)', border: '1px solid var(--vg-gold-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isFav ? 'var(--vg-gold)' : 'rgba(242,238,230,0.6)' }}
               >
                 <Heart size={15} style={{ fill: isFav ? 'var(--vg-gold)' : 'none' }} />

@@ -16,6 +16,7 @@ import { ReviewModal } from '@/components/ui/ReviewModal';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { RecentlyViewed } from '@/components/ui/RecentlyViewed';
 import { addToRecentlyViewed } from '@/components/ui/Breadcrumb';
+import { useFavorite } from '@/hooks/use-favorite';
 
 function Spinner() {
   return (
@@ -67,11 +68,6 @@ interface HotelDetail {
   cityRelation?: { name: string; country: string };
 }
 
-interface FavoriteStorageItem {
-  id: string;
-  type?: string;
-}
-
 export default function HotelDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -81,8 +77,8 @@ export default function HotelDetailPage() {
   const [hotel,        setHotel]        = useState<HotelDetail | null>(null);
   const [loading,      setLoading]      = useState(true);
   const [selectedRoom, setSelectedRoom] = useState<RoomType | null>(null);
-  const [isFav,        setIsFav]        = useState(false);
   const [reviewOpen,   setReviewOpen]   = useState(false);
+  const { isFavorited: isFav, toggle: toggleFavorite, pending: favPending } = useFavorite(hotel?.id, 'hotel');
   const [bookingData,  setBookingData]  = useState({ checkIn: '', checkOut: '', guests: 1, rooms: 1 });
 
   const lightbox = useImageLightbox([]);
@@ -106,30 +102,18 @@ export default function HotelDetailPage() {
 
   useEffect(() => { fetchHotel(); }, [fetchHotel]);
 
-  useEffect(() => {
+  const toggleFav = async () => {
     if (!hotel) {return;}
-    try {
-      const stored = JSON.parse(localStorage.getItem('va-favorites') || '[]');
-      setIsFav(stored.some((f: FavoriteStorageItem) => f.id === hotel.id));
-    } catch {
-      // ignore malformed localStorage data
+    const result = await toggleFavorite();
+    if (result.requiresAuth) {
+      toast({ title: 'Sign in to save favorites', variant: 'default' });
+      return;
     }
-  }, [hotel]);
-
-  const toggleFav = () => {
-    if (!hotel) {return;}
-    try {
-      const stored = JSON.parse(localStorage.getItem('va-favorites') || '[]');
-      const exists = stored.some((f: FavoriteStorageItem) => f.id === hotel.id);
-      const updated = exists
-        ? stored.filter((f: FavoriteStorageItem) => f.id !== hotel.id)
-        : [...stored, { id: hotel.id, type: 'hotel' }];
-      localStorage.setItem('va-favorites', JSON.stringify(updated));
-      setIsFav(!exists);
-      toast({ title: exists ? 'Removed from favorites' : 'Saved to favorites', variant: exists ? 'default' : 'success' });
-    } catch {
-      // ignore malformed localStorage data
+    if (!result.ok) {
+      toast({ title: 'Something went wrong', variant: 'destructive' });
+      return;
     }
+    toast({ title: result.favorited ? 'Saved to favorites' : 'Removed from favorites', variant: result.favorited ? 'success' : 'default' });
   };
 
   const handleShare = () => {
@@ -263,6 +247,7 @@ export default function HotelDetailPage() {
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button onClick={e => { e.stopPropagation(); toggleFav(); }}
+                disabled={favPending}
                 aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
                 style={{ width: '40px', height: '40px', background: 'rgba(3,2,10,0.7)', border: '1px solid var(--vg-gold-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isFav ? 'var(--vg-gold)' : 'rgba(242,238,230,0.6)', transition: 'color 0.2s' }}>
                 <Heart size={15} style={{ fill: isFav ? 'var(--vg-gold)' : 'none', transition: 'fill 0.2s' }} />
