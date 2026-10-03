@@ -120,6 +120,40 @@ export async function sendBookingCancellation(
   await sendEmail(to, 'Booking Cancelled — Va Travel', html);
 }
 
+/**
+ * Notifies the site admin (ADMIN_EMAIL) that a paid booking's user has
+ * requested a refund. This app has no automated Pi refund (App-to-User
+ * payment) wired up — that requires the app's own funded Pi wallet and
+ * its private seed, which only Marwan can provide, plus a deliberate
+ * decision to let server code spend real Pi autonomously. Until that
+ * exists, refunds on paid bookings are a tracked, actionable request
+ * instead of a dead end: the booking is marked `refund_requested` and
+ * this email gives whoever processes it everything needed to send the
+ * Pi manually from the Pi Wallet app.
+ */
+export async function sendRefundRequestEmail(
+  adminEmail: string,
+  details: {
+    bookingId: string; bookingCode: string; itemName: string;
+    userEmail: string; userName: string; userPiWalletId?: string | null;
+    amount: number; currency: string; piTxid?: string | null;
+  }
+): Promise<void> {
+  const html = baseTemplate(`
+    <h2>⚠️ Refund Requested — Action Needed</h2>
+    <p><strong>${escapeHtml(details.userName)}</strong> (${escapeHtml(details.userEmail)}) requested a refund for a paid booking.</p>
+    <table style="width:100%;border-collapse:collapse;margin:1rem 0">
+      <tr><td style="padding:6px 0;color:#6b7280">Booking code</td><td style="padding:6px 0"><strong>${escapeHtml(details.bookingCode)}</strong></td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Item</td><td style="padding:6px 0">${escapeHtml(details.itemName)}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Amount</td><td style="padding:6px 0"><strong>${details.amount} ${escapeHtml(details.currency)}</strong></td></tr>
+      ${details.userPiWalletId ? `<tr><td style="padding:6px 0;color:#6b7280">User's Pi wallet (uid)</td><td style="padding:6px 0">${escapeHtml(details.userPiWalletId)}</td></tr>` : ''}
+      ${details.piTxid ? `<tr><td style="padding:6px 0;color:#6b7280">Original payment txid</td><td style="padding:6px 0">${escapeHtml(details.piTxid)}</td></tr>` : ''}
+    </table>
+    <p>This needs to be refunded manually from the Pi Wallet app — there is no automated refund path configured yet.</p>
+  `);
+  await sendEmail(adminEmail, `Refund requested — ${details.bookingCode}`, html);
+}
+
 export async function sendPasswordResetEmail(
   to: string, userName: string, resetUrl: string
 ): Promise<void> {
@@ -140,6 +174,7 @@ const notifications = {
   sendPaymentConfirmation,
   sendWelcomeEmail,
   sendBookingCancellation,
+  sendRefundRequestEmail,
   sendPasswordResetEmail,
 };
 

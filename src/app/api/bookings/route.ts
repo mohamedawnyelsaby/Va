@@ -21,6 +21,7 @@ import { requireUser } from '@/lib/auth/guards';
 import { parsePagination } from '@/lib/api-utils';
 import { logger } from '@/lib/logger';
 import { captureException } from '@/lib/monitoring/sentry';
+import { sendRefundRequestEmail } from '@/lib/email/notifications';
 import {
   computeHotelTotal,
   countNights,
@@ -277,8 +278,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Only bookings that are still pending AND unpaid can be cancelled here.
-    // (A payment that is approved / processing must be handled as a refund.)
+    // Case 1: still pending and unpaid — cancel outright, no money ever moved.
     const cancelled = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const res = await tx.booking.updateMany({
         where: { id: bookingId, userId, status: 'pending', paymentStatus: 'unpaid' },
@@ -293,19 +293,70 @@ export async function PATCH(request: NextRequest) {
       return tx.booking.findUnique({ where: { id: bookingId } });
     });
 
-    if (!cancelled) {
+    if (cancelled) {
+      return NextResponse.json(cancelled);
+    }
+
+    // Case 2: already paid. This app has no automated Pi refund (App-to-User
+    // payment) wired up yet — that requires the app's own funded Pi wallet
+    // and its private seed, which is a credential/decision only the site
+    // owner can provide, so real money is never moved here automatically.
+    // Instead of a dead-end error, this marks the booking as a tracked
+    // refund request and emails ADMIN_EMAIL (if configured) with everything
+    // needed to send the refund manually from the Pi Wallet app.
+    //
+    // Only for bookings that haven't started yet, and only once.
+    const refundRequested = await prisma.booking.updateMany({
+      where: {
+        id: bookingId,
+        userId,
+        status: 'confirmed',
+        paymentStatus: 'paid',
+        startDate: { gt: new Date() },
+      },
+      data: { status: 'refund_requested' },
+    });
+
+    if (refundRequested.count === 0) {
       return NextResponse.json(
-        { error: 'This booking can no longer be cancelled' },
+        { error: 'This booking can no longer be cancelled or refunded.' },
         { status: 400 }
       );
     }
 
-    return NextResponse.json(cancelled);
+    const [withUser, payment] = await Promise.all([
+      prisma.booking.findUnique({ where: { id: bookingId }, include: { user: true } }),
+      prisma.payment.findFirst({ where: { bookingId, status: 'completed' }, orderBy: { createdAt: 'desc' } }),
+    ]);
+
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (adminEmail && withUser) {
+      sendRefundRequestEmail(adminEmail, {
+        bookingId: withUser.id,
+        bookingCode: withUser.bookingCode,
+        itemName: withUser.itemName,
+        userEmail: withUser.user.email,
+        userName: withUser.user.name || withUser.user.email,
+        userPiWalletId: withUser.user.piWalletId,
+        amount: withUser.totalPrice,
+        currency: withUser.currency,
+        piTxid: payment?.piTxid,
+      }).catch((err) => logger.error('[bookings PATCH] refund request email failed:', err));
+    } else if (!adminEmail) {
+      logger.warn('[bookings PATCH] ADMIN_EMAIL not configured — refund request for booking', bookingId, 'was not emailed to anyone.');
+    }
+
+    return NextResponse.json({
+      id: bookingId,
+      status: 'refund_requested',
+      message: 'Refund requested. This is processed manually and may take a few days.',
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
     }
-    console.error('Cancel booking error:', error);
+    logger.error('Cancel/refund booking error:', error);
+    captureException(error instanceof Error ? error : new Error(String(error)), { context: 'bookings PATCH' });
     return NextResponse.json({ error: 'Failed to cancel booking' }, { status: 500 });
   }
 }

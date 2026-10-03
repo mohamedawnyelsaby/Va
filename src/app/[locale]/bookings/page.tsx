@@ -87,9 +87,10 @@ function PaginationBar({
 }
 
 const STATUS_CONFIG: Record<string, { color: string; bg: string; Icon: LucideIcon; label: string }> = {
-  confirmed: { color: '#10b981', bg: 'rgba(16,185,129,0.08)',  Icon: CheckCircle, label: 'Confirmed' },
-  pending:   { color: '#C9A227', bg: 'rgba(201,162,39,0.08)', Icon: Clock,        label: 'Pending' },
-  cancelled: { color: '#ef4444', bg: 'rgba(239,68,68,0.08)',  Icon: AlertCircle,  label: 'Cancelled' },
+  confirmed:         { color: '#10b981', bg: 'rgba(16,185,129,0.08)',  Icon: CheckCircle, label: 'Confirmed' },
+  pending:           { color: '#C9A227', bg: 'rgba(201,162,39,0.08)', Icon: Clock,        label: 'Pending' },
+  cancelled:         { color: '#ef4444', bg: 'rgba(239,68,68,0.08)',  Icon: AlertCircle,  label: 'Cancelled' },
+  refund_requested:  { color: '#C9A227', bg: 'rgba(201,162,39,0.08)', Icon: Clock,        label: 'Refund Requested' },
 };
 
 interface Booking {
@@ -100,6 +101,7 @@ interface Booking {
   totalPrice: number;
   currency: string;
   status: string;
+  paymentStatus?: string;
 }
 
 export default function BookingsPage() {
@@ -134,7 +136,10 @@ export default function BookingsPage() {
       if (!res.ok) {
         throw new Error(data.error || 'This booking can no longer be cancelled.');
       }
-      setBookings(prev => prev.map(b => (b.id === bookingId ? { ...b, status: 'cancelled' } : b)));
+      // The server decides which actually happened: an unpaid pending
+      // booking is cancelled outright; a paid one becomes a tracked
+      // refund_requested — either way, data.status says which.
+      setBookings(prev => prev.map(b => (b.id === bookingId ? { ...b, status: data.status || 'cancelled' } : b)));
     } catch (err) {
       setCancelError(err instanceof Error ? err.message : 'Failed to cancel booking.');
     } finally {
@@ -248,6 +253,28 @@ export default function BookingsPage() {
                           }}
                         >
                           {cancellingId === b.id ? 'Cancelling…' : 'Cancel'}
+                        </button>
+                      )}
+                      {/* Paid booking, not started yet: server tracks this as a
+                          refund request and emails the admin to process it
+                          manually — there is no automated Pi refund. */}
+                      {b.status === 'confirmed' && new Date(b.startDate) > new Date() && (
+                        <button
+                          onClick={() => {
+                            if (window.confirm('Request a refund for this booking? This is processed manually and may take a few days.')) {
+                              cancelBooking(b.id);
+                            }
+                          }}
+                          disabled={cancellingId === b.id}
+                          style={{
+                            marginTop: '0.6rem', background: 'none', border: '1px solid var(--vg-border)',
+                            padding: '0.35rem 0.7rem', cursor: cancellingId === b.id ? 'not-allowed' : 'pointer',
+                            fontFamily: 'var(--font-space-mono)', fontSize: VG.font.micro,
+                            letterSpacing: VG.tracking.tight, textTransform: 'uppercase',
+                            color: 'var(--vg-gold)', opacity: cancellingId === b.id ? 0.5 : 1,
+                          }}
+                        >
+                          {cancellingId === b.id ? 'Requesting…' : 'Request Refund'}
                         </button>
                       )}
                     </div>
