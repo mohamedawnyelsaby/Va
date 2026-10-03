@@ -114,6 +114,7 @@ export async function POST(request: NextRequest) {
     let nights: number | undefined;
     let nightlyPrice: number | undefined;
     let roomTypeLabel: string | undefined;
+    let hotelRoomTotal: number | undefined;
     const relation: { hotelId?: string; attractionId?: string; restaurantId?: string } = {};
 
     if (data.type === 'hotel') {
@@ -141,6 +142,7 @@ export async function POST(request: NextRequest) {
 
       const room = resolveNightlyPrice(hotel, data.roomType);
       roomTypeLabel = room.roomType;
+      hotelRoomTotal = room.totalRooms;
       nightlyPrice = room.price;
       totalPrice = computeHotelTotal({
         nightlyPrice: room.price,
@@ -202,11 +204,37 @@ export async function POST(request: NextRequest) {
       if (existing) {
         const refreshed = await prisma.booking.update({
           where: { id: existing.id },
-          data: { totalPrice, currency, itemName },
+          data: { totalPrice, currency, itemName, roomType: roomTypeLabel },
         });
         return NextResponse.json(
           { ...refreshed, piAmount, nights, nightlyPrice, roomType: roomTypeLabel },
           { status: 200 }
+        );
+      }
+    }
+
+    // Overbooking protection — only runs for a genuinely NEW hotel booking
+    // (an identical pending retry above already returned), and only when
+    // this room type declares `totalRooms` in its JSON (see RoomType in
+    // lib/pricing.ts). No hotel does yet, so this is a no-op until that's
+    // set, matching current behaviour exactly for every existing listing.
+    if (data.type === 'hotel' && hotelRoomTotal) {
+      const requestedRooms = data.rooms ?? 1;
+      const overlapping = await prisma.booking.aggregate({
+        where: {
+          hotelId: data.itemId,
+          roomType: roomTypeLabel,
+          status: { in: ['pending', 'confirmed', 'refund_requested'] },
+          startDate: { lt: endDate },
+          endDate: { gt: startDate },
+        },
+        _sum: { rooms: true },
+      });
+      const alreadyBooked = overlapping._sum.rooms ?? 0;
+      if (alreadyBooked + requestedRooms > hotelRoomTotal) {
+        return NextResponse.json(
+          { error: `Sold out: only ${Math.max(0, hotelRoomTotal - alreadyBooked)} "${roomTypeLabel}" room(s) left for these dates.` },
+          { status: 409 }
         );
       }
     }
@@ -219,6 +247,7 @@ export async function POST(request: NextRequest) {
         itemName,
         startDate,
         endDate,
+        roomType: roomTypeLabel,
         checkInDate: data.type === 'hotel' ? startDate : undefined,
         checkOutDate: data.type === 'hotel' ? endDate : undefined,
         guests: data.guests,

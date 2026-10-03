@@ -36,6 +36,18 @@ describe('pricing', () => {
     expect(() => resolveNightlyPrice(hotel, 'Penthouse')).toThrow('UNKNOWN_ROOM_TYPE');
   });
 
+  it('passes through totalRooms when a room type declares it, for overbooking checks', () => {
+    const hotel = {
+      pricePerNight: 200,
+      roomTypes: [
+        { type: 'Standard', price: 200, totalRooms: 5 },
+        { type: 'Suite', price: 500 }, // no totalRooms -> unlimited, as before
+      ],
+    };
+    expect(resolveNightlyPrice(hotel, 'Standard')).toEqual({ roomType: 'Standard', price: 200, totalRooms: 5 });
+    expect(resolveNightlyPrice(hotel, 'Suite')).toEqual({ roomType: 'Suite', price: 500 });
+  });
+
   it("maps the default 'Standard' placeholder to the first listed room", () => {
     const hotel = { pricePerNight: 300, roomTypes: [{ type: 'Deluxe', price: 300 }] };
     expect(resolveNightlyPrice(hotel, 'Standard')).toEqual({ roomType: 'Deluxe', price: 300 });

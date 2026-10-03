@@ -232,6 +232,11 @@ model Booking {
   // Details
   guests          Int      @default(1)
   rooms           Int?     @default(1)
+  // Structured room-type label (hotel bookings only), used for inventory
+  // checks. Previously only embedded in itemName as free text, which
+  // couldn't be queried/counted. Nullable: existing rows stay NULL and
+  // are simply excluded from any per-room-type count.
+  roomType        String?
 
   // Pricing
   totalPrice      Float

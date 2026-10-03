@@ -25,6 +25,14 @@ export function countNights(start: Date, end: Date): number {
 export interface RoomType {
   type: string;
   price: number;
+  /**
+   * Optional total inventory for this room type. When a hotel's roomTypes
+   * JSON doesn't declare this (the case for every hotel today, since this
+   * field didn't exist before), availability is never enforced — current
+   * behaviour is preserved exactly. Set it on a room type to turn on real
+   * overbooking protection for that room type.
+   */
+  totalRooms?: number;
 }
 
 /**
@@ -37,7 +45,7 @@ export interface RoomType {
 export function resolveNightlyPrice(
   hotel: { pricePerNight: number; roomTypes: unknown[] },
   roomType?: string
-): { roomType: string; price: number } {
+): { roomType: string; price: number; totalRooms?: number } {
   const rooms = (hotel.roomTypes ?? []).filter(
     (r): r is RoomType =>
       typeof r === 'object' &&
@@ -47,12 +55,18 @@ export function resolveNightlyPrice(
       (r as RoomType).price > 0
   );
 
+  const withTotal = (r: RoomType) => ({
+    roomType: r.type,
+    price: r.price,
+    totalRooms: typeof r.totalRooms === 'number' && r.totalRooms > 0 ? r.totalRooms : undefined,
+  });
+
   if (roomType && rooms.length > 0) {
     const match = rooms.find((r) => r.type === roomType);
-    if (match) {return { roomType: match.type, price: match.price };}
+    if (match) {return withTotal(match);}
     // The booking page sends the placeholder 'Standard' when the user did not
     // pick a room; that means "the first listed room" (previous behaviour).
-    if (roomType === 'Standard') {return { roomType: rooms[0].type, price: rooms[0].price };}
+    if (roomType === 'Standard') {return withTotal(rooms[0]);}
     throw new Error('UNKNOWN_ROOM_TYPE');
   }
   return { roomType: roomType || 'Standard', price: hotel.pricePerNight };
