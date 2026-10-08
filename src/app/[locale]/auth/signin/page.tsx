@@ -43,20 +43,27 @@ export default function SignInPage() {
   };
 
   const handlePiNetworkLogin = async () => {
+    // Tracks which stage we're in so a failure can say WHERE it failed.
+    // This used to be a bare `catch {}` that showed the same fixed message
+    // for every possible failure (SDK, server verification, session), which
+    // made it impossible to diagnose from a phone with no DevTools.
+    let step = 'starting';
     try {
       if (!isAvailable) {
         toast({ title: 'Pi Browser Required', description: 'Please open this app in Pi Browser', variant: 'destructive' });
         return;
       }
       setIsPiLoading(true);
+      step = 'Pi SDK authenticate';
       const piUser = await authenticate(['username', 'payments']);
+      step = 'server verification';
       const res = await fetch('/api/pi/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accessToken: piUser.accessToken, uid: piUser.uid }),
       });
-      const data = await res.json();
-      if (!res.ok) {throw new Error(data.error || 'Auth failed');}
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {throw new Error(data.error || `HTTP ${res.status}`);}
       // ✅ FIX: this used to sign in via the 'credentials' (email/password)
       // provider using the user's own database id AS the password —
       // exploiting the exact auth bypass that was closed in
@@ -66,6 +73,7 @@ export default function SignInPage() {
       // fail. Pi Network sign-in should go through the dedicated
       // 'pi-network' provider, authenticated with the real Pi access
       // token — not a fake credentials login.
+      step = 'creating session';
       const result = await signIn('pi-network', {
         accessToken: piUser.accessToken,
         uid: piUser.uid,
@@ -74,9 +82,17 @@ export default function SignInPage() {
       });
       if (result?.ok) {
         router.push(`/${locale}/dashboard`);
+      } else {
+        // Previously a failed signIn() was silently ignored here.
+        throw new Error(result?.error || 'Session was not created');
       }
-    } catch {
-      toast({ title: 'Error', description: 'Pi Network login failed', variant: 'destructive' });
+    } catch (err) {
+      // Pi SDK rejections are not always Error instances.
+      const detail =
+        err instanceof Error ? err.message
+        : typeof err === 'string' ? err
+        : (() => { try { return JSON.stringify(err); } catch { return 'unknown error'; } })();
+      toast({ title: 'Pi Network login failed', description: `${step}: ${detail}`, variant: 'destructive' });
     } finally {
       setIsPiLoading(false);
     }
