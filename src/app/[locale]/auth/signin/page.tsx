@@ -16,6 +16,7 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isPiLoading, setIsPiLoading] = useState(false);
+  const [piError, setPiError] = useState('');
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
 
@@ -54,6 +55,7 @@ export default function SignInPage() {
         return;
       }
       setIsPiLoading(true);
+      setPiError('');
       step = 'Pi SDK authenticate';
       const piUser = await authenticate(['username', 'payments']);
       step = 'server verification';
@@ -92,6 +94,16 @@ export default function SignInPage() {
         err instanceof Error ? err.message
         : typeof err === 'string' ? err
         : (() => { try { return JSON.stringify(err); } catch { return 'unknown error'; } })();
+      // The toast is clipped on phones, so the full details also go in a
+      // wrapping box under the button. The sandbox flag is inlined at BUILD
+      // time (NEXT_PUBLIC_*), so showing it reveals how THIS deployment was
+      // built — a mismatch with how Pi Browser opened the app is a common
+      // cause of Pi.authenticate failing.
+      setPiError(
+        `${step}: ${detail}\n` +
+        `sandbox flag (build): ${process.env.NEXT_PUBLIC_PI_SANDBOX === 'true' ? 'true' : 'not true'}\n` +
+        `host: ${typeof window !== 'undefined' ? window.location.host : '?'}`
+      );
       toast({ title: 'Pi Network login failed', description: `${step}: ${detail}`, variant: 'destructive' });
     } finally {
       setIsPiLoading(false);
@@ -343,6 +355,15 @@ export default function SignInPage() {
               <span style={{ fontSize: '1rem', lineHeight: 1 }}>π</span>
               {isPiLoading ? 'Connecting...' : 'Continue with Pi Network'}
             </button>
+            {piError && (
+              <pre style={{
+                marginTop: '0.75rem', padding: '0.75rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.25)',
+                color: '#ef4444', fontFamily: 'var(--font-space-mono)', fontSize: '0.7rem', lineHeight: 1.5,
+              }}>
+                {piError}
+              </pre>
+            )}
           </div>
 
           {/* Bottom accent */}
