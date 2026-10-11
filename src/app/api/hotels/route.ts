@@ -44,6 +44,17 @@ export async function GET(request: NextRequest) {
       where.starRating = starRating;
     }
 
+    // Text search (the Hotels page's search box sends `search`; this route
+    // used to ignore it, so typing there did nothing).
+    const search = (searchParams.get('search') ?? '').trim().slice(0, 100);
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { city: { contains: search, mode: 'insensitive' } },
+        { country: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
     const [hotels, total] = await Promise.all([
       prisma.hotel.findMany({
         where,
