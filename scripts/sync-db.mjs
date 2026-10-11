@@ -16,9 +16,13 @@
 // Safe by design: `prisma db push` applies additive changes (new nullable
 // columns, new tables) on its own, and in a non-interactive environment it
 // REFUSES anything that would lose data ("Push cancelled") instead of
-// applying it. A refusal or any other failure fails the build, so the
-// previous (consistent) deployment keeps serving. Deliberately no
-// --accept-data-loss.
+// applying it. Deliberately no --accept-data-loss.
+//
+// A failed sync does NOT fail the build by default. It used to, and that
+// backfired: when the sync could not connect, NO deploy could ship at all —
+// including the fixes needed to diagnose the problem. It now logs loudly and
+// lets the build continue. Set SYNC_DB_STRICT=1 to make a failed sync fatal
+// again (once the connection is known-good).
 
 import { spawnSync } from 'node:child_process';
 
@@ -29,9 +33,19 @@ if (!isVercelProduction) {
   process.exit(0);
 }
 
+const strict = process.env.SYNC_DB_STRICT === '1';
+function giveUp(message, code) {
+  console.error(`[sync-db] ${message}`);
+  if (strict) {
+    console.error('[sync-db] SYNC_DB_STRICT=1 — failing the build.');
+    process.exit(code || 1);
+  }
+  console.error('[sync-db] CONTINUING THE BUILD without a schema sync. The database may be behind the code.');
+  process.exit(0);
+}
+
 if (!process.env.DATABASE_URL) {
-  console.error('[sync-db] DATABASE_URL is not set — cannot sync the schema. Failing the build on purpose.');
-  process.exit(1);
+  giveUp('DATABASE_URL is not set — cannot sync the schema.');
 }
 
 // schema.prisma declares directUrl = env("DIRECT_URL"); with no pooler it is
@@ -57,7 +71,6 @@ console.log('[sync-db] syncing database schema (prisma db push, no data-loss fla
 const result = spawnSync('npx', ['prisma', 'db', 'push', '--skip-generate'], { stdio: 'inherit', env });
 
 if (result.status !== 0) {
-  console.error('[sync-db] schema sync failed — failing the build so the current deployment stays live.');
-  process.exit(result.status ?? 1);
+  giveUp('schema sync failed.', result.status ?? 1);
 }
 console.log('[sync-db] schema is in sync.');
