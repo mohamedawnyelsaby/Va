@@ -38,6 +38,21 @@ if (!process.env.DATABASE_URL) {
 // the same value as DATABASE_URL (documented in .env.example).
 const env = { ...process.env, DIRECT_URL: process.env.DIRECT_URL || process.env.DATABASE_URL };
 
+// Host / port / user only — NEVER the password. When a sync fails because
+// one of the two URLs points at the wrong project or region, this is what
+// makes the build log enough to see which one.
+function describe(name, value) {
+  if (!value) {return `${name}: (not set)`;}
+  try {
+    const u = new URL(value);
+    return `${name}: host=${u.hostname} port=${u.port || '(default)'} user=${decodeURIComponent(u.username)}`;
+  } catch {
+    return `${name}: (not a valid URL)`;
+  }
+}
+console.log('[sync-db]', describe('DATABASE_URL', process.env.DATABASE_URL));
+console.log('[sync-db]', describe('DIRECT_URL (used for the sync)', env.DIRECT_URL));
+
 console.log('[sync-db] syncing database schema (prisma db push, no data-loss flag)...');
 const result = spawnSync('npx', ['prisma', 'db', 'push', '--skip-generate'], { stdio: 'inherit', env });
 
