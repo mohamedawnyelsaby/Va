@@ -51,6 +51,22 @@ export default function HotelsPage({ params }: { params: Promise<{ locale: strin
   const [search, setSearch] = useState('');
   const [starFilter, setStarFilter] = useState(0);
   const [sortBy, setSortBy] = useState<'rating' | 'price'>('rating');
+  const [errorDetail, setErrorDetail] = useState('');
+  const [ready, setReady] = useState(false);
+
+  // Other pages link here as /hotels?city=Dubai or /hotels?q=Dubai (cities page,
+  // search page, home search box, hotel breadcrumb). This page used to ignore
+  // both, so those links just showed every hotel. Read once on mount; the first
+  // fetch waits for this so there's no flash of unfiltered results.
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const initial = (sp.get('q') || sp.get('city') || '').trim().slice(0, 100);
+    if (initial) {
+      setSearchInput(initial);
+      setSearch(initial);
+    }
+    setReady(true);
+  }, []);
 
   // Debounce the search box so every keystroke doesn't fire a request.
   useEffect(() => {
@@ -67,6 +83,7 @@ export default function HotelsPage({ params }: { params: Promise<{ locale: strin
 
     setLoading(true);
     setError(false);
+    setErrorDetail('');
     try {
       const q = new URLSearchParams({
         page: String(page),
@@ -78,7 +95,7 @@ export default function HotelsPage({ params }: { params: Promise<{ locale: strin
       if (starFilter > 0) {q.set('starRating', String(starFilter));}
 
       const res = await fetch(`/api/hotels?${q}`, { signal: controller.signal });
-      if (!res.ok) {throw new Error('request failed');}
+      if (!res.ok) {throw new Error(`HTTP ${res.status}`);}
       const data: HotelsResponse = await res.json();
       setHotels(data.hotels || []);
       setTotal(data.pagination?.total ?? 0);
@@ -86,13 +103,14 @@ export default function HotelsPage({ params }: { params: Promise<{ locale: strin
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {return;}
       setError(true);
+      setErrorDetail(err instanceof Error ? err.message : 'network error');
       setHotels([]);
     } finally {
       setLoading(false);
     }
   }, [page, sortBy, search, starFilter]);
 
-  useEffect(() => { fetchHotels(); }, [fetchHotels]);
+  useEffect(() => { if (ready) {fetchHotels();} }, [ready, fetchHotels]);
 
   const FILTERS_EN = STAR_FILTERS.map((f) => f.label);
   const FILTERS_AR = STAR_FILTERS.map((f) => f.ar);
@@ -179,6 +197,7 @@ export default function HotelsPage({ params }: { params: Promise<{ locale: strin
       {!loading && error && (
         <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
           {isAr ? 'حدث خطأ في تحميل الفنادق. حاول مرة أخرى.' : 'Could not load hotels. Please try again.'}
+          {errorDetail && <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '0.5rem' }}>({errorDetail})</div>}
         </div>
       )}
 
