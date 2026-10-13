@@ -135,7 +135,16 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const exists = await prisma[body.itemType].findUnique({ where: { id: body.itemId }, select: { id: true } });
+    // A union of Prisma delegates isn't callable; pick the delegate explicitly
+    // (same approach as the reviews route).
+    const model =
+      body.itemType === 'hotel' ? prisma.hotel
+      : body.itemType === 'attraction' ? prisma.attraction
+      : prisma.restaurant;
+    const exists = await (model as typeof prisma.hotel).findUnique({
+      where: { id: body.itemId },
+      select: { id: true },
+    });
     if (!exists) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }

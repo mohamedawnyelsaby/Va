@@ -101,7 +101,7 @@ export const authOptions: NextAuthOptions = {
           if (!user || !user.password || !isValid) {return null;}
           if (!user.isActive) {return null;}
 
-          return { id: user.id, name: user.name, email: user.email };
+          return { id: user.id, name: user.name ?? undefined, email: user.email };
         } catch (e) {
           logger.error('[auth] credentials authorize error:', e);
           captureException(e instanceof Error ? e : new Error(String(e)), {
@@ -149,7 +149,7 @@ export const authOptions: NextAuthOptions = {
 
           if (!user.isActive) {return null;}
 
-          return { id: user.id, name: user.name, email: user.email };
+          return { id: user.id, name: user.name ?? undefined, email: user.email };
         } catch (e) {
           // Includes Pi API failures/timeouts: fail closed, never fall back
           // to trusting the client.
