@@ -25,6 +25,8 @@ import { captureException } from '@/lib/monitoring/sentry';
 import { getPayment, cancelPayment } from '@/lib/pi-network/platform-api';
 import { finalizePayment } from '@/lib/payments/finalize';
 
+const AMOUNT_TOLERANCE = 1e-6;
+
 const bodySchema = z.object({ piPaymentId: z.string().min(10).max(200) });
 
 export async function POST(request: NextRequest) {
@@ -70,7 +72,22 @@ export async function POST(request: NextRequest) {
       // Nothing on our side to reconcile, or it belongs to someone else.
       // Still resolve it on Pi's side so it stops blocking the user's SDK
       // from creating new payments, but don't touch any booking/cashback.
-      if (!piPayment.status?.developer_completed && !piPayment.status?.cancelled) {
+      //
+      // Only ever cancel a Pi payment that belongs to the CALLER's own Pi
+      // account: otherwise anyone who learns another user's Pi payment id
+      // could cancel that user's in-flight payment.
+      const caller = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { piWalletId: true },
+      });
+      const isCallersPiPayment =
+        Boolean(caller?.piWalletId) && piPayment.user_uid === caller?.piWalletId;
+
+      if (
+        isCallersPiPayment &&
+        !piPayment.status?.developer_completed &&
+        !piPayment.status?.cancelled
+      ) {
         try {
           await cancelPayment(piPaymentId);
         } catch (err) {
@@ -109,8 +126,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, resolved: 'cancelled', paymentId: payment.id });
     }
 
-    // Pi has a verified transaction: finalize exactly like /complete does.
+    // Pi has a verified transaction: finalize exactly like /complete does,
+    // which includes the SAME checks /approve and /complete make. Without
+    // them this endpoint would trust whatever Pi payment happens to carry a
+    // metadata reference to one of the caller's payments.
     if (piPayment.transaction?.txid && piPayment.transaction?.verified) {
+      const problems: string[] = [];
+      if (!payment.piPaymentId || payment.piPaymentId !== piPaymentId) {
+        problems.push('payment not linked to this Pi payment');
+      }
+      if (referencedPaymentId !== payment.id) {problems.push('payment reference mismatch');}
+      if (Math.abs(piPayment.amount - payment.amount) > AMOUNT_TOLERANCE) {
+        problems.push('amount mismatch');
+      }
+      if (piPayment.direction && piPayment.direction !== 'user_to_app') {
+        problems.push('wrong direction');
+      }
+      if (problems.length > 0) {
+        logger.warn(`[recover] Refusing to finalize ${payment.id}: ${problems.join(', ')}`);
+        captureException(new Error('Pi payment failed verification during recover'), {
+          context: 'payments/pi/recover',
+          paymentId: payment.id,
+          piPaymentId,
+          problems,
+        });
+        return NextResponse.json({ error: 'Payment verification failed' }, { status: 409 });
+      }
+
       const result = await finalizePayment({
         paymentId: payment.id,
         txid: piPayment.transaction.txid,
