@@ -49,7 +49,9 @@ export async function POST(request: NextRequest) {
     if (!user) {
       user = await prisma.user.create({
         data: {
-          email: `${piUsername}@pi.network`,
+          // Same scheme as lib/auth/options.ts and /api/auth/pi/verify: the
+          // immutable Pi uid, not the (changeable) username.
+          email: `${uid}@pi.network`,
           name: piUsername,
           piWalletId: uid,
           piUsername: piUsername,

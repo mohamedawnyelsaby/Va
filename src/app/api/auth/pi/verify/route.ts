@@ -29,18 +29,6 @@ const tokenCache = new Map<string, { uid: string; username: string; timestamp: n
 // ============================================
 
 /**
- * Generate secure session token
- */
-function generateSessionToken(uid: string): string {
-  const timestamp = Date.now().toString();
-  const random = crypto.randomBytes(16).toString('hex');
-  return crypto
-    .createHash('sha256')
-    .update(`${uid}:${timestamp}:${random}`)
-    .digest('hex');
-}
-
-/**
  * Clean expired cache entries
  */
 function cleanExpiredCache() {
@@ -140,8 +128,6 @@ export async function POST(request: NextRequest) {
     logger.log(`[${requestId}] ✅ Pi Platform verification successful`);
 
     // Database transaction for atomic user creation/update
-    const sessionToken = generateSessionToken(piUser.uid);
-    
     const user = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Upsert user with optimistic locking
       const updatedUser = await tx.user.upsert({
@@ -217,7 +203,6 @@ export async function POST(request: NextRequest) {
           username: piUser.username,
           id: user.id,
         },
-        sessionToken,
         requestId,
         performance: {
           verificationTime: duration,
@@ -293,18 +278,8 @@ export async function POST(request: NextRequest) {
 // ============================================
 
 export async function GET() {
-  return NextResponse.json({
-    service: 'Pi Verification',
-    status: 'healthy',
-    version: '2.0.0',
-    cache: {
-      size: tokenCache.size,
-      ttl: TOKEN_CACHE_TTL,
-    },
-    rateLimit: {
-      backend: 'redis (shared, see @/lib/rate-limit)',
-    },
-  });
+  // Intentionally minimal: no cache size / TTL / backend details.
+  return NextResponse.json({ service: 'Pi Verification', status: 'healthy' });
 }
 
 // ============================================
