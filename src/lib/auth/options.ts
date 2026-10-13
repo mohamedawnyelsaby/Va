@@ -27,6 +27,7 @@ import { prisma } from '@/lib/db';
 import { captureException } from '@/lib/monitoring/sentry';
 import { verifyPiUser } from '@/lib/pi-network/platform-api';
 import { logger } from '@/lib/logger';
+import { sessionVersion } from '@/lib/auth/session-version';
 
 // Precomputed bcrypt hash (cost 12) of a random string. Compared against when
 // the email does not exist so that "unknown email" and "wrong password" take
@@ -214,6 +215,30 @@ export const authOptions: NextAuthOptions = {
     },
 
     async jwt({ token, user, account }) {
+      // Every token read after sign-in: make sure the account is still valid.
+      // Throwing here makes NextAuth clear the cookie and treat the request
+      // as signed-out (getServerSession() -> null), which is what revokes:
+      //   - deactivated / deleted accounts (previously good for 30 days),
+      //   - sessions that predate a password change or reset.
+      if (!user && token.id) {
+        const current = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: { isActive: true, password: true },
+        });
+        if (!current || !current.isActive) {
+          throw new Error('SESSION_REVOKED');
+        }
+        const currentVersion = sessionVersion(current.password);
+        if (token.sv === undefined) {
+          // Token issued before this check existed: adopt the current state
+          // once instead of logging every existing user out at deploy time.
+          token.sv = currentVersion;
+        } else if (token.sv !== currentVersion) {
+          throw new Error('SESSION_REVOKED');
+        }
+        return token;
+      }
+
       if (user) {
         token.sub = user.id;
         token.id = user.id;
@@ -235,10 +260,11 @@ export const authOptions: NextAuthOptions = {
 
           const roleRow = await prisma.user.findUnique({
             where: { id: token.id },
-            select: { role: true, tier: true },
+            select: { role: true, tier: true, password: true },
           });
           token.role = roleRow?.role ?? 'user';
           token.tier = roleRow?.tier ?? 'free';
+          token.sv = sessionVersion(roleRow?.password);
         } catch (e) {
           // Fail closed: do not issue a token that carries the wrong user id.
           logger.error('[auth] jwt callback failed to resolve user:', e);

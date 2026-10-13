@@ -41,5 +41,7 @@ declare module 'next-auth/jwt' {
     tier?: string;
     piAccessToken?: string;
     provider?: string;
+    /** Fingerprint of the credentials this session was issued against. */
+    sv?: string;
   }
 }
