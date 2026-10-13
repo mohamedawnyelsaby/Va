@@ -27,11 +27,20 @@ import {
   countNights,
   resolveNightlyPrice,
   round2,
+  roundPi,
   toPiAmount,
 } from '@/lib/pricing';
 
 const MAX_STAY_NIGHTS = 60;
 const REUSE_WINDOW_MS = 30 * 60 * 1000;
+// How long an unpaid pending booking keeps its rooms reserved.
+const PENDING_HOLD_MS = 60 * 60 * 1000;
+
+class SoldOutError extends Error {
+  constructor(public readonly left: number) {
+    super('SOLD_OUT');
+  }
+}
 
 const createBookingSchema = z.object({
   type: z.enum(['hotel', 'attraction', 'restaurant']),
@@ -213,55 +222,76 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Overbooking protection — only runs for a genuinely NEW hotel booking
-    // (an identical pending retry above already returned), and only when
-    // this room type declares `totalRooms` in its JSON (see RoomType in
-    // lib/pricing.ts). No hotel does yet, so this is a no-op until that's
-    // set, matching current behaviour exactly for every existing listing.
-    if (data.type === 'hotel' && hotelRoomTotal) {
-      const requestedRooms = data.rooms ?? 1;
-      const overlapping = await prisma.booking.aggregate({
-        where: {
-          hotelId: data.itemId,
-          roomType: roomTypeLabel,
-          status: { in: ['pending', 'confirmed', 'refund_requested'] },
-          startDate: { lt: endDate },
-          endDate: { gt: startDate },
-        },
-        _sum: { rooms: true },
-      });
-      const alreadyBooked = overlapping._sum.rooms ?? 0;
-      if (alreadyBooked + requestedRooms > hotelRoomTotal) {
-        return NextResponse.json(
-          { error: `Sold out: only ${Math.max(0, hotelRoomTotal - alreadyBooked)} "${roomTypeLabel}" room(s) left for these dates.` },
-          { status: 409 }
-        );
-      }
-    }
+    const bookingData = {
+      userId,
+      itemId: data.itemId,
+      itemType: data.type,
+      itemName,
+      startDate,
+      endDate,
+      roomType: roomTypeLabel,
+      checkInDate: data.type === 'hotel' ? startDate : undefined,
+      checkOutDate: data.type === 'hotel' ? endDate : undefined,
+      guests: data.guests,
+      rooms: data.rooms ?? 1,
+      totalPrice,
+      currency,
+      // Nothing to pay (e.g. a restaurant reservation) -> confirmed directly.
+      status: requiresPayment ? 'pending' : 'confirmed',
+      paymentStatus: requiresPayment ? 'unpaid' : 'not_required',
+      paymentMethod: requiresPayment ? 'pi_network' : null,
+      specialRequests: data.specialRequests,
+      ...relation,
+    };
 
-    const booking = await prisma.booking.create({
-      data: {
-        userId,
-        itemId: data.itemId,
-        itemType: data.type,
-        itemName,
-        startDate,
-        endDate,
-        roomType: roomTypeLabel,
-        checkInDate: data.type === 'hotel' ? startDate : undefined,
-        checkOutDate: data.type === 'hotel' ? endDate : undefined,
-        guests: data.guests,
-        rooms: data.rooms ?? 1,
-        totalPrice,
-        currency,
-        // Nothing to pay (e.g. a restaurant reservation) -> confirmed directly.
-        status: requiresPayment ? 'pending' : 'confirmed',
-        paymentStatus: requiresPayment ? 'unpaid' : 'not_required',
-        paymentMethod: requiresPayment ? 'pi_network' : null,
-        specialRequests: data.specialRequests,
-        ...relation,
-      },
-    });
+    // Overbooking protection — only when this room type declares
+    // `totalRooms` in its JSON (see RoomType in lib/pricing.ts). No hotel does
+    // yet, so this is a no-op until that's set.
+    //
+    // - The check and the insert run in ONE transaction behind a per-hotel
+    //   advisory lock, so two simultaneous requests can't both see "1 room
+    //   left" and both succeed.
+    // - An unpaid `pending` booking only holds inventory for
+    //   PENDING_HOLD_MS; abandoned checkouts no longer block a room forever.
+    let booking;
+    if (data.type === 'hotel' && hotelRoomTotal && endDate) {
+      const requestedRooms = data.rooms ?? 1;
+      const holdCutoff = new Date(Date.now() - PENDING_HOLD_MS);
+      try {
+        booking = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${data.itemId}))`;
+          const overlapping = await tx.booking.aggregate({
+            where: {
+              hotelId: data.itemId,
+              roomType: roomTypeLabel,
+              startDate: { lt: endDate },
+              endDate: { gt: startDate },
+              OR: [
+                { status: { in: ['confirmed', 'refund_requested'] } },
+                { status: 'pending', paymentStatus: 'processing' },
+                { status: 'pending', createdAt: { gt: holdCutoff } },
+              ],
+            },
+            _sum: { rooms: true },
+          });
+          const alreadyBooked = overlapping._sum.rooms ?? 0;
+          if (alreadyBooked + requestedRooms > hotelRoomTotal) {
+            throw new SoldOutError(Math.max(0, hotelRoomTotal - alreadyBooked));
+          }
+          return tx.booking.create({ data: bookingData });
+        });
+      } catch (err) {
+        if (err instanceof SoldOutError) {
+          return NextResponse.json(
+            { error: `Sold out: only ${err.left} "${roomTypeLabel}" room(s) left for these dates.` },
+            { status: 409 }
+          );
+        }
+        throw err;
+      }
+    } else {
+      booking = await prisma.booking.create({ data: bookingData });
+    }
 
     return NextResponse.json(
       { ...booking, piAmount, nights, nightlyPrice, roomType: roomTypeLabel },
@@ -335,18 +365,57 @@ export async function PATCH(request: NextRequest) {
     // needed to send the refund manually from the Pi Wallet app.
     //
     // Only for bookings that haven't started yet, and only once.
-    const refundRequested = await prisma.booking.updateMany({
-      where: {
-        id: bookingId,
-        userId,
-        status: 'confirmed',
-        paymentStatus: 'paid',
-        startDate: { gt: new Date() },
-      },
-      data: { status: 'refund_requested' },
+    //
+    // The 2% Pi cashback credited when the payment completed is reversed in
+    // the SAME transaction (capped at the user's current balance), so a user
+    // can't pay, collect cashback, and then be refunded in full.
+    const refundRequested = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const res = await tx.booking.updateMany({
+        where: {
+          id: bookingId,
+          userId,
+          status: 'confirmed',
+          paymentStatus: 'paid',
+          startDate: { gt: new Date() },
+        },
+        data: { status: 'refund_requested' },
+      });
+      if (res.count === 0) {return false;}
+
+      const completed = await tx.payment.findFirst({
+        where: { bookingId, status: 'completed' },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, userId: true, metadata: true },
+      });
+      const meta = (completed?.metadata ?? {}) as { cashback?: unknown };
+      const cashback = Number(meta.cashback);
+      if (completed && Number.isFinite(cashback) && cashback > 0) {
+        const owner = await tx.user.findUnique({
+          where: { id: completed.userId },
+          select: { piBalance: true },
+        });
+        const reversed = roundPi(Math.min(cashback, owner?.piBalance ?? 0));
+        if (reversed > 0) {
+          await tx.user.update({
+            where: { id: completed.userId },
+            data: { piBalance: { decrement: reversed } },
+          });
+        }
+        await tx.payment.update({
+          where: { id: completed.id },
+          data: {
+            metadata: {
+              ...(completed.metadata as object),
+              cashbackReversed: reversed,
+              cashbackReversedAt: new Date().toISOString(),
+            },
+          },
+        });
+      }
+      return true;
     });
 
-    if (refundRequested.count === 0) {
+    if (!refundRequested) {
       return NextResponse.json(
         { error: 'This booking can no longer be cancelled or refunded.' },
         { status: 400 }
