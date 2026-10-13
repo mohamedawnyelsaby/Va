@@ -13,7 +13,7 @@ import { Redis } from '@upstash/redis';
 import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 
-export type RateLimitTier = 'auth' | 'payment' | 'ai' | 'search';
+export type RateLimitTier = 'auth' | 'payment' | 'ai' | 'search' | 'login' | 'loginEmail';
 
 // tier -> [max requests, window in seconds]
 const TIER_CONFIG: Record<RateLimitTier, [number, number]> = {
@@ -21,6 +21,11 @@ const TIER_CONFIG: Record<RateLimitTier, [number, number]> = {
   payment: [5, 60],
   ai: [10, 60],
   search: [30, 60],
+  // Password sign-in. `login` is per client IP; `loginEmail` is per target
+  // account (15 min window) so a distributed attack on ONE account is
+  // throttled even when every request comes from a different IP.
+  login: [10, 60],
+  loginEmail: [10, 900],
 };
 
 const redis =
@@ -85,9 +90,16 @@ function memoryLimit(identifier: string, max: number, windowSec: number) {
   };
 }
 
-function getClientId(request: Request): string {
-  const forwardedFor = request.headers.get('x-forwarded-for');
-  return forwardedFor?.split(',')[0]?.trim() || 'unknown';
+/**
+ * Best-effort client IP. Platform-set headers win over the generic
+ * x-forwarded-for, whose first entry is client-controlled on hosts that
+ * append to (rather than overwrite) it (Docker/Railway behind a proxy).
+ */
+export function getClientId(request: Request): string {
+  const h = request.headers;
+  const platformIp = h.get('x-vercel-forwarded-for') || h.get('x-real-ip');
+  if (platformIp) {return platformIp.split(',')[0].trim() || 'unknown';}
+  return h.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
 }
 
 /**
@@ -99,9 +111,11 @@ function getClientId(request: Request): string {
  */
 export async function checkRateLimit(
   request: Request,
-  tier: RateLimitTier
+  tier: RateLimitTier,
+  /** Overrides the default per-IP key (e.g. a normalised email address). */
+  key?: string
 ): Promise<NextResponse | null> {
-  const identifier = `${tier}:${getClientId(request)}`;
+  const identifier = `${tier}:${key ?? getClientId(request)}`;
   const [max, windowSec] = TIER_CONFIG[tier];
 
   let result: { success: boolean; limit: number; remaining: number; reset: number };
