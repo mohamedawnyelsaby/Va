@@ -67,6 +67,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // "Verified" = the reviewer has a paid booking for this exact item.
+    // Reviews are still allowed without one; the flag lets the UI tell them
+    // apart (it used to exist in the schema but was never set).
+    const paidBooking = await prisma.booking.findFirst({
+      where: {
+        userId,
+        itemId: data.itemId,
+        itemType: data.itemType,
+        paymentStatus: 'paid',
+        status: { in: ['confirmed', 'refund_requested'] },
+      },
+      select: { id: true },
+    });
+
     // Review + recomputed rating in ONE transaction, using a DB aggregate
     // instead of loading every review into memory.
     const review = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
@@ -78,6 +92,7 @@ export async function POST(request: NextRequest) {
           rating: data.rating,
           title: data.title,
           comment: data.comment,
+          verified: Boolean(paidBooking),
         },
       });
 
