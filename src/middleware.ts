@@ -4,7 +4,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-const locales = ['en', 'ar', 'fr', 'es', 'de', 'it', 'ru', 'zh', 'ja', 'ko'];
+// Must match src/app/[locale]/layout.tsx and Locale in lib/i18n/translations.ts:
+// a locale accepted here but not there redirects visitors to a 404.
+const locales = ['en', 'ar', 'fr', 'es', 'de', 'ru', 'zh', 'ja'];
 const defaultLocale = 'en';
 
 // Pi payment routes must NEVER require auth.

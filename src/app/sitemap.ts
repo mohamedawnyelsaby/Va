@@ -8,7 +8,8 @@ import { MetadataRoute } from 'next';
 // elsewhere for the canonical site URL — falling back to the old preview
 // URL only if NEXTAUTH_URL isn't set.
 const BASE_URL = process.env.NEXTAUTH_URL || 'https://va-pied.vercel.app';
-const LOCALES = ['en', 'ar', 'fr', 'es', 'de', 'it', 'ru', 'zh', 'ja', 'ko'];
+// Keep in sync with the supported locales in src/middleware.ts.
+const LOCALES = ['en', 'ar', 'fr', 'es', 'de', 'ru', 'zh', 'ja'];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const sitemap: MetadataRoute.Sitemap = [];
