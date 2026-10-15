@@ -11,5 +11,11 @@
       "SKIP_ENV_VALIDATION": "1",
       "SKIP_PRISMA_MIGRATE": "1"
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/reconcile-payments",
+      "schedule": "0 3 * * *"
+    }
+  ]
 }
