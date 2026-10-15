@@ -23,7 +23,7 @@ export async function finalizePayment(params: {
   requestId: string;
   /** statuses the payment may be moved to 'completed' from */
   allowedFrom: string[];
-  source: 'client' | 'webhook';
+  source: 'client' | 'webhook' | 'recover' | 'reconcile';
 }): Promise<FinalizeResult> {
   const { paymentId, txid, requestId, allowedFrom, source } = params;
 

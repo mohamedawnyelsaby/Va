@@ -5,6 +5,7 @@ import type { NextRequest } from 'next/server';
 const m = vi.hoisted(() => ({
   getPayment: vi.fn(),
   cancelPayment: vi.fn(),
+  completePayment: vi.fn(),
   finalizePayment: vi.fn(),
   paymentFindFirst: vi.fn(),
   paymentUpdateMany: vi.fn(),
@@ -20,6 +21,7 @@ vi.mock('@/lib/monitoring/sentry', () => ({ captureException: vi.fn() }));
 vi.mock('@/lib/pi-network/platform-api', () => ({
   getPayment: m.getPayment,
   cancelPayment: m.cancelPayment,
+  completePayment: m.completePayment,
 }));
 vi.mock('@/lib/payments/finalize', () => ({ finalizePayment: m.finalizePayment }));
 vi.mock('@/lib/db', () => ({
@@ -65,6 +67,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   m.paymentFindFirst.mockResolvedValue(ourPayment);
   m.getPayment.mockResolvedValue(piPayment());
+  m.completePayment.mockResolvedValue(undefined);
   m.finalizePayment.mockResolvedValue({ finalized: true, cashback: 0.2 });
   m.userFindUnique.mockResolvedValue({ piWalletId: 'pi_uid_1' });
 });
@@ -105,6 +108,68 @@ describe('POST /api/payments/pi/recover — finalize path', () => {
     const res = await call();
     expect(res.status).toBe(409);
     expect(m.finalizePayment).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/payments/pi/recover — closing the payment on Pi', () => {
+  it('completes the payment on Pi BEFORE persisting it (same order as /complete)', async () => {
+    await call();
+    expect(m.completePayment).toHaveBeenCalledWith(PI_ID, 'tx_1');
+    expect(m.completePayment.mock.invocationCallOrder[0]).toBeLessThan(
+      m.finalizePayment.mock.invocationCallOrder[0]
+    );
+  });
+
+  it('skips the Pi call when Pi already has it completed', async () => {
+    m.getPayment.mockResolvedValue(
+      piPayment({
+        status: { developer_approved: true, developer_completed: true, cancelled: false, user_cancelled: false },
+      })
+    );
+    await call();
+    expect(m.completePayment).not.toHaveBeenCalled();
+    expect(m.finalizePayment).toHaveBeenCalledTimes(1);
+  });
+
+  it('answers 502 and persists NOTHING when Pi rejects the completion', async () => {
+    m.completePayment.mockRejectedValue(new Error('pi down'));
+    // the re-check also shows it is not completed on Pi
+    const res = await call();
+    expect(res.status).toBe(502);
+    expect(m.finalizePayment).not.toHaveBeenCalled();
+  });
+
+  it('still persists when the Pi call errored but Pi did record the completion', async () => {
+    m.completePayment.mockRejectedValue(new Error('timeout'));
+    m.getPayment
+      .mockResolvedValueOnce(piPayment())
+      .mockResolvedValueOnce(
+        piPayment({
+          status: { developer_approved: true, developer_completed: true, cancelled: false, user_cancelled: false },
+        })
+      );
+    const res = await call();
+    expect(res.status).toBe(200);
+    expect(m.finalizePayment).toHaveBeenCalledTimes(1);
+  });
+
+  it('heals a payment that is completed here but still open on Pi', async () => {
+    m.paymentFindFirst.mockResolvedValue({ ...ourPayment, status: 'completed' });
+    const res = await call();
+    expect((await res.json()).resolved).toBe('already_completed');
+    expect(m.completePayment).toHaveBeenCalledWith(PI_ID, 'tx_1');
+    expect(m.finalizePayment).not.toHaveBeenCalled();
+  });
+
+  it('does not touch Pi for an already-completed payment Pi has also closed', async () => {
+    m.paymentFindFirst.mockResolvedValue({ ...ourPayment, status: 'completed' });
+    m.getPayment.mockResolvedValue(
+      piPayment({
+        status: { developer_approved: true, developer_completed: true, cancelled: false, user_cancelled: false },
+      })
+    );
+    await call();
+    expect(m.completePayment).not.toHaveBeenCalled();
   });
 });
 

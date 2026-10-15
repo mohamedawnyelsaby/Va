@@ -23,9 +23,7 @@ import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { captureException } from '@/lib/monitoring/sentry';
 import { getPayment, cancelPayment } from '@/lib/pi-network/platform-api';
-import { finalizePayment } from '@/lib/payments/finalize';
-
-const AMOUNT_TOLERANCE = 1e-6;
+import { reconcilePiPayment } from '@/lib/payments/reconcile';
 
 const bodySchema = z.object({ piPaymentId: z.string().min(10).max(200) });
 
@@ -103,92 +101,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, resolved: 'orphaned', piPaymentId });
     }
 
-    // Already settled on our side — nothing to do, just confirm.
-    if (payment.status === 'completed') {
-      return NextResponse.json({ success: true, resolved: 'already_completed', paymentId: payment.id });
-    }
-    if (payment.status === 'cancelled' || payment.status === 'failed') {
-      return NextResponse.json({ success: true, resolved: payment.status, paymentId: payment.id });
-    }
+    // From here the payment is the caller's own. The shared reconciler makes
+    // the same checks /approve and /complete make, closes the payment on Pi
+    // (so it stops blocking the SDK), and persists exactly once.
+    const result = await reconcilePiPayment({
+      payment,
+      piPayment,
+      piPaymentId,
+      requestId: `recover-${piPaymentId}`,
+      source: 'recover',
+    });
 
-    // Pi says it was cancelled: mirror that locally and stop.
-    if (piPayment.status?.cancelled || piPayment.status?.user_cancelled) {
-      await prisma.payment.updateMany({
-        where: { id: payment.id, status: { in: ['pending', 'approved'] } },
-        data: { status: 'cancelled' },
-      });
-      if (payment.bookingId) {
-        await prisma.booking.updateMany({
-          where: { id: payment.bookingId, paymentStatus: { not: 'paid' } },
-          data: { status: 'cancelled', paymentStatus: 'failed' },
-        });
-      }
-      return NextResponse.json({ success: true, resolved: 'cancelled', paymentId: payment.id });
+    if (result.resolved === 'refused') {
+      return NextResponse.json({ error: 'Payment verification failed' }, { status: 409 });
     }
-
-    // Pi has a verified transaction: finalize exactly like /complete does,
-    // which includes the SAME checks /approve and /complete make. Without
-    // them this endpoint would trust whatever Pi payment happens to carry a
-    // metadata reference to one of the caller's payments.
-    if (piPayment.transaction?.txid && piPayment.transaction?.verified) {
-      const problems: string[] = [];
-      if (!payment.piPaymentId || payment.piPaymentId !== piPaymentId) {
-        problems.push('payment not linked to this Pi payment');
-      }
-      if (referencedPaymentId !== payment.id) {problems.push('payment reference mismatch');}
-      if (Math.abs(piPayment.amount - payment.amount) > AMOUNT_TOLERANCE) {
-        problems.push('amount mismatch');
-      }
-      if (piPayment.direction && piPayment.direction !== 'user_to_app') {
-        problems.push('wrong direction');
-      }
-      if (problems.length > 0) {
-        logger.warn(`[recover] Refusing to finalize ${payment.id}: ${problems.join(', ')}`);
-        captureException(new Error('Pi payment failed verification during recover'), {
-          context: 'payments/pi/recover',
-          paymentId: payment.id,
-          piPaymentId,
-          problems,
-        });
-        return NextResponse.json({ error: 'Payment verification failed' }, { status: 409 });
-      }
-
-      const result = await finalizePayment({
-        paymentId: payment.id,
-        txid: piPayment.transaction.txid,
-        requestId: `recover-${piPaymentId}`,
-        allowedFrom: ['pending', 'approved'],
-        source: 'webhook',
-      });
-      return NextResponse.json({
-        success: true,
-        resolved: 'finalized',
-        paymentId: payment.id,
-        finalized: result.finalized,
-        cashback: result.cashback,
-      });
+    if (result.resolved === 'pi_completion_failed') {
+      return NextResponse.json(
+        { error: 'Pi Network completion failed. Please try again.' },
+        { status: 502 }
+      );
     }
-
-    // Not yet approved on Pi and no transaction: Pi never saw money move,
-    // so it's safe to cancel and let the user try again cleanly.
-    if (!piPayment.status?.developer_approved) {
-      try {
-        await cancelPayment(piPaymentId);
-      } catch (err) {
-        logger.warn('[recover] cancelPayment failed:', err instanceof Error ? err.message : err);
-      }
-      await prisma.payment.updateMany({
-        where: { id: payment.id, status: 'pending' },
-        data: { status: 'cancelled' },
-      });
-      return NextResponse.json({ success: true, resolved: 'cancelled_unapproved', paymentId: payment.id });
-    }
-
-    // Approved but no transaction yet (blockchain submission never
-    // happened or hasn't confirmed) — leave it as approved. The user can
-    // retry completion once Pi has a transaction, or this will be picked
-    // up again next time the SDK reports it as incomplete.
-    return NextResponse.json({ success: true, resolved: 'pending_transaction', paymentId: payment.id });
+    return NextResponse.json({ success: true, ...result });
   } catch (error) {
     logger.error('[recover] error:', error);
     captureException(error instanceof Error ? error : new Error(String(error)), { context: 'payments/pi/recover' });
