@@ -31,7 +31,10 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 // One or more comma-separated Gemini model ids, tried in order. Configure
 // via GEMINI_MODELS if Google retires/renames a model without notice.
-const GEMINI_MODELS = (process.env.GEMINI_MODELS || 'gemini-2.0-flash,gemini-1.5-flash')
+// Defaults checked against https://ai.google.dev/gemini-api/docs/deprecations
+// (2026-10-12): gemini-2.0-flash shut down 2026-06-01 and gemini-1.5-flash is
+// long gone, so the old defaults always failed over to OpenAI.
+const GEMINI_MODELS = (process.env.GEMINI_MODELS || 'gemini-3.8-flash,gemini-3.5-flash-lite')
   .split(',')
   .map((m) => m.trim())
   .filter(Boolean);
