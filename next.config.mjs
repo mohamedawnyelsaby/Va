@@ -13,13 +13,11 @@
 //    uses are allowed.
 // 4) Added standard security headers and disabled the X-Powered-By header.
 //
-// NOT CHANGED ON PURPOSE:
-// - typescript.ignoreBuildErrors stays true for now. CI now runs a full
-//   `next build` in addition to `tsc --noEmit` (see .github/workflows/
-//   deploy.yml), so a broken build gets caught there even with this flag
-//   on. Flip this to false once a clean CI build has been observed for a
-//   while and the Next 15 async `params` migration in [locale] pages is
-//   confirmed complete.
+// TYPE CHECKING:
+// - typescript.ignoreBuildErrors is false: `next build` now fails on type
+//   errors instead of shipping them. `tsc --noEmit` has been clean and CI's
+//   full build has passed, so this should not block deploys; if a deploy
+//   fails on a type error, fix the error rather than flipping this back.
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -43,7 +41,7 @@ const nextConfig = {
   },
 
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   images: {
