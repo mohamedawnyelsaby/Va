@@ -3,8 +3,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { NextRequest } from 'next/server';
 
 const m = vi.hoisted(() => ({
+  hotelFindUnique: vi.fn(),
+  bookingFindFirst: vi.fn(),
+  bookingCreate: vi.fn(),
   tx: {
-    booking: { updateMany: vi.fn() },
+    $executeRaw: vi.fn(),
+    booking: { updateMany: vi.fn(), aggregate: vi.fn(), create: vi.fn() },
     payment: { updateMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     user: { findUnique: vi.fn(), update: vi.fn() },
   },
@@ -18,12 +22,17 @@ vi.mock('@/lib/email/notifications', () => ({ sendRefundRequestEmail: vi.fn() })
 vi.mock('@/lib/db', () => ({
   prisma: {
     $transaction: (fn: (t: typeof m.tx) => unknown) => fn(m.tx),
-    booking: { findUnique: m.bookingFindUnique },
+    booking: {
+      findUnique: m.bookingFindUnique,
+      findFirst: m.bookingFindFirst,
+      create: m.bookingCreate,
+    },
+    hotel: { findUnique: m.hotelFindUnique },
     payment: { findFirst: m.paymentFindFirst },
   },
 }));
 
-import { PATCH } from '@/app/api/bookings/route';
+import { PATCH, POST } from '@/app/api/bookings/route';
 
 const cancel = () =>
   PATCH(
@@ -86,5 +95,108 @@ describe('PATCH /api/bookings — refund request reverses cashback', () => {
     const res = await cancel();
     expect(res.status).toBe(400);
     expect(m.tx.user.update).not.toHaveBeenCalled();
+  });
+});
+
+
+/* ---------------- POST: overbooking protection ---------------- */
+
+const day = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString();
+const book = (over: Record<string, unknown> = {}) =>
+  POST(
+    new Request('http://localhost/api/bookings', {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'hotel',
+        itemId: 'h1',
+        startDate: day(10),
+        endDate: day(12),
+        guests: 2,
+        rooms: 1,
+        roomType: 'Deluxe',
+        ...over,
+      }),
+    }) as unknown as NextRequest
+  );
+
+const hotelWith = (totalRooms?: number) => ({
+  name: 'Test Hotel',
+  pricePerNight: 100,
+  currency: 'USD',
+  roomTypes: [{ type: 'Deluxe', price: 100, ...(totalRooms ? { totalRooms } : {}) }],
+});
+
+describe('POST /api/bookings — overbooking protection', () => {
+  beforeEach(() => {
+    m.bookingFindFirst.mockResolvedValue(null); // no reusable pending booking
+    m.tx.booking.create.mockImplementation(async ({ data }: { data: object }) => ({ id: 'new', ...data }));
+    m.bookingCreate.mockImplementation(async ({ data }: { data: object }) => ({ id: 'plain', ...data }));
+    m.tx.booking.aggregate.mockResolvedValue({ _sum: { rooms: 0 } });
+  });
+
+  it('rejects with 409 when the room type is sold out, and creates nothing', async () => {
+    m.hotelFindUnique.mockResolvedValue(hotelWith(2));
+    m.tx.booking.aggregate.mockResolvedValue({ _sum: { rooms: 2 } });
+    const res = await book();
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toMatch(/sold out/i);
+    expect(m.tx.booking.create).not.toHaveBeenCalled();
+  });
+
+  it('creates the booking when there is room, inside the transaction', async () => {
+    m.hotelFindUnique.mockResolvedValue(hotelWith(2));
+    m.tx.booking.aggregate.mockResolvedValue({ _sum: { rooms: 1 } });
+    const res = await book();
+    expect(res.status).toBe(201);
+    expect(m.tx.booking.create).toHaveBeenCalledTimes(1);
+    expect(m.bookingCreate).not.toHaveBeenCalled();
+  });
+
+  it('takes the per-hotel lock BEFORE counting, so concurrent requests serialise', async () => {
+    m.hotelFindUnique.mockResolvedValue(hotelWith(2));
+    await book();
+    expect(m.tx.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(m.tx.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      m.tx.booking.aggregate.mock.invocationCallOrder[0]
+    );
+    expect(m.tx.booking.aggregate.mock.invocationCallOrder[0]).toBeLessThan(
+      m.tx.booking.create.mock.invocationCallOrder[0]
+    );
+  });
+
+  it('refuses a request for more rooms than remain, and reports how many are left', async () => {
+    m.hotelFindUnique.mockResolvedValue(hotelWith(2));
+    m.tx.booking.aggregate.mockResolvedValue({ _sum: { rooms: 1 } });
+    const res = await book({ rooms: 2 });
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toContain('only 1');
+  });
+
+  it('counts confirmed and in-flight bookings, plus only RECENT unpaid pending ones', async () => {
+    m.hotelFindUnique.mockResolvedValue(hotelWith(2));
+    await book();
+    const { where } = m.tx.booking.aggregate.mock.calls[0][0];
+    expect(where.OR).toEqual(
+      expect.arrayContaining([
+        { status: { in: ['confirmed', 'refund_requested'] } },
+        { status: 'pending', paymentStatus: 'processing' },
+      ])
+    );
+    const pending = where.OR.find(
+      (c: { status: string; createdAt?: unknown }) => c.status === 'pending' && c.createdAt
+    );
+    const cutoff = pending.createdAt.gt as Date;
+    const ageMin = (Date.now() - cutoff.getTime()) / 60_000;
+    expect(ageMin).toBeGreaterThan(59); // holds rooms for ~60 minutes, no longer
+    expect(ageMin).toBeLessThan(61);
+  });
+
+  it('keeps today\'s behaviour for hotels that declare no totalRooms: no lock, no counting', async () => {
+    m.hotelFindUnique.mockResolvedValue(hotelWith(undefined));
+    const res = await book();
+    expect(res.status).toBe(201);
+    expect(m.bookingCreate).toHaveBeenCalledTimes(1);
+    expect(m.tx.$executeRaw).not.toHaveBeenCalled();
+    expect(m.tx.booking.aggregate).not.toHaveBeenCalled();
   });
 });
