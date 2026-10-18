@@ -6,7 +6,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
-import { MapPin, Star, Heart, Share2, Wifi, Coffee, Dumbbell, Utensils, Calendar, Users, MessageSquare } from 'lucide-react';
+import { MapPin, Star, Heart, Share2, Calendar, CalendarCheck, CalendarDays, Users, BedDouble, Lock, ShieldCheck, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
@@ -17,6 +17,7 @@ import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { RecentlyViewed } from '@/components/ui/RecentlyViewed';
 import { addToRecentlyViewed } from '@/components/ui/Breadcrumb';
 import { useFavorite } from '@/hooks/use-favorite';
+import { AmenityGrid } from '@/components/hotel/AmenityGrid';
 
 function Spinner() {
   return (
@@ -30,9 +31,20 @@ function Spinner() {
   );
 }
 
-const AMENITY_ICONS: Record<string, typeof Wifi> = {
-  WiFi: Wifi, Breakfast: Coffee, Gym: Dumbbell, Restaurant: Utensils, Pool: Coffee,
-};
+/** "Fri, 24 Oct → Sun, 26 Oct" in the page language. Parsed as local dates so
+ *  the day can't shift by a timezone offset. */
+function formatStay(checkIn: string, checkOut: string, locale: string): string {
+  const fmt = (iso: string) => {
+    const d = new Date(`${iso}T00:00:00`);
+    if (Number.isNaN(d.getTime())) {return iso;}
+    try {
+      return d.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' });
+    } catch {
+      return d.toLocaleDateString('en', { weekday: 'short', day: 'numeric', month: 'short' });
+    }
+  };
+  return `${fmt(checkIn)} → ${fmt(checkOut)}`;
+}
 
 interface RoomType {
   type: string;
@@ -82,6 +94,19 @@ export default function HotelDetailPage() {
   const [bookingData,  setBookingData]  = useState({ checkIn: '', checkOut: '', guests: 1, rooms: 1 });
 
   const lightbox = useImageLightbox([]);
+
+  // Is the booking card on screen? (drives the mobile sticky CTA)
+  const [bookingCardVisible, setBookingCardVisible] = useState(false);
+  useEffect(() => {
+    const el = document.getElementById('booking-card');
+    if (!el || typeof IntersectionObserver === 'undefined') {return;}
+    const io = new IntersectionObserver(([entry]) => setBookingCardVisible(entry.isIntersecting), { threshold: 0.15 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [loading, hotel?.id]);
+
+  const scrollToBooking = () =>
+    document.getElementById('booking-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   const fetchHotel = useCallback(async () => {
     try {
@@ -158,7 +183,7 @@ export default function HotelDetailPage() {
   const images = hotel.images?.length > 0 ? hotel.images : [hotel.thumbnail].filter((img): img is string => Boolean(img));
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', paddingTop: '60px' }}>
+    <div className="hotel-detail-page" style={{ minHeight: '100vh', background: 'var(--vg-bg)', paddingTop: '60px' }}>
 
       {lightbox.open && (
         <ImageLightbox images={images} initialIndex={lightbox.index} alt={hotel.name} onClose={lightbox.close} />
@@ -260,7 +285,7 @@ export default function HotelDetailPage() {
       {/* Main content */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: '2rem', padding: `2.5rem ${VG.section.x}`, maxWidth: '1400px', margin: '0 auto' }}
         className="hotel-detail-grid">
-        <style>{'@media(max-width:900px){.hotel-detail-grid{grid-template-columns:1fr!important}}'}</style>
+        <style>{'.hotel-mobile-cta{display:none}@media(max-width:900px){.hotel-detail-grid{grid-template-columns:1fr!important}.hotel-mobile-cta{display:flex}.hotel-detail-page{padding-bottom:76px}}'}</style>
 
         {/* Left */}
         <div>
@@ -276,17 +301,7 @@ export default function HotelDetailPage() {
           {hotel.amenities?.length > 0 && (
             <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', borderTop: 'none', padding: '2rem', marginBottom: '1px' }}>
               <div className="vg-overline" style={{ marginBottom: '1.2rem' }}>Amenities</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.5rem' }}>
-                {hotel.amenities.map((a: string) => {
-                  const Icon = AMENITY_ICONS[a] || Wifi;
-                  return (
-                    <div key={a} className="vg-pi-step" style={{ padding: '0.65rem 0.8rem' }}>
-                      <Icon size={13} color="var(--vg-gold)" />
-                      <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-2)' }}>{a}</span>
-                    </div>
-                  );
-                })}
-              </div>
+              <AmenityGrid amenities={hotel.amenities} />
             </div>
           )}
 
@@ -366,7 +381,7 @@ export default function HotelDetailPage() {
 
         {/* Sticky booking card */}
         <div>
-          <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-gold-border)', position: 'sticky', top: '80px' }}>
+          <div id="booking-card" style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-gold-border)', position: 'sticky', top: '80px', scrollMarginTop: '80px' }}>
             <div style={{ height: '2px', background: 'linear-gradient(to right, var(--vg-gold), var(--vg-gold-2))' }} />
             <div style={{ padding: '1.8rem' }}>
               <div className="vg-overline" style={{ marginBottom: '1.2rem' }}>Book Your Stay</div>
@@ -379,9 +394,9 @@ export default function HotelDetailPage() {
               {/* Check-in */}
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ ...monoLabel, display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
-                  <Calendar size={11} /> Check-in
+                  <Calendar size={14} aria-hidden /> Check-in
                 </label>
-                <input type="date" min={today} value={bookingData.checkIn}
+                <input type="date" lang={locale} min={today} value={bookingData.checkIn}
                   onChange={e => setBookingData({ ...bookingData, checkIn: e.target.value })}
                   style={inputBase}
                   onFocus={e => Object.assign(e.target.style, inputFocus)}
@@ -391,9 +406,9 @@ export default function HotelDetailPage() {
               {/* Check-out */}
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ ...monoLabel, display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
-                  <Calendar size={11} /> Check-out
+                  <Calendar size={14} aria-hidden /> Check-out
                 </label>
-                <input type="date" min={bookingData.checkIn || today} value={bookingData.checkOut}
+                <input type="date" lang={locale} min={bookingData.checkIn || today} value={bookingData.checkOut}
                   onChange={e => setBookingData({ ...bookingData, checkOut: e.target.value })}
                   style={inputBase}
                   onFocus={e => Object.assign(e.target.style, inputFocus)}
@@ -404,7 +419,7 @@ export default function HotelDetailPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
                 <div>
                   <label style={{ ...monoLabel, display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
-                    <Users size={11} /> Guests
+                    <Users size={14} aria-hidden /> Guests
                   </label>
                   <input type="number" min={1} max={20} value={bookingData.guests}
                     onChange={e => setBookingData({ ...bookingData, guests: parseInt(e.target.value) || 1 })}
@@ -413,7 +428,9 @@ export default function HotelDetailPage() {
                     onBlur={e => Object.assign(e.target.style, inputBlur)} />
                 </div>
                 <div>
-                  <label style={{ ...monoLabel, display: 'block', marginBottom: '0.5rem' }}>Rooms</label>
+                  <label style={{ ...monoLabel, display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
+                    <BedDouble size={14} aria-hidden /> Rooms
+                  </label>
                   <input type="number" min={1} max={10} value={bookingData.rooms}
                     onChange={e => setBookingData({ ...bookingData, rooms: parseInt(e.target.value) || 1 })}
                     style={inputBase}
@@ -422,12 +439,20 @@ export default function HotelDetailPage() {
                 </div>
               </div>
 
+              {/* Stay summary */}
+              {nights > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-2)' }}>
+                  <CalendarDays size={14} color="var(--vg-gold)" aria-hidden style={{ flexShrink: 0 }} />
+                  <span>{formatStay(bookingData.checkIn, bookingData.checkOut, locale)} · {nights} {nights === 1 ? 'night' : 'nights'}</span>
+                </div>
+              )}
+
               {/* Price breakdown */}
               {nights > 0 && (
                 <div style={{ background: 'var(--vg-bg-surface)', padding: '1rem', marginBottom: '1.2rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                     <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-3)' }}>
-                      {formatCurrency(pricePerNight, hotel.currency)} × {nights}n × {bookingData.rooms}rm
+                      {formatCurrency(pricePerNight, hotel.currency)} × {nights} {nights === 1 ? 'night' : 'nights'} × {bookingData.rooms} {bookingData.rooms === 1 ? 'room' : 'rooms'}
                     </span>
                     <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-2)' }}>{formatCurrency(subtotal, hotel.currency)}</span>
                   </div>
@@ -443,17 +468,43 @@ export default function HotelDetailPage() {
                 </div>
               )}
 
-              <button onClick={handleBooking} className="vg-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1.1rem', fontSize: VG.font.button, letterSpacing: VG.tracking.normal }}>
-                Book Now — π {pricePerNight > 0 ? pricePerNight.toFixed(2) : '—'}/night
+              <button onClick={handleBooking} className="vg-btn-primary" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', padding: '1.1rem', fontSize: VG.font.button, letterSpacing: VG.tracking.normal }}>
+                <CalendarCheck size={16} aria-hidden />
+                {nights > 0 ? `Book Now · ${formatCurrency(total, hotel.currency)}` : 'Book Now'}
               </button>
 
-              <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-3)', textAlign: 'center', marginTop: '0.75rem', lineHeight: 1.6 }}>
-                Free cancellation up to 24 hours before check-in
-              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.9rem', fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-3)', lineHeight: 1.5 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                  <Lock size={14} aria-hidden style={{ flexShrink: 0, marginTop: '0.15rem' }} />
+                  <span>Pay securely with Pi. The exact π amount is shown before you confirm.</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                  <ShieldCheck size={14} aria-hidden style={{ flexShrink: 0, marginTop: '0.15rem' }} />
+                  <span>Free cancellation up to 24 hours before check-in</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Mobile: the booking card is the LAST block on small screens, so keep a
+          sticky call-to-action above the bottom nav until the card is in view. */}
+      {!bookingCardVisible && (
+        <div className="hotel-mobile-cta" style={{ position: 'fixed', insetInline: 0, bottom: 'calc(var(--bnavH, 70px) + env(safe-area-inset-bottom, 0px))', zIndex: 150, alignItems: 'center', justifyContent: 'space-between', gap: '1rem', padding: '0.75rem 1rem', background: 'var(--vg-bg-card)', borderTop: '1px solid var(--vg-gold-border)' }}>
+          <div>
+            <div style={{ ...monoLabel, marginBottom: '0.15rem' }}>{nights > 0 ? `${nights} ${nights === 1 ? 'night' : 'nights'}` : 'From'}</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+              <span className="vg-stat-num" style={{ fontSize: '1.3rem' }}>{formatCurrency(nights > 0 ? total : pricePerNight, hotel.currency)}</span>
+              {nights === 0 && <span style={{ ...monoLabel, color: 'var(--vg-text-3)' }}>/ NIGHT</span>}
+            </div>
+          </div>
+          <button onClick={nights > 0 ? handleBooking : scrollToBooking} className="vg-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.85rem 1.4rem', whiteSpace: 'nowrap' }}>
+            <CalendarCheck size={16} aria-hidden />
+            {nights > 0 ? 'Book Now' : 'Select Dates'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
