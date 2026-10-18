@@ -24,15 +24,15 @@ const LANGS: Array<{ code: string; flag: string; label: string }> = [
   { code: 'ru', flag: '🇷🇺', label: 'Русский' },
 ];
 
-// TODO: replace with real data once a notifications API/table exists.
-// Kept intentionally small and generic — this is placeholder content so
-// the bell + panel are functional and visually correct in the meantime.
-function usePlaceholderNotifications(tr: ReturnType<typeof t>) {
-  return [
-    { id: 1, icon: '🎁', title: tr.header.subtitle, body: tr.ticker[4]?.replace(/\*\*/g, '') ?? '', unread: true },
-    { id: 2, icon: '📉', title: tr.ticker[1]?.replace(/\*\*/g, '') ?? '', body: '', unread: true },
-    { id: 3, icon: '🌍', title: tr.ticker[5]?.replace(/\*\*/g, '') ?? '', body: '', unread: true },
-  ];
+type NotificationItem = { id: number; icon: string; title: string; body: string; unread: boolean };
+
+// There is no notifications API/table yet. This used to return three fake
+// "unread" entries built from marketing ticker text, so every visitor (signed
+// in or not) saw a red "3" badge for things that were never sent to them.
+// Return nothing until real data exists: the badge hides itself at 0 and the
+// panel shows its translated empty state. Replace this body with a real fetch.
+function useNotifications(): NotificationItem[] {
+  return [];
 }
 
 export function Navbar({ locale }: { locale: string; isRTL?: boolean }) {
@@ -48,7 +48,7 @@ export function Navbar({ locale }: { locale: string; isRTL?: boolean }) {
   const notifRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
 
-  const notifications = usePlaceholderNotifications(tr);
+  const notifications = useNotifications();
   const unreadCount = notifications.filter(n => n.unread).length;
 
   useEffect(() => setMounted(true), []);
