@@ -27,6 +27,9 @@ import type { RapidApiHotel } from '@/types/rapidapi';
 //   bit busy" message forever with nobody alerted.
 
 const FETCH_TIMEOUT_MS = 15_000;
+// Per Gemini model. Shorter than FETCH_TIMEOUT_MS so that one slow model leaves
+// time to try the next model and then OpenAI within the function's budget.
+const GEMINI_TIMEOUT_MS = 8_000;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 // One or more comma-separated Gemini model ids, tried in order. Configure
@@ -185,28 +188,37 @@ If missing dates, ask in user's language: {"message":"ask for dates","action":"c
     const geminiErrors: string[] = [];
 
     for (const model of GEMINI_MODELS) {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-        {
-          method: 'POST',
-          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
-          body: JSON.stringify({
-            system_instruction: { parts: [{ text: systemPrompt }] },
-            contents: geminiMessages,
-            generationConfig: { maxOutputTokens: 1000, temperature: 0.7 },
-          }),
-        }
-      );
-      
-      if (res.status === 429) {geminiErrors.push(`${model}: rate limited`); continue;}
+      // A timeout or network error used to throw straight out of this loop and
+      // fail the request with a 500 -- the next model and the OpenAI fallback
+      // were never tried. Treat it like any other per-model failure.
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+          {
+            method: 'POST',
+            signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
+            body: JSON.stringify({
+              system_instruction: { parts: [{ text: systemPrompt }] },
+              contents: geminiMessages,
+              generationConfig: { maxOutputTokens: 1000, temperature: 0.7 },
+            }),
+          }
+        );
 
-      const data = await res.json();
-      if (data.error) {geminiErrors.push(`${model}: ${data.error?.message || 'unknown error'}`); continue;}
+        if (res.status === 429) {geminiErrors.push(`${model}: rate limited`); continue;}
 
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text) { aiText = text; geminiSuccess = true; break; }
-      geminiErrors.push(`${model}: empty response`);
+        const data = await res.json();
+        if (data.error) {geminiErrors.push(`${model}: ${data.error?.message || 'unknown error'}`); continue;}
+
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) { aiText = text; geminiSuccess = true; break; }
+        geminiErrors.push(`${model}: empty response`);
+      } catch (err) {
+        const reason = err instanceof Error ? err.name || err.message : String(err);
+        geminiErrors.push(`${model}: ${reason}`);
+        logger.warn(`[ai/travel] Gemini ${model} failed (${reason}), trying next provider`);
+      }
     }
 
     let openAiError: string | undefined;
