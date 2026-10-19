@@ -189,20 +189,20 @@ export default function HotelsPage({ params }: { params: Promise<{ locale: strin
 
       {/* ── States ── */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
+        <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--vg-text-3)' }}>
           {isAr ? 'جاري التحميل...' : 'Loading hotels...'}
         </div>
       )}
 
       {!loading && error && (
-        <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
+        <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--vg-text-3)' }}>
           {isAr ? 'حدث خطأ في تحميل الفنادق. حاول مرة أخرى.' : 'Could not load hotels. Please try again.'}
           {errorDetail && <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '0.5rem' }}>({errorDetail})</div>}
         </div>
       )}
 
       {!loading && !error && hotels.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
+        <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--vg-text-3)' }}>
           {isAr ? 'لا توجد فنادق مطابقة لبحثك.' : 'No hotels match your search.'}
         </div>
       )}

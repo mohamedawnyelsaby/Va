@@ -41,8 +41,8 @@ export function ThemeToggle({ size = 'md', showLabel = false, className = '' }: 
         width: btnSize,
         height: btnSize,
         borderRadius: 10,
-        border: '0.5px solid var(--vt-border-2)',
-        background: 'var(--vt-bg-surface)',
+        border: '0.5px solid var(--vg-border-2)',
+        background: 'var(--vg-bg-surface)',
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
@@ -53,11 +53,11 @@ export function ThemeToggle({ size = 'md', showLabel = false, className = '' }: 
         flexShrink: 0,
       }}
       onMouseEnter={e => {
-        (e.currentTarget as HTMLButtonElement).style.background = 'var(--vt-bg-deep)';
+        (e.currentTarget as HTMLButtonElement).style.background = 'var(--vg-bg)';
         (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.05)';
       }}
       onMouseLeave={e => {
-        (e.currentTarget as HTMLButtonElement).style.background = 'var(--vt-bg-surface)';
+        (e.currentTarget as HTMLButtonElement).style.background = 'var(--vg-bg-surface)';
         (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';
       }}
     >
@@ -66,7 +66,7 @@ export function ThemeToggle({ size = 'md', showLabel = false, className = '' }: 
         height={iconSize}
         viewBox="0 0 24 24"
         fill="none"
-        stroke="var(--vt-text-2)"
+        stroke="var(--vg-text-2)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -93,7 +93,7 @@ export function ThemeToggle({ size = 'md', showLabel = false, className = '' }: 
         height={iconSize}
         viewBox="0 0 24 24"
         fill="none"
-        stroke="var(--vt-text-2)"
+        stroke="var(--vg-text-2)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -112,7 +112,7 @@ export function ThemeToggle({ size = 'md', showLabel = false, className = '' }: 
           style={{
             fontSize: 12,
             fontWeight: 500,
-            color: 'var(--vt-text-2)',
+            color: 'var(--vg-text-2)',
             marginLeft: iconSize + 4,
             whiteSpace: 'nowrap',
           }}
