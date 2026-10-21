@@ -5,6 +5,7 @@ import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, DM_Sans, Space_Mono, Cairo } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
+import './legacy-tokens.css';
 import './vg.css';
 import { Providers } from '@/components/providers';
 import GoldenCursorTrail from '@/components/ui/GoldenCursorTrail';

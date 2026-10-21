@@ -1,0 +1,60 @@
+/* src/app/legacy-tokens.css
+ *
+ * Compatibility layer: maps the OLD design-token names to the current ones.
+ *
+ * The AI chat, the hotels list, the legacy Header and several others are
+ * written with --ink, --ink-border, --gold, --bg-card, --space-*, --radius-*,
+ * --ease-smooth ... An earlier globals.css defined these as aliases (see git
+ * b5849f3, "COMPATIBILITY LAYER"); a later wholesale rewrite dropped them, so
+ * every rule using them silently became invalid: no bubble backgrounds, no
+ * borders, no padding, no easing. Defining them again restores those rules
+ * without touching the components.
+ *
+ * These are aliases, so theme switching (data-theme) keeps working.
+ */
+:root,
+[data-theme] {
+  --gold: var(--g);
+  --gold-light: var(--gl);
+  --gold-pale: var(--gdim);
+  --gold-dark: var(--gd);
+
+  --bg-card: var(--s1);
+  --bg-subtle: var(--s2);
+  --bg-overlay: rgba(0, 0, 0, 0.55);
+
+  --ink: var(--t);
+  --ink-muted: var(--td);
+  --ink-faint: var(--tm);
+  --ink-border: var(--bd);
+
+  --font-display: var(--font-serif);
+
+  --radius-sm: var(--rS);
+  --radius-md: var(--rM);
+  --radius-lg: var(--rL);
+  --radius-xl: var(--rXL);
+  --radius-full: 9999px;
+
+  --shadow-sm: var(--sh);
+  --shadow-md: var(--sh);
+  --shadow-lg: var(--shH);
+  --shadow-gold: 0 4px 20px var(--gglow);
+
+  --ease-smooth: var(--ease);
+  --ease-spring: var(--spring);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+}

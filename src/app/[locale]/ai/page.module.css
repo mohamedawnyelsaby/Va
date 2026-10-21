@@ -5,10 +5,13 @@
 .page {
   display: flex;
   flex-direction: column;
-  height: calc(100dvh - var(--navH));
+  /* body already reserves --bnavH at the bottom for the fixed bottom nav, so the
+     chat box is exactly what is left between the header and that reserve.
+     (It used to subtract only the header AND add 80px of padding, which left a
+     large dead gap under the input and pushed it to the middle of the screen.) */
+  height: calc(100dvh - var(--navH) - var(--bnavH, 70px));
   margin-top: var(--navH);
   background: var(--bg);
-  padding-bottom: 80px; /* bottom nav */
 }
 
 /* ─── Chat Header ─── */

@@ -21,7 +21,8 @@ function walk(dir: string, out: string[] = []): string[] {
 
 const files = walk(SRC);
 const isTest = (f: string) => /\.test\.(ts|tsx)$/.test(f);
-const cssFiles = files.filter((f) => f.endsWith('.css') && !f.endsWith('.module.css'));
+const cssFiles = files.filter((f) => f.endsWith('.css'));
+const moduleFiles = cssFiles.filter((f) => f.endsWith('.module.css'));
 const codeFiles = files.filter((f) => /\.(ts|tsx)$/.test(f) && !isTest(f));
 
 const css = cssFiles.map((f) => readFileSync(f, 'utf8')).join('\n');
@@ -86,5 +87,26 @@ describe('stylesheet integrity', () => {
       [...missing].map(([v, file]) => `${v} (first seen in ${file})`),
       'variables read without a fallback but defined nowhere'
     ).toEqual([]);
+  });
+
+  it('every styles.xxx used from a CSS module exists in that module', () => {
+    const missing: string[] = [];
+    for (const { f, text } of code) {
+      for (const imp of text.matchAll(/import\s+(\w+)\s+from\s+['"]([^'"]+\.module\.css)['"]/g)) {
+        const [, name, rel] = imp;
+        const target = rel.startsWith('.')
+          ? path.resolve(path.dirname(f), rel)
+          : path.join(SRC, rel.replace(/^@\//, ''));
+        if (!moduleFiles.includes(target)) {continue;}
+        const defined = new Set([...readFileSync(target, 'utf8').matchAll(/\.([A-Za-z_][\w-]*)/g)].map((m) => m[1]));
+        const used = new Set<string>();
+        for (const m of text.matchAll(new RegExp(`\\b${name}\\.([A-Za-z_][\\w]*)`, 'g'))) {used.add(m[1]);}
+        for (const m of text.matchAll(new RegExp(`\\b${name}\\[['"]([\\w-]+)['"]\\]`, 'g'))) {used.add(m[1]);}
+        for (const cls of used) {
+          if (!defined.has(cls)) {missing.push(`${name}.${cls} (in ${path.relative(SRC, f)}, module ${path.relative(SRC, target)})`);}
+        }
+      }
+    }
+    expect(missing, 'CSS-module classes used in a component but missing from the module').toEqual([]);
   });
 });
