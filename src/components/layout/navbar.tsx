@@ -7,6 +7,7 @@
 // of the app's design tokens (colors, spacing, radii, fonts).
 
 import { useEffect, useRef, useState } from 'react';
+import { Bell, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -98,7 +99,7 @@ export function Navbar({ locale }: { locale: string; isRTL?: boolean }) {
             aria-label={tr.header.notifTitle}
             aria-expanded={notifOpen}
           >
-            🔔
+            <Bell size={18} aria-hidden />
             <div className={`notif-badge${unreadCount === 0 ? ' hidden' : ''}`}>{unreadCount}</div>
           </button>
 
@@ -135,7 +136,7 @@ export function Navbar({ locale }: { locale: string; isRTL?: boolean }) {
             onClick={() => { setLangOpen(v => !v); setNotifOpen(false); }}
             aria-expanded={langOpen}
           >
-            🌐 {currentLang.label}
+            <Globe size={16} aria-hidden /> {currentLang.label}
           </button>
 
           {langOpen && (

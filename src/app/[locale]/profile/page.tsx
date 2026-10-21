@@ -3,6 +3,7 @@
 
 import Link from 'next/link';
 import { use } from 'react';
+import { CalendarDays, CreditCard, Heart, User } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import styles from './page.module.css';
 import { t } from '@/lib/i18n/translations';
@@ -21,21 +22,26 @@ export default function ProfilePage({ params }: Props) {
   const { data: session, status } = useSession();
   const authenticated = status === 'authenticated' && !!session?.user;
 
+  // The Settings entry is hidden on purpose: /settings is still a "coming soon"
+  // placeholder, and a production menu should not lead to an unfinished page.
+  // Re-add { Icon: Settings, label: p.menuSettings, href: ... } when it ships.
   const menu = [
-    { icon: '🗓️', label: p.menuBookings, href: `/${locale}/bookings` },
-    { icon: '💳', label: p.menuPayments, href: `/${locale}/wallet` },
-    { icon: '⚙️', label: p.menuSettings, href: `/${locale}/settings` },
-    { icon: '❤️', label: p.menuSaved, href: `/${locale}/favorites` },
+    { Icon: CalendarDays, label: p.menuBookings, href: `/${locale}/bookings` },
+    { Icon: CreditCard, label: p.menuPayments, href: `/${locale}/wallet` },
+    { Icon: Heart, label: p.menuSaved, href: `/${locale}/favorites` },
   ];
 
   return (
     <main className={styles.main} dir={ar ? 'rtl' : 'ltr'}>
       <div className={styles.sh}>
-        <div className={styles.st}>👤 {p.title}</div>
+        <div className={styles.st}>
+          <User size={18} aria-hidden style={{ marginInlineEnd: 8, verticalAlign: '-3px' }} />
+          {p.title}
+        </div>
       </div>
 
       <div className="prof-card">
-        <div className="prof-ava">{authenticated ? '🧑' : '👤'}</div>
+        <div className="prof-ava"><User size={34} strokeWidth={1.5} aria-hidden /></div>
         <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.15rem', fontWeight: 700 }}>
           {authenticated ? (session?.user?.name || session?.user?.email) : p.guestName}
         </div>
@@ -80,7 +86,7 @@ export default function ProfilePage({ params }: Props) {
       <div className="menu-card">
         {menu.map(m => (
           <Link key={m.href} href={m.href} className="mitem" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div className="mico">{m.icon}</div>
+            <div className="mico"><m.Icon size={20} strokeWidth={1.8} aria-hidden /></div>
             <div style={{ flex: 1, fontSize: '.83rem', fontWeight: 600 }}>{m.label}</div>
             <span style={{ color: 'var(--tm)' }}>›</span>
           </Link>
