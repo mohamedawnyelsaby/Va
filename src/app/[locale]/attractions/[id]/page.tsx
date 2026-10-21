@@ -3,12 +3,13 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { MapPin, Star, Clock, Ticket, Heart, MessageSquare } from 'lucide-react';
+import { MapPin, Star, Clock, Ticket, Heart } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 import { VG, monoLabel } from '@/lib/tokens';
 import { ReviewModal } from '@/components/ui/ReviewModal';
+import { ReviewsSection } from '@/components/ui/ReviewsSection';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { RecentlyViewed } from '@/components/ui/RecentlyViewed';
 import { addToRecentlyViewed } from '@/components/ui/Breadcrumb';
@@ -43,6 +44,7 @@ export default function AttractionDetailPage() {
   const [attraction, setAttraction] = useState<AttractionDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewsKey, setReviewsKey] = useState(0);
   const lightbox = useImageLightbox([]);
   const { isFavorited: isFav, toggle: toggleFavorite } = useFavorite(attraction?.id, 'attraction');
 
@@ -92,7 +94,7 @@ export default function AttractionDetailPage() {
         <ImageLightbox images={images} initialIndex={lightbox.index} alt={attraction.name} onClose={lightbox.close} />
       )}
 
-      <ReviewModal isOpen={reviewOpen} onClose={() => setReviewOpen(false)} itemId={attraction.id} itemName={attraction.name} itemType="attraction" />
+      <ReviewModal isOpen={reviewOpen} onClose={() => { setReviewOpen(false); setReviewsKey((k) => k + 1); }} itemId={attraction.id} itemName={attraction.name} itemType="attraction" />
 
       {/* Breadcrumb nav */}
       <div style={{ padding: `1rem ${VG.section.x}`, borderBottom: '1px solid var(--vg-border)', background: 'var(--vg-bg-surface)' }}>
@@ -198,15 +200,16 @@ export default function AttractionDetailPage() {
             </div>
           )}
 
-          {/* Review section */}
-          <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', borderTop: 'none', padding: '1.5rem 2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div className="vg-overline">Reviews</div>
-              <button onClick={() => setReviewOpen(true)} className="vg-btn-outline" style={{ padding: '0.45rem 0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <MessageSquare size={12} /> Write Review
-              </button>
-            </div>
-          </div>
+          {/* Reviews */}
+          <ReviewsSection
+            itemId={attraction.id}
+            itemType="attraction"
+            label="Reviews"
+            emptyHint="Be the first to review this attraction."
+            locale={locale}
+            onWrite={() => setReviewOpen(true)}
+            refreshKey={reviewsKey}
+          />
 
           <div style={{ marginTop: '2.5rem' }}>
             <RecentlyViewed locale={locale} exclude={attraction.id} />

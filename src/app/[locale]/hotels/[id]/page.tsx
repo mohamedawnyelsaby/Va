@@ -6,7 +6,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
-import { MapPin, Star, Heart, Share2, Calendar, CalendarCheck, CalendarDays, Users, BedDouble, Lock, ShieldCheck, MessageSquare } from 'lucide-react';
+import { MapPin, Star, Heart, Share2, Calendar, CalendarCheck, CalendarDays, Users, BedDouble, Lock, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
@@ -18,6 +18,7 @@ import { RecentlyViewed } from '@/components/ui/RecentlyViewed';
 import { addToRecentlyViewed } from '@/components/ui/Breadcrumb';
 import { useFavorite } from '@/hooks/use-favorite';
 import { AmenityGrid } from '@/components/hotel/AmenityGrid';
+import { ReviewsSection } from '@/components/ui/ReviewsSection';
 
 function Spinner() {
   return (
@@ -90,6 +91,7 @@ export default function HotelDetailPage() {
   const [loading,      setLoading]      = useState(true);
   const [selectedRoom, setSelectedRoom] = useState<RoomType | null>(null);
   const [reviewOpen,   setReviewOpen]   = useState(false);
+  const [reviewsKey, setReviewsKey] = useState(0);
   const { isFavorited: isFav, toggle: toggleFavorite, pending: favPending } = useFavorite(hotel?.id, 'hotel');
   const [bookingData,  setBookingData]  = useState({ checkIn: '', checkOut: '', guests: 1, rooms: 1 });
 
@@ -189,7 +191,7 @@ export default function HotelDetailPage() {
         <ImageLightbox images={images} initialIndex={lightbox.index} alt={hotel.name} onClose={lightbox.close} />
       )}
 
-      <ReviewModal isOpen={reviewOpen} onClose={() => setReviewOpen(false)} itemId={hotel.id} itemName={hotel.name} itemType="hotel" />
+      <ReviewModal isOpen={reviewOpen} onClose={() => { setReviewOpen(false); setReviewsKey((k) => k + 1); }} itemId={hotel.id} itemName={hotel.name} itemType="hotel" />
 
       {/* Back nav + Breadcrumb */}
       <div style={{ padding: `1rem ${VG.section.x}`, borderBottom: '1px solid var(--vg-border)', background: 'var(--vg-bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
@@ -333,45 +335,16 @@ export default function HotelDetailPage() {
             </div>
           )}
 
-          {/* Reviews */}
-          {(hotel.reviews?.length ?? 0) > 0 && (
-            <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', borderTop: 'none', padding: '2rem', marginBottom: '1px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <div className="vg-overline">Guest Reviews</div>
-                <button onClick={() => setReviewOpen(true)} className="vg-btn-outline" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <MessageSquare size={12} /> Write Review
-                </button>
-              </div>
-              {hotel.reviews?.slice(0, 5).map((review: HotelReview) => (
-                <div key={review.id} style={{ paddingBottom: '1.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--vg-border)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
-                    <div>
-                      <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.body, color: 'var(--vg-text)', marginBottom: '0.25rem' }}>{review.user?.name}</div>
-                      <div style={{ display: 'flex', gap: '2px' }}>
-                        {Array.from({ length: review.rating }).map((_, s: number) => (
-                          <span key={s} style={{ color: 'var(--vg-star)', fontSize: '0.65rem' }}>★</span>
-                        ))}
-                      </div>
-                    </div>
-                    <div style={{ ...monoLabel }}>{new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</div>
-                  </div>
-                  {review.title && <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1rem', color: 'var(--vg-text)', marginBottom: '0.4rem' }}>{review.title}</div>}
-                  <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-2)', lineHeight: 1.7, margin: 0 }}>{review.comment}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Write review CTA if no reviews */}
-          {(!hotel.reviews || hotel.reviews.length === 0) && (
-            <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', borderTop: 'none', padding: '2rem', textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.3rem', color: 'var(--vg-text-3)', marginBottom: '0.8rem' }}>No reviews yet</div>
-              <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-3)', marginBottom: '1.2rem' }}>Be the first to review this hotel.</p>
-              <button onClick={() => setReviewOpen(true)} className="vg-btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-                <MessageSquare size={13} /> Write a Review
-              </button>
-            </div>
-          )}
+          {/* Reviews (loaded from /api/reviews: the hotel endpoint does not include them) */}
+          <ReviewsSection
+            itemId={hotel.id}
+            itemType="hotel"
+            label="Guest Reviews"
+            emptyHint="Be the first to review this hotel."
+            locale={locale}
+            onWrite={() => setReviewOpen(true)}
+            refreshKey={reviewsKey}
+          />
 
           {/* Recently Viewed */}
           <div style={{ marginTop: '2.5rem' }}>
