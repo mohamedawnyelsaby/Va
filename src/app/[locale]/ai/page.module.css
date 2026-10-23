@@ -2,16 +2,22 @@
    PATH: app/[locale]/ai/page.module.css
    ============================================================ */
 
+/* The chat is a full-height shell pinned BETWEEN the fixed header and the fixed
+   bottom nav. It used to be sized with 100dvh arithmetic; in production the box
+   was only as tall as its content, so the input floated mid-screen with a large
+   dead area below. Fixed positioning does not depend on any parent height. */
 .page {
   display: flex;
   flex-direction: column;
-  /* body already reserves --bnavH at the bottom for the fixed bottom nav, so the
-     chat box is exactly what is left between the header and that reserve.
-     (It used to subtract only the header AND add 80px of padding, which left a
-     large dead gap under the input and pushed it to the middle of the screen.) */
-  height: calc(100dvh - var(--navH) - var(--bnavH, 70px));
-  margin-top: var(--navH);
+  position: fixed;
+  top: var(--navH);
+  bottom: var(--bnavH, 70px);
+  inset-inline: 0;
+  width: 100%;
+  max-width: 900px;
+  margin-inline: auto;
   background: var(--bg);
+  z-index: 1;
 }
 
 /* ─── Chat Header ─── */
@@ -204,11 +210,18 @@
   margin-bottom: var(--space-3);
 }
 
+/* One horizontally scrollable row. As a wrapped block the six suggestions took
+   about a quarter of the screen and squeezed the conversation. */
 .chips {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   gap: var(--space-2);
+  padding-bottom: 2px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
+.chips::-webkit-scrollbar { display: none; }
 
 .chip {
   display: inline-flex;
@@ -321,3 +334,5 @@
   cursor: not-allowed;
   box-shadow: none;
 }
+
+.chip { flex-shrink: 0; white-space: nowrap; }
