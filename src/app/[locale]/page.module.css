@@ -92,10 +92,21 @@
 .dc:hover img { transform: scale(1.06); }
 .wbtn { position: absolute; top: 9px; inset-inline-end: 9px; width: 30px; height: 30px; background: rgba(0,0,0,.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .85rem; cursor: pointer; border: none; backdrop-filter: blur(6px); transition: .18s; z-index: 2; }
 .wbtn.on { background: rgba(239,68,68,.35); }
-.di { padding: 11px; }
-.dn { font-weight: 700; font-size: .92rem; }
-.dc2 { font-size: .67rem; color: var(--tm); margin-top: 1px; }
-.dp { color: var(--g); font-weight: 700; font-size: .79rem; margin-top: 4px; }
+/* The destination image is `fill` (absolutely positioned over the whole card), so
+   this block used to sit BEHIND it: cards showed only a photo, no name or price.
+   It is now overlaid at the bottom, on a gradient so the text stays readable. */
+.di {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 1;
+  padding: 28px 11px 11px;
+  background: linear-gradient(to top, rgba(6, 5, 15, 0.85) 0%, rgba(6, 5, 15, 0.45) 60%, transparent 100%);
+  color: #fff;
+}
+.dn { font-weight: 700; font-size: .92rem; color: #fff; }
+.dc2 { font-size: .67rem; color: rgba(255, 255, 255, 0.78); margin-top: 1px; }
+.dp { color: var(--gl); font-weight: 700; font-size: .79rem; margin-top: 4px; }
 .dBadge { position: absolute; top: 9px; inset-inline-start: 9px; background: var(--g); color: #060610; border-radius: 99px; padding: 2px 9px; font-size: .58rem; font-weight: 700; z-index: 2; }
 
 /* Hotel scroll */
@@ -133,7 +144,7 @@
 
 /* Exchange rates */
 .ratesRow { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 18px 20px; max-width: 1100px; margin: 0 auto; }
-.ratePill { display: flex; align-items: center; gap: 5px; background: var(--s2); border: 1px solid var(--bd); border-radius: 99px; padding: 5px 11px; font-size: .68rem; font-family: var(--font-mono); }
+.ratePill { display: flex; align-items: center; gap: 5px; background: var(--s2); border: 1px solid var(--bd); border-radius: 99px; padding: 5px 11px; font-size: .68rem; font-family: var(--font-mono); direction: ltr; unicode-bidi: isolate; }
 .rateUp { color: var(--green); }
 .rateDown { color: var(--red); }
 
