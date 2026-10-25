@@ -43,9 +43,46 @@ async function probe(read: () => Promise<unknown>): Promise<string> {
   }
 }
 
+// Which Pi network each public hostname is registered for in the Pi Developer
+// Portal (see the validation keys in middleware.ts). A deployment can only serve
+// ONE network: the server talks to Pi with a single PI_API_KEY, and that key
+// belongs to either the Testnet app or the Mainnet app.
+const HOST_NETWORK: Record<string, 'testnet' | 'mainnet'> = {
+  'va-pied.vercel.app': 'testnet',
+  'va-mainnet.vercel.app': 'mainnet',
+};
+
+/** GET /api/health?pi=1 : Pi configuration check. Never returns secret values. */
+function piConfigReport(host: string) {
+  const clientIsSandbox = process.env.NEXT_PUBLIC_PI_SANDBOX === 'true';
+  const hostExpects = HOST_NETWORK[host.toLowerCase()] ?? null;
+  const clientMatchesHost = hostExpects ? (hostExpects === 'testnet') === clientIsSandbox : null;
+  return {
+    host,
+    // What the browser SDK is told at build time (Pi.init({ sandbox })).
+    clientNetwork: clientIsSandbox ? 'testnet (sandbox)' : 'mainnet',
+    apiKeyConfigured: Boolean(process.env.PI_API_KEY),
+    hostExpects,
+    clientMatchesHost,
+    warning:
+      clientMatchesHost === false
+        ? 'This hostname is registered for a different Pi network than this deployment is built for. Payments here would be created on one network and verified on the other.'
+        : null,
+  };
+}
+
 export async function GET(request: NextRequest) {
   const timestamp = new Date().toISOString();
   const wantsProbe = request.nextUrl.searchParams.get('probe') === '1';
+
+  if (request.nextUrl.searchParams.get('pi') === '1') {
+    const limited = await checkRateLimit(request, 'search');
+    if (limited) {return limited;}
+    return NextResponse.json(
+      { pi: piConfigReport(request.headers.get('host') ?? ''), timestamp },
+      { headers: { 'Cache-Control': 'no-store' } }
+    );
+  }
 
   if (wantsProbe) {
     const limited = await checkRateLimit(request, 'search');
