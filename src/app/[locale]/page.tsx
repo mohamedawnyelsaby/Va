@@ -4,13 +4,13 @@
    ============================================================ */
 'use client';
 
-import { useState, use } from 'react';
+import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './page.module.css';
 import { AIFeatureCards } from '@/components/sections/ai-feature-cards';
 import { Phase2Features } from '@/components/sections/phase2-features';
-import { useWishlist, DESTINATIONS } from '@/lib/wishlist';
+import { formatCurrency } from '@/lib/utils';
 import { t } from '@/lib/i18n/translations';
 
 interface Props {
@@ -19,58 +19,43 @@ interface Props {
 
 const isAr = (locale: string) => locale === 'ar';
 
-// Flash deal destination names and review content are still bilingual
-// (ar/en) pending full 8-language translation in a follow-up pass.
-const FLASH = [
-  { destAr: 'دبي', destEn: 'Dubai', off: '35%', price: 546, orig: 840, flag: '🇦🇪' },
-  { destAr: 'بالي', destEn: 'Bali', off: '40%', price: 252, orig: 420, flag: '🇮🇩' },
-  { destAr: 'روما', destEn: 'Rome', off: '25%', price: 510, orig: 680, flag: '🇮🇹' },
-  { destAr: 'بانكوك', destEn: 'Bangkok', off: '50%', price: 180, orig: 360, flag: '🇹🇭' },
-  { destAr: 'سنغافورة', destEn: 'Singapore', off: '30%', price: 420, orig: 600, flag: '🇸🇬' },
-];
+/* The home page used to render hard-coded sample content as if it were real:
+ * flash deals with invented discounts, hotels that are not in the database
+ * (and cannot be booked), made-up testimonials, "live" exchange rates that were
+ * constants, and marketing totals ("42K hotels", "8M travelers"). It now shows
+ * only what the API returns. */
+interface HomeCity {
+  id: string;
+  name: string;
+  country: string;
+  thumbnail: string | null;
+  images: string[];
+  _count?: { hotels: number };
+}
+interface HomeHotel {
+  id: string;
+  name: string;
+  city: string;
+  starRating: number;
+  rating: number;
+  reviewCount: number;
+  pricePerNight: number;
+  currency: string;
+  thumbnail: string | null;
+  images: string[];
+  amenities: string[];
+}
+interface HomeData {
+  cities: HomeCity[];
+  hotels: HomeHotel[];
+  cityTotal: number;
+  hotelTotal: number;
+}
 
-const HOTELS = [
-  { id: 1, name: 'Burj Al Arab', stars: 5, loc: 'Dubai, UAE', price: 840, orig: 980, score: 9.8, tags: ['Sea View', 'Butler', 'Pool'], priceDrop: true, img: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600' },
-  { id: 2, name: 'Four Seasons Bora Bora', stars: 5, loc: 'French Polynesia', price: 1200, score: 9.9, tags: ['Overwater', 'Snorkel', 'Spa'], priceDrop: false, img: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=600' },
-  { id: 3, name: 'The Peninsula Tokyo', stars: 5, loc: 'Tokyo, Japan', price: 650, orig: 750, score: 9.7, tags: ['City View', 'Fine Dining', 'Spa'], priceDrop: true, img: 'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=600' },
-  { id: 4, name: 'Hotel de Russie', stars: 5, loc: 'Rome, Italy', price: 680, score: 9.6, tags: ['Garden', 'Spa', 'Trattoria'], priceDrop: false, img: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600' },
-];
-
-const RATES = [
-  { flag: '💵→π', from: '1 USD', to: 'π', value: '2.52', unit: 'π', up: true },
-  { flag: '🇪🇬→π', from: '1 π', to: 'EGP', value: '19.48', unit: 'EGP', up: false },
-  { flag: '💵→🇪🇬', from: '1 USD', to: 'EGP', value: '48.81', unit: 'EGP', up: true },
-];
-
-const REVIEWS = [
-  {
-    stars: 5,
-    textAr: '"خدمة لا تصدق! حجزت فندق في دبي في دقائق والذكاء الاصطناعي اقترح لي ترقية مجانية."',
-    textEn: '"Incredible service! Booked in Dubai in minutes, the AI suggested a free upgrade."',
-    name: 'Ahmed Al-Saeed', destAr: 'دبي 🇦🇪', destEn: 'Dubai 🇦🇪', ava: '🧑‍💼',
-  },
-  {
-    stars: 5,
-    textAr: '"Logy خطط لي رحلة يابان كاملة في ثوانٍ. أفضل تطبيق سفر جربته."',
-    textEn: '"Logy planned my entire Japan trip in seconds. Best travel app I\'ve ever used."',
-    name: 'Sarah Al-Mahdi', destAr: 'طوكيو 🇯🇵', destEn: 'Tokyo 🇯🇵', ava: '👩‍💻',
-  },
-  {
-    stars: 5,
-    textAr: '"فحص التأشيرة وفّر عليّ ساعات من البحث. واضح ودقيق."',
-    textEn: '"The visa checker saved me hours of research. Clear and accurate."',
-    name: 'Karim Boulaaras', destAr: 'باريس 🇫🇷', destEn: 'Paris 🇫🇷', ava: '👨‍🎨',
-  },
-  {
-    stars: 5,
-    textAr: '"أسعار الصرف اللحظية والتوقعات ساعدتني أوفر 30% على رحلتي."',
-    textEn: '"Live exchange rates and predictions helped me save 30% on my trip."',
-    name: 'Layla Nasr', destAr: 'المالديف 🇲🇻', destEn: 'Maldives 🇲🇻', ava: '👩‍🦱',
-  },
-];
-
-function fp(price: number) {
-  return `$${Math.round(price)}`;
+async function getJson<T>(url: string, signal: AbortSignal): Promise<T> {
+  const res = await fetch(url, { signal });
+  if (!res.ok) {throw new Error(`HTTP ${res.status}`);}
+  return res.json() as Promise<T>;
 }
 
 export default function HomePage({ params }: Props) {
@@ -79,8 +64,28 @@ export default function HomePage({ params }: Props) {
   const tr = t(locale);
   const h = tr.home;
   const [tab, setTab] = useState('hotels');
-  const [activeCat, setActiveCat] = useState(0);
-  const { ids: wishlist, toggle: toggleWish } = useWishlist();
+  const [data, setData] = useState<HomeData | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    Promise.all([
+      getJson<{ cities: HomeCity[]; pagination?: { total?: number } }>('/api/cities?limit=6', controller.signal),
+      getJson<{ hotels: HomeHotel[]; pagination?: { total?: number } }>('/api/hotels?limit=4&sortBy=rating', controller.signal),
+    ])
+      .then(([c, hs]) =>
+        setData({
+          cities: c.cities ?? [],
+          hotels: hs.hotels ?? [],
+          cityTotal: c.pagination?.total ?? (c.cities ?? []).length,
+          hotelTotal: hs.pagination?.total ?? (hs.hotels ?? []).length,
+        })
+      )
+      .catch((err) => {
+        if (err?.name !== 'AbortError') {setFailed(true);}
+      });
+    return () => controller.abort();
+  }, []);
   const [query, setQuery] = useState('');
 
   const TABS = [
@@ -92,15 +97,6 @@ export default function HomePage({ params }: Props) {
 
   return (
     <main className={styles.main} dir={ar ? 'rtl' : 'ltr'}>
-
-      {/* ── Ticker ── */}
-      <div className={styles.ticker}>
-        <div className={styles.tickerInner}>
-          {[...h.ticker, ...h.ticker].map((item, i) => (
-            <span key={i} className={styles.tickerItem} dangerouslySetInnerHTML={{ __html: `•&nbsp;${item}` }} />
-          ))}
-        </div>
-      </div>
 
       {/* ── Hero ── */}
       <section className={styles.hero}>
@@ -119,10 +115,9 @@ export default function HomePage({ params }: Props) {
           </p>
 
           <div className={styles.stats}>
-            <div><div className={styles.statNum}><span>180</span>+</div><div className={styles.statLabel}>{h.statDestinations}</div></div>
-            <div><div className={styles.statNum}><span>42</span>K</div><div className={styles.statLabel}>{h.statHotels}</div></div>
-            <div><div className={styles.statNum}><span>8</span>M</div><div className={styles.statLabel}>{h.statTravelers}</div></div>
-            <div><div className={styles.statNum}><span>6</span></div><div className={styles.statLabel}>{h.statLanguages}</div></div>
+            <div><div className={styles.statNum}><span>{data ? data.cityTotal : '—'}</span></div><div className={styles.statLabel}>{h.statDestinations}</div></div>
+            <div><div className={styles.statNum}><span>{data ? data.hotelTotal : '—'}</span></div><div className={styles.statLabel}>{h.statHotels}</div></div>
+            <div><div className={styles.statNum}><span>8</span></div><div className={styles.statLabel}>{h.statLanguages}</div></div>
           </div>
 
           {/* Search widget */}
@@ -191,67 +186,29 @@ export default function HomePage({ params }: Props) {
         </div>
       </section>
 
-      {/* ── Flash Deals ── */}
-      <div className={styles.flash}>
-        <div className={styles.flLbl}>
-          <div className={styles.flFire}>🔥</div>
-          <div className={styles.flLabel}>{h.flashDeals}</div>
-        </div>
-        <div className={styles.flDeals}>
-          {FLASH.map((d) => (
-            <div key={d.destEn} className={styles.fdeal}>
-              <div className={styles.fdest}>{d.flag} {ar ? d.destAr : d.destEn}</div>
-              <div className={styles.foff}>-{d.off}</div>
-              <div><span className={styles.fprice}>{fp(d.price)}</span><span className={styles.forig}>{fp(d.orig)}</span></div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Categories ── */}
-      <div className={styles.cats}>
-        {h.categories.map((c, i) => (
-          <button key={c} className={`${styles.cat} ${i === activeCat ? styles.on : ''}`} onClick={() => setActiveCat(i)}>
-            {c}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Live Exchange Rates ── */}
-      <div className={styles.sh}>
-        <div className={styles.st}>💱 {h.exchangeRates}</div>
-      </div>
-      <div className={styles.ratesRow}>
-        {RATES.map((r) => (
-          <div key={r.from + r.to} className={styles.ratePill}>
-            {r.flag} {r.from} = <span className={r.up ? styles.rateUp : styles.rateDown}>{r.value} {r.unit} {r.up ? '↑' : '↓'}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Destinations ── */}
+      {/* ── Destinations (real cities) ── */}
       <div className={styles.sh}>
         <div className={styles.st}>🌍 {h.popularDestinations}</div>
-        <Link href={`/${locale}/attractions`} className={styles.sl}>{h.viewAll}</Link>
+        <Link href={`/${locale}/cities`} className={styles.sl}>{h.viewAll}</Link>
       </div>
       <div className={styles.dg}>
-        {DESTINATIONS.map((d) => (
-          <Link key={d.id} href={`/${locale}/attractions`} className={styles.dc}>
-            {d.badge && <div className={styles.dBadge}>{d.badge}</div>}
-            <Image src={d.img} alt={ar ? d.nameAr : d.nameEn} fill sizes="(max-width: 768px) 50vw, 300px" loading="lazy" />
-            <button
-              className={`${styles.wbtn} ${wishlist.includes(d.id) ? styles.on : ''}`}
-              onClick={(e) => { e.preventDefault(); toggleWish(d.id); }}
-            >
-              {wishlist.includes(d.id) ? '❤️' : '🤍'}
-            </button>
-            <div className={styles.di}>
-              <div className={styles.dn}>{ar ? d.nameAr : d.nameEn}</div>
-              <div className={styles.dc2}>{ar ? d.countryAr : d.countryEn} · {d.weather}</div>
-              <div className={styles.dp}>{h.fromPrefix}{fp(d.price)}{h.perNight}</div>
-            </div>
-          </Link>
+        {!data && !failed && Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className={styles.dc} aria-hidden style={{ background: 'var(--s2)' }} />
         ))}
+        {data?.cities.map((city) => {
+          const img = city.thumbnail || city.images?.[0];
+          return (
+            <Link key={city.id} href={`/${locale}/hotels?city=${encodeURIComponent(city.name)}`} className={styles.dc}>
+              {img && <Image src={img} alt={city.name} fill sizes="(max-width: 768px) 50vw, 300px" loading="lazy" />}
+              <div className={styles.di}>
+                <div className={styles.dn}>{city.name}</div>
+                <div className={styles.dc2}>{city.country}</div>
+                {city._count && <div className={styles.dp}>{city._count.hotels} {h.statHotels}</div>}
+              </div>
+            </Link>
+          );
+        })}
+        {failed && <p style={{ gridColumn: '1 / -1', color: 'var(--td)', fontSize: '.85rem' }}>{ar ? 'تعذّر تحميل الوجهات. حاول مرة أخرى.' : 'Could not load destinations. Please try again.'}</p>}
       </div>
 
       {/* ── Hotels ── */}
@@ -260,63 +217,43 @@ export default function HomePage({ params }: Props) {
         <Link href={`/${locale}/hotels`} className={styles.sl}>{h.viewAll}</Link>
       </div>
       <div className={styles.hs}>
-        {HOTELS.map((hotel) => (
-          <div key={hotel.id} className={styles.hc}>
-            {hotel.priceDrop && <div className={styles.pdrop}>📉 {h.priceDrop}</div>}
-            <div className={styles.hcImgWrap}>
-              <Image className={styles.hcImg} src={hotel.img} alt={hotel.name} fill sizes="290px" loading="lazy" />
-            </div>
-            <div className={styles.hbody}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <div className={styles.hname}>{hotel.name}</div>
-                  <div className={styles.hstars}>{'★'.repeat(hotel.stars)}</div>
-                  <div className={styles.hloc}>📍 {hotel.loc}</div>
-                </div>
-                <div style={{ textAlign: 'end' }}>
-                  <div className={styles.hprice}>{fp(hotel.price)}<span style={{ fontSize: '.53rem' }}>{h.perNight}</span></div>
-                  {hotel.orig && <div className={styles.horig}>{fp(hotel.orig)}</div>}
-                </div>
-              </div>
-              <div className={styles.brow}>
-                <span className={`${styles.b} ${styles.bg}`}>✓ {h.freeCancel}</span>
-                <span className={`${styles.b} ${styles.bb}`}>✓ {h.instantConfirm}</span>
-                <span className={`${styles.b} ${styles.ba}`}>🏆</span>
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, margin: '5px 0' }}>
-                {hotel.tags.map((tag) => (
-                  <span key={tag} className={styles.b} style={{ background: 'var(--s2)', color: 'var(--td)' }}>{tag}</span>
-                ))}
-              </div>
-              <div className={styles.hf}>
-                <div className={styles.hscore}>⭐ {hotel.score}</div>
-                <Link href={`/${locale}/hotels`} className={styles.bookBtn}>{h.bookNow}</Link>
-              </div>
-            </div>
-          </div>
+        {!data && !failed && Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className={styles.hc} aria-hidden style={{ height: 300, background: 'var(--s2)' }} />
         ))}
-      </div>
-
-      {/* ── Traveler Reviews ── */}
-      <div className={styles.sh}>
-        <div className={styles.st}>⭐ {h.travelerReviews}</div>
-        <span className={styles.sl}>{h.more}</span>
-      </div>
-      <div className={styles.reviewsScroll}>
-        {REVIEWS.map((r) => (
-          <div key={r.name} className={styles.reviewCard}>
-            <div className={styles.reviewQuote}>&rdquo;</div>
-            <div className={styles.reviewStars}>{'★'.repeat(r.stars)}</div>
-            <div className={styles.reviewText}>{ar ? r.textAr : r.textEn}</div>
-            <div className={styles.reviewAuthor}>
-              <div className={styles.reviewAva}>{r.ava}</div>
-              <div>
-                <div className={styles.reviewName}>{r.name}</div>
-                <div className={styles.reviewDest}>{ar ? r.destAr : r.destEn}</div>
+        {data?.hotels.map((hotel) => {
+          const img = hotel.thumbnail || hotel.images?.[0];
+          return (
+            <div key={hotel.id} className={styles.hc}>
+              <Link href={`/${locale}/hotels/${hotel.id}`} className={styles.hcImgWrap} style={{ display: 'block', background: 'var(--s2)' }}>
+                {img && <Image className={styles.hcImg} src={img} alt={hotel.name} fill sizes="290px" loading="lazy" />}
+              </Link>
+              <div className={styles.hbody}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                  <div>
+                    <div className={styles.hname}>{hotel.name}</div>
+                    <div className={styles.hstars}>{'★'.repeat(Math.max(0, Math.min(5, hotel.starRating)))}</div>
+                    <div className={styles.hloc}>📍 {hotel.city}</div>
+                  </div>
+                  <div style={{ textAlign: 'end' }}>
+                    <div className={styles.hprice}>{formatCurrency(hotel.pricePerNight, hotel.currency)}<span style={{ fontSize: '.53rem' }}>{h.perNight}</span></div>
+                  </div>
+                </div>
+                {hotel.amenities?.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, margin: '8px 0 5px' }}>
+                    {hotel.amenities.slice(0, 3).map((tag) => (
+                      <span key={tag} className={styles.b} style={{ background: 'var(--s2)', color: 'var(--td)' }}>{tag}</span>
+                    ))}
+                  </div>
+                )}
+                <div className={styles.hf}>
+                  <div className={styles.hscore}>{hotel.reviewCount > 0 ? `⭐ ${hotel.rating.toFixed(1)}` : ''}</div>
+                  <Link href={`/${locale}/hotels/${hotel.id}`} className={styles.bookBtn}>{h.bookNow}</Link>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
+        {failed && <p style={{ color: 'var(--td)', fontSize: '.85rem' }}>{ar ? 'تعذّر تحميل الفنادق. حاول مرة أخرى.' : 'Could not load hotels. Please try again.'}</p>}
       </div>
 
       {/* ── AI Features ── */}

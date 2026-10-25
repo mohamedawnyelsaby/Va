@@ -599,7 +599,7 @@ const en: Translations = {
     entryUnit: 'ENTRY',
   },
   home: {
-    badge: 'Real AI · Real Bookings · 180+ Countries',
+    badge: 'Real AI · Real Bookings · Pay with Pi',
     heroPart1: 'Travel', heroPart1Em: true,
     heroPart2: 'Smarter.', heroPart2Em: false,
     heroPart3: 'Live', heroPart3Em: true,
@@ -947,7 +947,7 @@ const ar: Translations = {
     entryUnit: 'دخول',
   },
   home: {
-    badge: 'ذكاء اصطناعي حقيقي · حجوزات حقيقية · 180+ دولة',
+    badge: 'ذكاء اصطناعي حقيقي · حجوزات حقيقية · الدفع بعملة Pi',
     heroPart1: 'سافر', heroPart1Em: false,
     heroPart2: 'بذكاء.', heroPart2Em: true,
     heroPart3: 'عِش', heroPart3Em: false,
@@ -1295,7 +1295,7 @@ const fr: Translations = {
     entryUnit: 'ENTRÉE',
   },
   home: {
-    badge: 'IA Réelle · Réservations Réelles · 180+ Pays',
+    badge: 'IA Réelle · Réservations Réelles · Paiement en Pi',
     heroPart1: 'Voyagez', heroPart1Em: true,
     heroPart2: 'Plus Malin.', heroPart2Em: false,
     heroPart3: 'Vivez', heroPart3Em: true,
@@ -1643,7 +1643,7 @@ const es: Translations = {
     entryUnit: 'ENTRADA',
   },
   home: {
-    badge: 'IA Real · Reservas Reales · 180+ Países',
+    badge: 'IA Real · Reservas Reales · Pago con Pi',
     heroPart1: 'Viaja', heroPart1Em: true,
     heroPart2: 'Más Inteligente.', heroPart2Em: false,
     heroPart3: 'Vive', heroPart3Em: true,
@@ -1991,7 +1991,7 @@ const de: Translations = {
     entryUnit: 'EINTRITT',
   },
   home: {
-    badge: 'Echte KI · Echte Buchungen · 180+ Länder',
+    badge: 'Echte KI · Echte Buchungen · Zahlung mit Pi',
     heroPart1: 'Reise', heroPart1Em: true,
     heroPart2: 'Klüger.', heroPart2Em: false,
     heroPart3: 'Lebe', heroPart3Em: true,
@@ -2339,7 +2339,7 @@ const zh: Translations = {
     entryUnit: '门票',
   },
   home: {
-    badge: '真实AI · 真实预订 · 180+国家',
+    badge: '真实AI · 真实预订 · 使用Pi支付',
     heroPart1: '智慧', heroPart1Em: true,
     heroPart2: '出行。', heroPart2Em: false,
     heroPart3: '大胆', heroPart3Em: true,
@@ -2687,7 +2687,7 @@ const ja: Translations = {
     entryUnit: '入場料',
   },
   home: {
-    badge: '本物のAI · 本物の予約 · 180以上の国',
+    badge: '本物のAI · 本物の予約 · Piで支払い',
     heroPart1: 'スマートに', heroPart1Em: true,
     heroPart2: '旅する。', heroPart2Em: false,
     heroPart3: '大胆に', heroPart3Em: true,
@@ -3035,7 +3035,7 @@ const ru: Translations = {
     entryUnit: 'ВХОД',
   },
   home: {
-    badge: 'Настоящий ИИ · Реальные бронирования · 180+ стран',
+    badge: 'Настоящий ИИ · Реальные бронирования · Оплата в Pi',
     heroPart1: 'Путешествуй', heroPart1Em: true,
     heroPart2: 'Умнее.', heroPart2Em: false,
     heroPart3: 'Живи', heroPart3Em: true,
