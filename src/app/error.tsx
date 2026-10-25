@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from '@/lib/contact';
 // src/app/error.tsx
 'use client';
 
@@ -63,10 +64,10 @@ export default function Error({
           <p className="text-center text-xs text-muted-foreground">
             If the problem persists, please contact support at{' '}
             <a
-              href="mailto:support@vatravel.com"
+              href={`mailto:${SUPPORT_EMAIL}`}
               className="text-primary hover:underline"
             >
-              support@vatravel.com
+              {SUPPORT_EMAIL}
             </a>
           </p>
         </CardContent>

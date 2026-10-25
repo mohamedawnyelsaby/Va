@@ -109,25 +109,19 @@ export function BreadcrumbStructuredData({
 
 export function OrganizationStructuredData() {
   useEffect(() => {
+    // Only facts we can stand behind. This used to publish a made-up phone number
+    // (+1-555-0123, a fictional range), social accounts that are not ours
+    // (facebook/twitter/instagram.com/vatravel) and a domain we do not own
+    // (vatravel.com); search engines treat structured data as claims.
+    // Add `sameAs` / `contactPoint` back here once real ones exist.
+    const origin = window.location.origin;
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'Organization',
       name: 'Va Travel',
-      url: 'https://vatravel.com',
-      logo: 'https://vatravel.com/logo.png',
+      url: origin,
       description:
         'Your trusted travel partner for booking hotels, attractions, and restaurants worldwide.',
-      sameAs: [
-        'https://facebook.com/vatravel',
-        'https://twitter.com/vatravel',
-        'https://instagram.com/vatravel',
-      ],
-      contactPoint: {
-        '@type': 'ContactPoint',
-        telephone: '+1-555-0123',
-        contactType: 'customer service',
-        availableLanguage: ['en', 'ar', 'fr', 'es'],
-      },
     };
 
     const script = document.createElement('script');

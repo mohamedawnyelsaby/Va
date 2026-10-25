@@ -1,4 +1,5 @@
 'use client';
+import { CAREERS_EMAIL } from '@/lib/contact';
 
 export default function CareersPage() {
   const roles = [
@@ -45,8 +46,8 @@ export default function CareersPage() {
           <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.86rem', color: 'var(--vg-text-2)', marginBottom: '1rem' }}>
             Don&apos;t see your role? Send us your CV anyway.
           </div>
-          <a href="mailto:careers@vatravel.com" className="vg-btn-primary" style={{ textDecoration: 'none', display: 'inline-flex' }}>
-            careers@vatravel.com
+          <a href={`mailto:${CAREERS_EMAIL}`} className="vg-btn-primary" style={{ textDecoration: 'none', display: 'inline-flex' }}>
+            {CAREERS_EMAIL}
           </a>
         </div>
       </div>

@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next';
 
-const BASE_URL = 'https://vatravel.com';
+// robots.txt used to point crawlers at https://vatravel.com (not this site) and
+// list three sitemap files this app does not serve. Only /sitemap.xml exists.
+const BASE_URL = (process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://va-pied.vercel.app').replace(/\/$/, '');
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -31,12 +33,7 @@ export default function robots(): MetadataRoute.Robots {
         crawlDelay: 1,
       },
     ],
-    sitemap: [
-      `${BASE_URL}/sitemap.xml`,
-      `${BASE_URL}/sitemap-hotels.xml`,
-      `${BASE_URL}/sitemap-cities.xml`,
-      `${BASE_URL}/sitemap-attractions.xml`,
-    ],
+    sitemap: [`${BASE_URL}/sitemap.xml`],
     host: BASE_URL,
   };
 }

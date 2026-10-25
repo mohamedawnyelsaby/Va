@@ -1,3 +1,4 @@
+import { PRESS_EMAIL } from '@/lib/contact';
 // PATH: src/app/[locale]/press/page.tsx
 'use client';
 
@@ -90,8 +91,8 @@ export default function PressPage() {
           }}>
             Our communications team responds within 24 hours to all media requests.
           </p>
-          <a href="mailto:press@vatravel.com" className="vg-btn-primary" style={{ textDecoration: 'none', display: 'inline-flex' }}>
-            press@vatravel.com
+          <a href={`mailto:${PRESS_EMAIL}`} className="vg-btn-primary" style={{ textDecoration: 'none', display: 'inline-flex' }}>
+            {PRESS_EMAIL}
           </a>
         </div>
       </div>

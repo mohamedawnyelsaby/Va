@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from '@/lib/contact';
 export default function ContactPage() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--vg-bg)', paddingTop: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -8,7 +9,7 @@ export default function ContactPage() {
           Contact <em className="vg-italic">Us</em>
         </h1>
         <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.9rem', color: 'var(--vg-text-2)', lineHeight: 1.8, marginBottom: '2rem' }}>
-          We would love to hear from you. Reach us at <span style={{ color: 'var(--vg-gold)' }}>support@vatravel.com</span>
+          We would love to hear from you. Reach us at <span style={{ color: 'var(--vg-gold)' }}>{SUPPORT_EMAIL}</span>
         </p>
         <div className="vg-badge-outline" style={{ display: 'inline-flex' }}><span className="dot" />24/7 Support</div>
       </div>

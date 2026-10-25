@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from '@/lib/contact';
 // PATH: src/app/[locale]/help/page.tsx
 export default function HelpPage() {
   const FAQS = [
@@ -34,8 +35,8 @@ export default function HelpPage() {
           <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: '0.86rem', color: 'var(--vg-text-2)', marginBottom: '1rem' }}>
             Still need help? Contact our support team.
           </div>
-          <a href="mailto:support@vatravel.com" className="vg-btn-primary" style={{ textDecoration: 'none', display: 'inline-flex' }}>
-            support@vatravel.com
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="vg-btn-primary" style={{ textDecoration: 'none', display: 'inline-flex' }}>
+            {SUPPORT_EMAIL}
           </a>
         </div>
       </div>
