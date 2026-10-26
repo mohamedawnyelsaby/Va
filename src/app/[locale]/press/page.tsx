@@ -1,6 +1,6 @@
-import { PRESS_EMAIL } from '@/lib/contact';
 // PATH: src/app/[locale]/press/page.tsx
 'use client';
+import { PRESS_EMAIL } from '@/lib/contact';
 
 export default function PressPage() {
   const PRESS_ITEMS = [

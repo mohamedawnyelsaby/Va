@@ -1,6 +1,6 @@
-import { SUPPORT_EMAIL } from '@/lib/contact';
 // src/app/error.tsx
 'use client';
+import { SUPPORT_EMAIL } from '@/lib/contact';
 
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
