@@ -30,7 +30,7 @@ function stripLeadingComments(src: string): string {
 describe("'use client' directive placement", () => {
   const files = walk(path.join(process.cwd(), 'src'));
 
-  it("is the first statement in every file that declares it", () => {
+  it('is the first statement in every file that declares it', () => {
     const misplaced: string[] = [];
     for (const f of files) {
       const src = readFileSync(f, 'utf8');
