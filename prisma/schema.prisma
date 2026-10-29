@@ -306,17 +306,53 @@ model Payment {
   metadata        Json?
   errorMessage    String?  @db.Text
 
+  // Idempotency: a client-supplied key (Idempotency-Key header). The same key
+  // always returns the same payment instead of creating another one.
+  idempotencyKey  String?  @unique
+
+  // Refund workflow (all nullable/additive). A refund only exists for a
+  // 'completed' payment; the payment moves to 'refunded' when it is sent.
+  refundRequestedAt  DateTime?
+  refundProcessingAt DateTime?   // claim marker: one worker sends the refund
+  refundedAt         DateTime?
+  refundReason       String?  @db.Text
+  refundAmount       Float?
+  refundTxid         String?  @unique
+  refundedBy         String?     // admin user id (or 'system')
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   // Relations
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   booking         Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  events          PaymentEvent[]
 
   @@index([userId])
   @@index([bookingId])
   @@index([status])
   @@index([createdAt])
+  @@index([refundRequestedAt])
+}
+
+// ============================================
+// PAYMENT EVENT (append-only audit trail)
+// One row per state transition, kept for support and auditing.
+// ============================================
+model PaymentEvent {
+  id          String   @id @default(cuid())
+  paymentId   String
+  fromStatus  String?
+  toStatus    String
+  actor       String   // 'user:<id>' | 'admin:<id>' | 'webhook' | 'reconcile' | 'system'
+  reason      String?  @db.Text
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  payment     Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId, createdAt])
+  @@index([toStatus])
 }
 
 // ============================================

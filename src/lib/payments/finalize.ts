@@ -10,6 +10,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { CASHBACK_RATE, roundPi } from '@/lib/pricing';
+import { transitionPayment, type PaymentStatus } from '@/lib/payments/state-machine';
 
 export interface FinalizeResult {
   /** true only for the single caller that performed the transition */
@@ -46,11 +47,33 @@ export async function finalizePayment(params: {
     }
 
     // Atomic compare-and-set. Only one concurrent caller can win this.
-    const claimed = await tx.payment.updateMany({
-      where: { id: paymentId, status: { in: allowedFrom } },
-      data: { status: 'completed', piTxid: txid },
+    //
+    // The state machine requires approved -> completed. If our DB is still
+    // 'pending'/'created' (e.g. the approve call's DB write was lost) but Pi
+    // has already verified the transaction, record the missed approval first,
+    // in the same transaction, so the history stays truthful.
+    const lagging = allowedFrom.filter((s): s is PaymentStatus => s === 'pending' || s === 'created');
+    if (lagging.length > 0) {
+      await transitionPayment(tx, {
+        paymentId,
+        from: lagging,
+        to: 'approved',
+        actor: source,
+        reason: 'Approval recorded late: Pi reported a verified transaction',
+      });
+    }
+    if (!allowedFrom.includes('approved') && lagging.length === 0) {
+      return { finalized: false, cashback: 0 };
+    }
+    const claimed = await transitionPayment(tx, {
+      paymentId,
+      from: ['approved'],
+      to: 'completed',
+      actor: source,
+      data: { piTxid: txid },
+      metadata: { txid, requestId },
     });
-    if (claimed.count === 0) {
+    if (!claimed) {
       return { finalized: false, cashback: 0 };
     }
 

@@ -37,3 +37,51 @@ describe('middleware locale detection', () => {
     expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
   });
 });
+
+describe('middleware API protection', () => {
+  const api = (path: string, init: { method?: string; headers?: Record<string, string> } = {}) =>
+    middleware(new NextRequest(`http://localhost${path}`, init));
+
+  it('rejects an unknown Origin with 403', async () => {
+    const res = await api('/api/hotels', { headers: { origin: 'https://evil.example' } });
+    expect(res.status).toBe(403);
+    expect(res.headers.get('access-control-allow-origin')).toBeNull();
+  });
+
+  it('rejects a preflight from an unknown Origin', async () => {
+    const res = await api('/api/bookings', { method: 'OPTIONS', headers: { origin: 'https://evil.example' } });
+    expect(res.status).toBe(403);
+  });
+
+  it('answers a preflight from the app itself and echoes only that origin', async () => {
+    const res = await api('/api/hotels', { method: 'OPTIONS', headers: { origin: 'http://localhost' } });
+    expect(res.status).toBe(204);
+    expect(res.headers.get('access-control-allow-origin')).toBe('http://localhost');
+  });
+
+  it.each(['/api/bookings', '/api/payments/pi/create', '/api/user', '/api/favorites'])(
+    'returns 401 for %s without a session',
+    async (path) => {
+      const res = await api(path, { method: 'POST' });
+      expect(res.status).toBe(401);
+    }
+  );
+
+  it('does not let a dotted path skip the API checks', async () => {
+    const res = await api('/api/bookings/a.b', { method: 'POST' });
+    expect(res.status).toBe(401);
+  });
+
+  it('keeps public reads and the signed webhook reachable without a session', async () => {
+    expect((await api('/api/hotels')).status).toBe(200);
+    expect((await api('/api/health')).status).toBe(200);
+    expect((await api('/api/webhooks/pi', { method: 'POST' })).status).toBe(200);
+  });
+
+  it('redirects a sensitive page to sign-in when there is no session', async () => {
+    const res = await visit('/en/wallet');
+    expect(res.status).toBe(307);
+    expect(target(res)).toBe('/en/auth/signin');
+    expect(res.headers.get('location')).toContain('callbackUrl=%2Fen%2Fwallet');
+  });
+});

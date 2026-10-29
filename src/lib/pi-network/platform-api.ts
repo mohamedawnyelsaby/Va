@@ -80,25 +80,30 @@ export function verifyPiSignature(
   timestamp: string
 ): boolean {
   try {
-    if (!PI_SECRET) {
-      logger.error('❌ PI_SECRET not configured');
+    // Fail closed on anything malformed: every input must be a non-empty string.
+    if (typeof body !== 'string' || body.length === 0) {return false;}
+    if (typeof signature !== 'string' || signature.length === 0) {return false;}
+    if (typeof timestamp !== 'string' || timestamp.length === 0) {return false;}
+
+    const secret = process.env.PI_SECRET_KEY;
+    if (!secret) {
+      logger.error('❌ PI_SECRET_KEY not configured');
       return false;
     }
 
+    // An HMAC-SHA256 hex digest is exactly 64 hex characters. Reject anything
+    // else before comparing (also guarantees equal buffer lengths).
+    if (!/^[0-9a-fA-F]{64}$/.test(signature)) {return false;}
+
     // Create payload: timestamp.body
     const payload = `${timestamp}.${body}`;
-    
-    // Generate expected signature
-    const expectedSignature = crypto
-      .createHmac('sha256', PI_SECRET)
-      .update(payload)
-      .digest('hex');
+
+    const expected = crypto.createHmac('sha256', secret).update(payload).digest();
+    const provided = Buffer.from(signature, 'hex');
+    if (provided.length !== expected.length) {return false;}
 
     // Timing-safe comparison to prevent timing attacks
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expectedSignature)
-    );
+    return crypto.timingSafeEqual(provided, expected);
   } catch (error) {
     logger.error('❌ Signature verification error:', error);
     return false;
@@ -194,8 +199,10 @@ function sleep(ms: number): Promise<void> {
  * Returns user data if token is valid
  */
 export async function verifyPiUser(accessToken: string): Promise<PiUser> {
-  logger.log('🔐 Verifying Pi user token...');
-  
+  if (typeof accessToken !== 'string' || accessToken.trim().length === 0) {
+    throw new Error('Failed to verify Pi user token');
+  }
+
   try {
     const user = await makeRequest<PiUser>({
       method: 'GET',
@@ -203,12 +210,16 @@ export async function verifyPiUser(accessToken: string): Promise<PiUser> {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
       },
+      timeout: 10_000,
     });
-    
-    logger.log(`✅ User verified: ${user.username}`);
+
+    // Never trust a malformed response: a uid is mandatory.
+    if (!user || typeof user.uid !== 'string' || user.uid.length === 0) {
+      throw new Error('Invalid response from Pi /v2/me');
+    }
     return user;
   } catch (error) {
-    logger.error('❌ User verification failed:', error);
+    logger.error('❌ User verification failed:', error instanceof Error ? error.message : error);
     throw new Error('Failed to verify Pi user token');
   }
 }

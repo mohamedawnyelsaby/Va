@@ -56,6 +56,18 @@ export function getA2UNetworkConfig(): A2UNetworkConfig {
   };
 }
 
+/**
+ * Thrown when the Pi were ALREADY sent on-chain but marking the payment
+ * complete on Pi failed. The money has moved: callers must NOT retry or
+ * release any lock, and must keep the txid for manual completion.
+ */
+export class A2UPostSubmitError extends Error {
+  constructor(message: string, public readonly identifier: string, public readonly txid: string) {
+    super(message);
+    this.name = 'A2UPostSubmitError';
+  }
+}
+
 export interface SendA2UParams {
   /** The recipient's Pi user uid (what Pi's auth returns; stored as User.piWalletId). */
   uid: string;
@@ -193,7 +205,11 @@ async function doSendA2UPayment(params: SendA2UParams): Promise<SendA2UResult> {
       ? `${err.response?.status ?? ''} ${JSON.stringify(err.response?.data ?? err.message)}`
       : err instanceof Error ? err.message : String(err);
     logger.error(`[a2u] SENT but /complete failed. identifier=${identifier} txid=${txid}:`, detail);
-    throw new Error(`Pi was sent (txid ${txid}, payment ${identifier}) but marking it complete failed: ${detail}`);
+    throw new A2UPostSubmitError(
+      `Pi was sent (txid ${txid}, payment ${identifier}) but marking it complete failed: ${detail}`,
+      identifier,
+      txid
+    );
   }
 
   logger.log(`[a2u] ✅ ${cfg.network} payment ${identifier} complete, txid ${txid}`);

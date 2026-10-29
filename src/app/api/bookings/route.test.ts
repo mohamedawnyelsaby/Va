@@ -9,7 +9,8 @@ const m = vi.hoisted(() => ({
   tx: {
     $executeRaw: vi.fn(),
     booking: { updateMany: vi.fn(), aggregate: vi.fn(), create: vi.fn() },
-    payment: { updateMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
+    payment: { updateMany: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
+    paymentEvent: { create: vi.fn() },
     user: { findUnique: vi.fn(), update: vi.fn() },
   },
   bookingFindUnique: vi.fn(),
@@ -71,6 +72,27 @@ describe('PATCH /api/bookings — refund request reverses cashback', () => {
       memo: 'm',
       cashbackReversed: 0.2,
     });
+  });
+
+  it('records when and why the refund was requested, once, with an audit event', async () => {
+    m.tx.payment.updateMany.mockResolvedValue({ count: 1 });
+    await PATCH(
+      new Request('http://localhost/api/bookings', {
+        method: 'PATCH',
+        body: JSON.stringify({ bookingId: 'b1', reason: 'Plans changed' }),
+      }) as unknown as NextRequest
+    );
+    expect(m.tx.payment.updateMany).toHaveBeenCalledWith({
+      where: { id: 'pay_1', status: 'completed', refundRequestedAt: null },
+      data: { refundRequestedAt: expect.any(Date), refundReason: 'Plans changed' },
+    });
+    expect(m.tx.paymentEvent.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not write a second audit event when a refund was already requested', async () => {
+    m.tx.payment.updateMany.mockResolvedValue({ count: 0 });
+    await cancel();
+    expect(m.tx.paymentEvent.create).not.toHaveBeenCalled();
   });
 
   it('never drives the balance negative: reverses only what is left', async () => {

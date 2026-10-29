@@ -22,6 +22,7 @@ import { parsePagination } from '@/lib/api-utils';
 import { logger } from '@/lib/logger';
 import { captureException } from '@/lib/monitoring/sentry';
 import { sendRefundRequestEmail } from '@/lib/email/notifications';
+import { transitionPayment } from '@/lib/payments/state-machine';
 import {
   computeHotelTotal,
   countNights,
@@ -55,7 +56,10 @@ const createBookingSchema = z.object({
   specialRequests: z.string().max(500).optional(),
 });
 
-const cancelSchema = z.object({ bookingId: z.string().min(1).max(64) });
+const cancelSchema = z.object({
+  bookingId: z.string().min(1).max(64),
+  reason: z.string().trim().max(500).optional(),
+});
 
 /* ===============================
    GET – User bookings
@@ -330,7 +334,7 @@ export async function PATCH(request: NextRequest) {
     if ('response' in guard) {return guard.response;}
     const { userId } = guard;
 
-    const { bookingId } = cancelSchema.parse(await request.json());
+    const { bookingId, reason } = cancelSchema.parse(await request.json());
 
     const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
     if (!booking || booking.userId !== userId) {
@@ -345,10 +349,19 @@ export async function PATCH(request: NextRequest) {
       });
       if (res.count === 0) {return null;}
 
-      await tx.payment.updateMany({
+      const openPayments = await tx.payment.findMany({
         where: { bookingId, status: 'pending' },
-        data: { status: 'cancelled' },
+        select: { id: true },
       });
+      for (const p of openPayments) {
+        await transitionPayment(tx, {
+          paymentId: p.id,
+          from: ['pending'],
+          to: 'cancelled',
+          actor: `user:${userId}`,
+          reason: 'Booking cancelled by the user before payment',
+        });
+      }
       return tx.booking.findUnique({ where: { id: bookingId } });
     });
 
@@ -387,6 +400,25 @@ export async function PATCH(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
         select: { id: true, userId: true, metadata: true },
       });
+      if (completed) {
+        // Refund workflow: record WHEN and WHY it was requested (once). The
+        // payment stays 'completed' until the refund is actually sent.
+        const flagged = await tx.payment.updateMany({
+          where: { id: completed.id, status: 'completed', refundRequestedAt: null },
+          data: { refundRequestedAt: new Date(), refundReason: reason ?? null },
+        });
+        if (flagged?.count !== 0) {
+          await tx.paymentEvent.create({
+            data: {
+              paymentId: completed.id,
+              fromStatus: 'completed',
+              toStatus: 'completed',
+              actor: `user:${userId}`,
+              reason: `Refund requested${reason ? `: ${reason}` : ''}`,
+            },
+          });
+        }
+      }
       const meta = (completed?.metadata ?? {}) as { cashback?: unknown };
       const cashback = Number(meta.cashback);
       if (completed && Number.isFinite(cashback) && cashback > 0) {

@@ -21,6 +21,7 @@ import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { verifyPiSignature } from '@/lib/pi-network/platform-api';
 import { finalizePayment } from '@/lib/payments/finalize';
+import { transitionPayment } from '@/lib/payments/state-machine';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -167,13 +168,15 @@ async function handlePaymentClosed(payment: PiWebhookPayment, status: 'cancelled
   }
 
   return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    const updated = await tx.payment.updateMany({
-      where: { id: dbPayment.id, status: { in: ['pending', 'approved'] } },
-      data: {
-        status,
-        ...(status === 'failed' ? { errorMessage: 'Payment failed' } : {}),
-      },
+    const moved = await transitionPayment(tx, {
+      paymentId: dbPayment.id,
+      from: ['pending', 'created', 'approved'],
+      to: status,
+      actor: 'webhook',
+      reason: `Pi reported payment_${status}`,
+      ...(status === 'failed' ? { data: { errorMessage: 'Payment failed' } } : {}),
     });
+    const updated = { count: moved ? 1 : 0 };
 
     if (updated.count > 0 && dbPayment.bookingId) {
       await tx.booking.updateMany({

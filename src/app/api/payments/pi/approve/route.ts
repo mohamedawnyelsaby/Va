@@ -21,6 +21,7 @@ import { requireUser } from '@/lib/auth/guards';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { getPayment, approvePayment } from '@/lib/pi-network/platform-api';
+import { transitionPayment } from '@/lib/payments/state-machine';
 
 const AMOUNT_TOLERANCE = 1e-6;
 
@@ -140,16 +141,19 @@ export async function POST(request: NextRequest) {
 
     // ---- Persist ---------------------------------------------------------
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      await tx.payment.updateMany({
-        where: { id: payment.id, status: 'pending' },
+      await transitionPayment(tx, {
+        paymentId: payment.id,
+        from: ['pending', 'created'],
+        to: 'approved',
+        actor: `user:${userId}`,
         data: {
-          status: 'approved',
           metadata: {
             ...((payment.metadata as object) || {}),
             approvedAt: new Date().toISOString(),
             requestId,
           },
         },
+        metadata: { piPaymentId, requestId },
       });
       if (payment.bookingId) {
         await tx.booking.updateMany({

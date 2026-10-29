@@ -11,12 +11,14 @@
 // could be 'completed' here yet stay "incomplete" on Pi, and Pi allows only one
 // open payment per user, so they would be unable to pay again.
 
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { captureException } from '@/lib/monitoring/sentry';
 import { cancelPayment, completePayment, getPayment } from '@/lib/pi-network/platform-api';
 import type { PiPayment } from '@/lib/pi-network/platform-api';
 import { finalizePayment } from '@/lib/payments/finalize';
+import { transitionPayment } from '@/lib/payments/state-machine';
 
 const AMOUNT_TOLERANCE = 1e-6;
 
@@ -93,10 +95,15 @@ export async function reconcilePiPayment(params: {
 
   // Pi says it was cancelled: mirror that locally and stop.
   if (piPayment.status?.cancelled || piPayment.status?.user_cancelled) {
-    await prisma.payment.updateMany({
-      where: { id: payment.id, status: { in: ['pending', 'approved'] } },
-      data: { status: 'cancelled' },
-    });
+    await prisma.$transaction((tx: Prisma.TransactionClient) =>
+      transitionPayment(tx, {
+        paymentId: payment.id,
+        from: ['pending', 'created', 'approved'],
+        to: 'cancelled',
+        actor: 'reconcile',
+        reason: 'Pi reports the payment was cancelled',
+      })
+    );
     if (payment.bookingId) {
       await prisma.booking.updateMany({
         where: { id: payment.bookingId, paymentStatus: { not: 'paid' } },
@@ -166,10 +173,15 @@ export async function reconcilePiPayment(params: {
     } catch (err) {
       logger.warn('[reconcile] cancelPayment failed:', err instanceof Error ? err.message : err);
     }
-    await prisma.payment.updateMany({
-      where: { id: payment.id, status: 'pending' },
-      data: { status: 'cancelled' },
-    });
+    await prisma.$transaction((tx: Prisma.TransactionClient) =>
+      transitionPayment(tx, {
+        paymentId: payment.id,
+        from: ['pending'],
+        to: 'cancelled',
+        actor: 'reconcile',
+        reason: 'Never approved on Pi and no transaction: cancelled so the user can retry',
+      })
+    );
     return { resolved: 'cancelled_unapproved', paymentId: payment.id };
   }
 

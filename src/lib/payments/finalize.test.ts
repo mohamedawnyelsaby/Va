@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const tx = vi.hoisted(() => ({
   payment: { findFirst: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn(), update: vi.fn() },
+  paymentEvent: { create: vi.fn() },
   booking: { update: vi.fn() },
   user: { update: vi.fn() },
 }));
@@ -55,12 +56,27 @@ describe('finalizePayment', () => {
     expect(tx.booking.update).not.toHaveBeenCalled();
   });
 
-  it('only moves the payment out of the allowed statuses (compare-and-set)', async () => {
-    await finalizePayment({ ...params, allowedFrom: ['pending', 'approved'] });
+  it('only completes from approved (compare-and-set) and records the transition', async () => {
+    await finalizePayment(params);
     expect(tx.payment.updateMany).toHaveBeenCalledWith({
-      where: { id: 'pay_1', status: { in: ['pending', 'approved'] } },
-      data: { status: 'completed', piTxid: 'tx_abc' },
+      where: { id: 'pay_1', status: { in: ['approved'] } },
+      data: { piTxid: 'tx_abc', status: 'completed' },
     });
+    expect(tx.paymentEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ paymentId: 'pay_1', fromStatus: 'approved', toStatus: 'completed', actor: 'client' }),
+    });
+  });
+
+  it('records a missed approval first when the DB still says pending (state machine stays strict)', async () => {
+    await finalizePayment({ ...params, allowedFrom: ['pending', 'approved'] });
+    const calls = tx.payment.updateMany.mock.calls.map((c) => c[0].data.status);
+    expect(calls).toEqual(['approved', 'completed']);
+  });
+
+  it('never completes a payment that is not in an allowed status', async () => {
+    const res = await finalizePayment({ ...params, allowedFrom: ['failed'] });
+    expect(res).toEqual({ finalized: false, cashback: 0 });
+    expect(tx.payment.updateMany).not.toHaveBeenCalled();
   });
 
   it('refuses a txid that already settled a different payment', async () => {

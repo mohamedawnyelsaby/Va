@@ -1,48 +1,30 @@
 // src/middleware.ts
-// ✅ FIXED: Renamed from proxy.ts to middleware.ts (Next.js requires this exact name)
-// ✅ FIXED: Protected routes temporarily disabled for Pi Browser compatibility
+// Edge middleware: locale routing, security headers, CORS allowlist and
+// session enforcement (see src/lib/security/api-policy.ts for the rules).
+//
+// SECURITY
+// - /api/*: an unknown Origin is rejected with 403; every API path is
+//   deny-by-default and needs a session unless explicitly public or
+//   self-authenticated (webhook signature / cron secret / seed secret).
+// - Sensitive pages (profile, wallet, bookings, ...) redirect to sign-in
+//   without a session.
+// - This is a first gate only: it checks that a valid, signed session cookie
+//   exists. Route handlers still re-check the user in the database
+//   (requireUser / requireAdmin), which is what revokes deactivated users.
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
+import {
+  classifyApi,
+  getAllowedOrigins,
+  isOriginAllowed,
+  isProtectedPage,
+} from '@/lib/security/api-policy';
 
 // Must match src/app/[locale]/layout.tsx and Locale in lib/i18n/translations.ts:
 // a locale accepted here but not there redirects visitors to a 404.
 const locales = ['en', 'ar', 'fr', 'es', 'de', 'ru', 'zh', 'ja'];
 const defaultLocale = 'en';
-
-// Pi payment routes must NEVER require auth.
-// Currently unused: protected-route enforcement is temporarily disabled
-// (see note above) for Pi Browser compatibility, so nothing reads this
-// list yet. Kept here, ready to wire back in when protection is restored.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const PUBLIC_API_PATHS = [
-  '/api/auth',
-  '/api/payments/pi/approve',
-  '/api/payments/pi/complete',
-  '/api/payments/pi/create',
-  '/api/payments/pi/recover',
-  '/api/auth/pi/verify',
-  '/api/pi/auth',
-  '/api/webhooks/pi',
-  '/api/health',
-  '/api/hotels',
-  '/api/cities',
-  '/api/attractions',
-  '/api/restaurants',
-  '/api/search',
-];
-
-// Origins allowed to make cross-origin requests to this app's API routes.
-// The app's own frontend calling its own /api/* routes is same-origin and
-// never needs CORS headers at all — this allowlist exists only for the
-// rare legitimate cross-origin case (e.g. Pi Browser's own domains), not
-// as a general-purpose open API. Add the production custom domain here
-// once it's live (e.g. https://va.pi).
-const ALLOWED_ORIGINS = [
-  'https://va-pied.vercel.app',
-  'https://va-mainnet.vercel.app',
-  'https://sdk.minepi.com',
-  'https://app-cdn.minepi.com',
-];
 
 // Pi domain-ownership validation keys, one per registered app. Both
 // va-pied.vercel.app (Testnet app) and va-mainnet.vercel.app (Mainnet
@@ -55,6 +37,25 @@ const VALIDATION_KEYS: Record<string, string> = {
   'va-pied.vercel.app': 'ff33e9722c38cad2f0ff491e01f3e70d21c695368d78af8299537117183c830762b90b777d192b4a9704c48c4e302225f601e2604056043d4a3f59a1e362e301',
   'va-mainnet.vercel.app': 'd94228e67abeffc15c2ad34a613cfd7af51201db1e5502a7767807cdae9a1904393a0d011dd22f83412da289a1cbc973853b1f1d642e5920d460812aa828f3b3',
 };
+
+// Reads and verifies the signed NextAuth session cookie. The cookie name must
+// match the one configured in src/lib/auth/options.ts. Any failure means
+// "no session" (fail closed).
+async function readSession(request: NextRequest) {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) {return null;}
+  try {
+    const secure = process.env.NODE_ENV === 'production';
+    return await getToken({
+      req: request,
+      secret,
+      secureCookie: secure,
+      cookieName: secure ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
+    });
+  } catch {
+    return null;
+  }
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -74,6 +75,42 @@ export async function middleware(request: NextRequest) {
     // Unknown host — fall through to the static public/validation-key.txt file.
   }
 
+  // ✅ API routes: CORS allowlist + session enforcement. Handled BEFORE the
+  // static-file skip below so a dotted path (e.g. /api/hotels/a.b) can never
+  // slip past these checks.
+  if (pathname.startsWith('/api/')) {
+    const origin = request.headers.get('origin');
+    const ownOrigin = request.nextUrl.origin;
+
+    if (origin && !isOriginAllowed(origin, ownOrigin, getAllowedOrigins())) {
+      return NextResponse.json({ error: 'Origin not allowed' }, { status: 403 });
+    }
+
+    const corsHeaders = new Headers();
+    if (origin) {
+      corsHeaders.set('Access-Control-Allow-Origin', origin);
+      corsHeaders.set('Vary', 'Origin');
+      corsHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+      corsHeaders.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    }
+
+    // Preflight carries no credentials; answer it for allowed origins only.
+    if (request.method === 'OPTIONS') {
+      return new NextResponse(null, { status: 204, headers: corsHeaders });
+    }
+
+    if (classifyApi(pathname, request.method) === 'protected') {
+      const token = await readSession(request);
+      if (!token) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
+      }
+    }
+
+    const response = NextResponse.next();
+    corsHeaders.forEach((value, key) => response.headers.set(key, value));
+    return response;
+  }
+
   // ✅ Skip static files and images
   if (
     pathname.startsWith('/_next/') ||
@@ -85,25 +122,6 @@ export async function middleware(request: NextRequest) {
     pathname.includes('.')
   ) {
     return NextResponse.next();
-  }
-
-  // ✅ API routes: add CORS headers but don't redirect
-  if (pathname.startsWith('/api/')) {
-    const response = NextResponse.next();
-    const origin = request.headers.get('origin');
-    if (origin && ALLOWED_ORIGINS.includes(origin)) {
-      response.headers.set('Access-Control-Allow-Origin', origin);
-      response.headers.set('Vary', 'Origin');
-    }
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-    // Handle preflight
-    if (request.method === 'OPTIONS') {
-      return new NextResponse(null, { status: 200, headers: response.headers });
-    }
-
-    return response;
   }
 
   // ✅ Locale detection and redirect
@@ -130,6 +148,20 @@ export async function middleware(request: NextRequest) {
 
     url.pathname = `/${detectedLocale}${pathname}`;
     return NextResponse.redirect(url);
+  }
+
+  // ✅ Sensitive pages need a session
+  const withoutLocale = pathname.replace(/^\/[a-z]{2}(?=\/|$)/, '') || '/';
+  if (isProtectedPage(withoutLocale)) {
+    const token = await readSession(request);
+    if (!token) {
+      const locale = pathname.split('/')[1];
+      const url = request.nextUrl.clone();
+      url.pathname = `/${locale}/auth/signin`;
+      url.search = '';
+      url.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(url);
+    }
   }
 
   // ✅ Security headers
