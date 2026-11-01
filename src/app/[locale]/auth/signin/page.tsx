@@ -7,6 +7,17 @@ import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import Link from 'next/link';
 
+// A request that never answers must become a visible error, not an endless
+// "Connecting...". Pi Browser has no DevTools, so the step name + timeout is
+// the only way to see where a login hangs.
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`timed out after ${ms / 1000}s (${label})`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 export default function SignInPage() {
   const router = useRouter();
   const params = useParams();
@@ -17,6 +28,7 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isPiLoading, setIsPiLoading] = useState(false);
   const [piError, setPiError] = useState('');
+  const [piStep, setPiStep] = useState('');
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
 
@@ -57,13 +69,27 @@ export default function SignInPage() {
       setIsPiLoading(true);
       setPiError('');
       step = 'Pi SDK authenticate';
-      const piUser = await authenticate(['username', 'payments']);
+      setPiStep('1/3');
+      const piUser = await withTimeout(authenticate(['username', 'payments']), 40_000, step);
       step = 'server verification';
-      const res = await fetch('/api/pi/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken: piUser.accessToken, uid: piUser.uid }),
-      });
+      setPiStep('2/3');
+      const controller = new AbortController();
+      const abortTimer = setTimeout(() => controller.abort(), 20_000);
+      let res: Response;
+      try {
+        res = await fetch('/api/pi/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken: piUser.accessToken, uid: piUser.uid }),
+          signal: controller.signal,
+        });
+      } catch (e) {
+        throw new Error(
+          e instanceof DOMException && e.name === 'AbortError' ? 'timed out after 20s (/api/pi/auth)' : String(e)
+        );
+      } finally {
+        clearTimeout(abortTimer);
+      }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {throw new Error(data.error || `HTTP ${res.status}`);}
       // ✅ FIX: this used to sign in via the 'credentials' (email/password)
@@ -76,12 +102,17 @@ export default function SignInPage() {
       // 'pi-network' provider, authenticated with the real Pi access
       // token — not a fake credentials login.
       step = 'creating session';
-      const result = await signIn('pi-network', {
-        accessToken: piUser.accessToken,
-        uid: piUser.uid,
-        username: piUser.username,
-        redirect: false,
-      });
+      setPiStep('3/3');
+      const result = await withTimeout(
+        signIn('pi-network', {
+          accessToken: piUser.accessToken,
+          uid: piUser.uid,
+          username: piUser.username,
+          redirect: false,
+        }),
+        20_000,
+        step
+      );
       if (result?.ok) {
         router.push(`/${locale}/dashboard`);
       } else {
@@ -107,6 +138,7 @@ export default function SignInPage() {
       toast({ title: 'Pi Network login failed', description: `${step}: ${detail}`, variant: 'destructive' });
     } finally {
       setIsPiLoading(false);
+      setPiStep('');
     }
   };
 
@@ -353,7 +385,7 @@ export default function SignInPage() {
               onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--vg-gold-dim)'; }}
             >
               <span style={{ fontSize: '1rem', lineHeight: 1 }}>π</span>
-              {isPiLoading ? 'Connecting...' : 'Continue with Pi Network'}
+              {isPiLoading ? `Connecting... ${piStep}` : 'Continue with Pi Network'}
             </button>
             {piError && (
               <pre style={{
