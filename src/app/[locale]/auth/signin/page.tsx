@@ -3,6 +3,7 @@ import { usePi } from '@/components/providers/pi-provider';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import { isPiSandbox, readSandboxSignals } from '@/lib/pi-network/sandbox';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import Link from 'next/link';
@@ -133,6 +134,8 @@ export default function SignInPage() {
       setPiError(
         `${step}: ${detail}\n` +
         `sandbox flag (build): ${process.env.NEXT_PUBLIC_PI_SANDBOX === 'true' ? 'true' : 'not true'}\n` +
+        `sandbox (detected): ${isPiSandbox() ? 'true' : 'false'}\n` +
+        `opened from: ${(() => { const x = readSandboxSignals(); return x.ancestorOrigins[0] || x.referrer || 'direct'; })()}\n` +
         `host: ${typeof window !== 'undefined' ? window.location.host : '?'}`
       );
       toast({ title: 'Pi Network login failed', description: `${step}: ${detail}`, variant: 'destructive' });

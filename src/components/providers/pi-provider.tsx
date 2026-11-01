@@ -1,5 +1,6 @@
 // src/components/providers/pi-provider.tsx
 'use client';
+import { isPiSandbox } from '@/lib/pi-network/sandbox';
 
 import { 
   createContext, 
@@ -382,7 +383,9 @@ export function PiProvider({ children }: { children: ReactNode }) {
 
       // Pi SDK is available!
       try {
-        const isSandbox = process.env.NEXT_PUBLIC_PI_SANDBOX === 'true';
+        // Build flag OR detected at runtime (Pi Browser opens Testnet apps
+        // inside sandbox.minepi.com). A wrong mode makes Pi.authenticate hang.
+        const isSandbox = isPiSandbox();
         
         logger.log('🔧 Initializing Pi SDK...');
         
