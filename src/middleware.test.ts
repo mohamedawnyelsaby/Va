@@ -95,7 +95,7 @@ describe('middleware with a real NextAuth session cookie', () => {
   });
 
   const call = async (path: string, cookieName: string, method = 'GET') => {
-    const token = await encode({ token: { sub: 'user-1' }, secret: SECRET });
+    const token = await encode({ token: { sub: 'user-1', id: 'user-1', email: 'u@example.com' }, secret: SECRET });
     return middleware(
       new NextRequest(`http://localhost${path}`, { method, headers: { cookie: `${cookieName}=${token}` } })
     );
