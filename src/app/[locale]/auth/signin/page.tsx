@@ -1,6 +1,6 @@
 'use client';
 import { usePi } from '@/components/providers/pi-provider';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { isPiSandbox, readSandboxSignals } from '@/lib/pi-network/sandbox';
@@ -30,10 +30,26 @@ export default function SignInPage() {
   const [isPiLoading, setIsPiLoading] = useState(false);
   const [piError, setPiError] = useState('');
   const [piStep, setPiStep] = useState('');
+  const [piTrace, setPiTrace] = useState<string[]>([]);
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Live trace of the Pi sign-in stages, printed under the button.
+  const traceStart = useRef(0);
+  const addTrace = (line: string) =>
+    setPiTrace((prev) => [...prev.slice(-14), `${((Date.now() - traceStart.current) / 1000).toFixed(1)}s ${line}`]);
+  useEffect(() => {
+    const onStage = (e: Event) => {
+      setPiTrace((prev) => [
+        ...prev.slice(-14),
+        `${((Date.now() - traceStart.current) / 1000).toFixed(1)}s ${String((e as CustomEvent).detail)}`,
+      ]);
+    };
+    window.addEventListener('pi-stage', onStage);
+    return () => window.removeEventListener('pi-stage', onStage);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,9 +85,13 @@ export default function SignInPage() {
       }
       setIsPiLoading(true);
       setPiError('');
+      traceStart.current = Date.now();
+      setPiTrace([]);
+      addTrace(`start (sandbox: ${isPiSandbox() ? 'yes' : 'no'}, sdk available: ${isAvailable ? 'yes' : 'no'})`);
       step = 'Pi SDK authenticate';
       setPiStep('1/3');
       const piUser = await withTimeout(authenticate(['username', 'payments']), 40_000, step);
+      addTrace('authenticate() finished');
       step = 'server verification';
       setPiStep('2/3');
       const controller = new AbortController();
@@ -102,6 +122,7 @@ export default function SignInPage() {
       // fail. Pi Network sign-in should go through the dedicated
       // 'pi-network' provider, authenticated with the real Pi access
       // token — not a fake credentials login.
+      addTrace(`/api/pi/auth HTTP ${res.status}`);
       step = 'creating session';
       setPiStep('3/3');
       const result = await withTimeout(
@@ -114,6 +135,7 @@ export default function SignInPage() {
         20_000,
         step
       );
+      addTrace(`signIn result ok=${String(result?.ok)} error=${String(result?.error ?? '')}`);
       if (result?.ok) {
         router.push(`/${locale}/dashboard`);
       } else {
@@ -390,6 +412,11 @@ export default function SignInPage() {
               <span style={{ fontSize: '1rem', lineHeight: 1 }}>π</span>
               {isPiLoading ? `Connecting... ${piStep}` : 'Continue with Pi Network'}
             </button>
+            {piTrace.length > 0 && (
+              <pre style={{ marginTop: '0.75rem', fontSize: '0.7rem', whiteSpace: 'pre-wrap', color: '#9a9ab0' }}>
+                {piTrace.join('\n')}
+              </pre>
+            )}
             {piError && (
               <pre style={{
                 marginTop: '0.75rem', padding: '0.75rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word',

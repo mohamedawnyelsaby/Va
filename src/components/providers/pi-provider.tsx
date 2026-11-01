@@ -260,6 +260,18 @@ const PiContext = createContext<PiContextType | null>(null);
 // Provider Component
 // ============================================
 
+// Sign-in diagnostics: the sign-in page listens for these and prints them on
+// screen, because Pi Browser has no DevTools. No data is sent anywhere.
+function emitPiStage(stage: string) {
+  try {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('pi-stage', { detail: stage }));
+    }
+  } catch {
+    /* diagnostics must never affect sign-in */
+  }
+}
+
 export function PiProvider({ children }: { children: ReactNode }) {
   // State
   const [sdkStatus, setSdkStatus] = useState<PiSDKStatus>('initializing');
@@ -544,11 +556,14 @@ export function PiProvider({ children }: { children: ReactNode }) {
         throw new Error('Invalid authentication scopes');
       }
 
+      emitPiStage('Pi.authenticate called');
       const auth = await Pi.authenticate(sanitizedScopes, (payment: PiSdkPayment) => {
+        emitPiStage('incomplete payment callback');
         logger.log('📦 Incomplete payment found during auth:', payment);
         handleIncompletePayment(payment);
       });
 
+      emitPiStage('Pi.authenticate resolved');
       // Validate authentication response
       if (!auth?.user?.uid || !auth?.user?.username) {
         throw new Error('Invalid authentication response');
@@ -568,6 +583,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
       
       // Verify with backend (critical for security)
       try {
+        emitPiStage('backend verify sent');
         const verifyResponse = await fetch('/api/auth/pi/verify', {
           method: 'POST',
           headers: { 
@@ -579,11 +595,13 @@ export function PiProvider({ children }: { children: ReactNode }) {
           }),
         });
 
+        emitPiStage(`backend verify HTTP ${verifyResponse.status}`);
         if (!verifyResponse.ok) {
           throw new Error('Backend verification failed');
         }
 
         await verifyResponse.json();
+        emitPiStage('backend verify body read');
         logger.log('✅ Backend verification successful');
         
       } catch (error) {
