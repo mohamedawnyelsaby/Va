@@ -335,6 +335,19 @@ export function PiProvider({ children }: { children: ReactNode }) {
       setUser(userData);
       setIsAuthenticated(true);
       logger.log('✅ Session restored:', userData.username);
+
+      // The saved name only proves the user signed in on this device once.
+      // Confirm there is still a real server session; otherwise the header
+      // shows a signed-in user while protected pages redirect to sign-in.
+      // A network failure leaves things as they are (no false sign-out).
+      fetch('/api/auth/session', { cache: 'no-store' })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((session) => {
+          if (session && !session.user) {
+            clearSession();
+          }
+        })
+        .catch(() => undefined);
       
     } catch (error) {
       logger.error('❌ Session restore failed:', error);
