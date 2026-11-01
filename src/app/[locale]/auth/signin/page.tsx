@@ -137,7 +137,21 @@ export default function SignInPage() {
       );
       addTrace(`signIn result ok=${String(result?.ok)} error=${String(result?.error ?? '')}`);
       if (result?.ok) {
-        router.push(`/${locale}/dashboard`);
+        // signIn() can report ok while the browser refused to keep the session
+        // cookie (embedded / third-party context). Check before navigating,
+        // otherwise the protected page bounces straight back to sign-in.
+        step = 'checking session';
+        const check = await withTimeout(
+          fetch('/api/auth/session', { cache: 'no-store' }).then((r) => r.json()),
+          10_000,
+          step
+        );
+        addTrace(`session cookie: ${check?.user ? 'present' : 'MISSING'}`);
+        if (!check?.user) {
+          throw new Error('Signed in, but the browser did not keep the session cookie');
+        }
+        // Hard navigation so the very first request already carries the cookie.
+        window.location.assign(`/${locale}/dashboard`);
       } else {
         // Previously a failed signIn() was silently ignored here.
         throw new Error(result?.error || 'Session was not created');

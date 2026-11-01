@@ -53,6 +53,13 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/error',
   },
   secret: process.env.NEXTAUTH_SECRET,
+  // Cookies. In production they are SameSite=None; Secure because Pi Browser
+  // runs the app embedded (Testnet apps open inside sandbox.minepi.com), and a
+  // SameSite=Lax cookie is not sent/kept in that cross-site context - sign-in
+  // would "succeed" and the very next page would still see no session.
+  // Cross-site request forgery is covered separately: src/middleware.ts
+  // rejects any API request whose Origin is not the app itself or an
+  // allowlisted origin (403), and NextAuth's own endpoints need a CSRF token.
   cookies: {
     sessionToken: {
       name: process.env.NODE_ENV === 'production'
@@ -60,7 +67,29 @@ export const authOptions: NextAuthOptions = {
         : 'next-auth.session-token',
       options: {
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    callbackUrl: {
+      name: process.env.NODE_ENV === 'production'
+        ? '__Secure-next-auth.callback-url'
+        : 'next-auth.callback-url',
+      options: {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    csrfToken: {
+      name: process.env.NODE_ENV === 'production'
+        ? '__Host-next-auth.csrf-token'
+        : 'next-auth.csrf-token',
+      options: {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production',
       },

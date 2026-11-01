@@ -1,5 +1,6 @@
 // @vitest-environment node
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { encode } from 'next-auth/jwt';
 import { NextRequest } from 'next/server';
 import { middleware } from '@/middleware';
 
@@ -83,5 +84,38 @@ describe('middleware API protection', () => {
     expect(res.status).toBe(307);
     expect(target(res)).toBe('/en/auth/signin');
     expect(res.headers.get('location')).toContain('callbackUrl=%2Fen%2Fwallet');
+  });
+});
+
+
+describe('middleware with a real NextAuth session cookie', () => {
+  const SECRET = 'x'.repeat(40);
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  const call = async (path: string, cookieName: string, method = 'GET') => {
+    const token = await encode({ token: { sub: 'user-1' }, secret: SECRET });
+    return middleware(
+      new NextRequest(`http://localhost${path}`, { method, headers: { cookie: `${cookieName}=${token}` } })
+    );
+  };
+
+  it('accepts a valid session cookie (development cookie name)', async () => {
+    vi.stubEnv('NEXTAUTH_SECRET', SECRET);
+    expect((await call('/api/bookings', 'next-auth.session-token')).status).toBe(200);
+    expect((await call('/en/wallet', 'next-auth.session-token')).status).toBe(200);
+  });
+
+  it('accepts a valid session cookie in production (__Secure- name)', async () => {
+    vi.stubEnv('NEXTAUTH_SECRET', SECRET);
+    vi.stubEnv('NODE_ENV', 'production');
+    expect((await call('/api/bookings', '__Secure-next-auth.session-token')).status).toBe(200);
+    expect((await call('/en/wallet', '__Secure-next-auth.session-token')).status).toBe(200);
+  });
+
+  it('rejects a cookie signed with a different secret', async () => {
+    vi.stubEnv('NEXTAUTH_SECRET', 'y'.repeat(40));
+    expect((await call('/api/bookings', 'next-auth.session-token')).status).toBe(401);
   });
 });
