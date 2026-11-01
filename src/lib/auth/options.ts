@@ -26,6 +26,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { captureException } from '@/lib/monitoring/sentry';
 import { verifyPiUser } from '@/lib/pi-network/platform-api';
+import { getVerifiedToken, rememberVerifiedToken } from '@/lib/pi-network/verified-token-cache';
 import { logger } from '@/lib/logger';
 import { sessionVersion } from '@/lib/auth/session-version';
 
@@ -152,41 +153,66 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.accessToken || !credentials?.uid) {return null;}
 
+        // Short, non-sensitive reason codes (shown on the sign-in screen).
+        // NextAuth returns the thrown message as `error`; none of these reveal
+        // anything an attacker does not already know from the response itself.
+        let piUid: string;
+        let piUsernameRaw: string;
         try {
           // ✅ The ONLY source of truth for who this is: Pi Network itself.
+          // A token already verified moments ago in /api/auth/pi/verify is
+          // reused (same token + same uid, 5 min); otherwise ask Pi now.
           // The client-supplied uid/username are never trusted on their own.
-          const piUser = await verifyPiUser(credentials.accessToken);
-
-          if (!piUser?.uid || piUser.uid !== credentials.uid) {
-            logger.warn('[auth] Pi sign-in rejected: uid mismatch');
-            return null;
+          const known = getVerifiedToken(credentials.accessToken, credentials.uid);
+          if (known) {
+            piUid = known.uid;
+            piUsernameRaw = known.username;
+          } else {
+            const piUser = await verifyPiUser(credentials.accessToken);
+            piUid = piUser?.uid ?? '';
+            piUsernameRaw = String(piUser?.username || piUser?.uid || '');
+            if (piUid && piUid === credentials.uid) {
+              rememberVerifiedToken(credentials.accessToken, piUid, piUsernameRaw);
+            }
           }
+        } catch (e) {
+          // Pi API failure/timeout: fail closed, never fall back to the client.
+          logger.error('[auth] Pi verification failed:', e instanceof Error ? e.message : e);
+          throw new Error('PiVerifyFailed');
+        }
 
-          const piUsername = String(piUser.username || piUser.uid).slice(0, 100);
+        if (!piUid || piUid !== credentials.uid) {
+          logger.warn('[auth] Pi sign-in rejected: uid mismatch');
+          throw new Error('PiUidMismatch');
+        }
+
+        try {
+          const piUsername = (piUsernameRaw || piUid).slice(0, 100);
 
           const user = await prisma.user.upsert({
-            where: { piWalletId: piUser.uid },
+            where: { piWalletId: piUid },
             update: { piUsername },
             create: {
-              email: `${piUser.uid}@pi.network`,
-              piWalletId: piUser.uid,
+              email: `${piUid}@pi.network`,
+              piWalletId: piUid,
               piUsername,
               name: piUsername,
               emailVerified: new Date(),
             },
           });
 
-          if (!user.isActive) {return null;}
+          if (!user.isActive) {
+            throw new Error('AccountInactive');
+          }
 
           return { id: user.id, name: user.name ?? undefined, email: user.email };
         } catch (e) {
-          // Includes Pi API failures/timeouts: fail closed, never fall back
-          // to trusting the client.
-          logger.error('[auth] Pi authorize error:', e instanceof Error ? e.message : e);
+          if (e instanceof Error && e.message === 'AccountInactive') {throw e;}
+          logger.error('[auth] Pi authorize database error:', e instanceof Error ? e.message : e);
           captureException(e instanceof Error ? e : new Error(String(e)), {
             context: 'pi-network credentials authorize',
           });
-          return null;
+          throw new Error('PiServerError');
         }
       },
     }),

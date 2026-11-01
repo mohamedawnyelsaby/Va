@@ -19,26 +19,15 @@ import { captureException, captureMessage } from '@/lib/monitoring/sentry';
 
 import { logger } from '@/lib/logger';
 import { checkRateLimit } from '@/lib/rate-limit';
-const TOKEN_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-// In-memory cache for verified tokens (production should use Redis)
-const tokenCache = new Map<string, { uid: string; username: string; timestamp: number }>();
+import {
+  clearVerifiedTokens,
+  getVerifiedToken,
+  rememberVerifiedToken,
+} from '@/lib/pi-network/verified-token-cache';
 
 // ============================================
 // SECURITY UTILITIES
 // ============================================
-
-/**
- * Clean expired cache entries
- */
-function cleanExpiredCache() {
-  const now = Date.now();
-  for (const [token, data] of tokenCache.entries()) {
-    if (now - data.timestamp > TOKEN_CACHE_TTL) {
-      tokenCache.delete(token);
-    }
-  }
-}
 
 // ============================================
 // MAIN VERIFICATION HANDLER
@@ -77,8 +66,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check token cache for performance optimization
-    const cached = tokenCache.get(accessToken);
-    if (cached && cached.uid === uid) {
+    const cached = getVerifiedToken(accessToken, uid);
+    if (cached) {
       logger.log(`[${requestId}] ⚡ Cache hit for ${uid}`);
       return NextResponse.json({
         verified: true,
@@ -182,14 +171,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Cache the verified token
-    tokenCache.set(accessToken, {
-      uid: piUser.uid,
-      username: piUser.username,
-      timestamp: Date.now(),
-    });
-
-    // Clean expired cache entries (async, non-blocking)
-    setImmediate(() => cleanExpiredCache());
+    rememberVerifiedToken(accessToken, piUser.uid, piUser.username);
 
     const duration = Date.now() - startTime;
     logger.log(`[${requestId}] 🎉 Verification completed in ${duration}ms`);
@@ -289,6 +271,6 @@ export async function GET() {
 if (typeof process !== 'undefined') {
   process.on('SIGTERM', () => {
     logger.log('🧹 Cleaning up verification cache...');
-    tokenCache.clear();
+    clearVerifiedTokens();
   });
 }

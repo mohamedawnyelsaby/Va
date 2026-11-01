@@ -89,30 +89,9 @@ export default function SignInPage() {
       setPiTrace([]);
       addTrace(`start (sandbox: ${isPiSandbox() ? 'yes' : 'no'}, sdk available: ${isAvailable ? 'yes' : 'no'})`);
       step = 'Pi SDK authenticate';
-      setPiStep('1/3');
+      setPiStep('1/2');
       const piUser = await withTimeout(authenticate(['username', 'payments']), 40_000, step);
       addTrace('authenticate() finished');
-      step = 'server verification';
-      setPiStep('2/3');
-      const controller = new AbortController();
-      const abortTimer = setTimeout(() => controller.abort(), 20_000);
-      let res: Response;
-      try {
-        res = await fetch('/api/pi/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ accessToken: piUser.accessToken, uid: piUser.uid }),
-          signal: controller.signal,
-        });
-      } catch (e) {
-        throw new Error(
-          e instanceof DOMException && e.name === 'AbortError' ? 'timed out after 20s (/api/pi/auth)' : String(e)
-        );
-      } finally {
-        clearTimeout(abortTimer);
-      }
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {throw new Error(data.error || `HTTP ${res.status}`);}
       // ✅ FIX: this used to sign in via the 'credentials' (email/password)
       // provider using the user's own database id AS the password —
       // exploiting the exact auth bypass that was closed in
@@ -122,9 +101,8 @@ export default function SignInPage() {
       // fail. Pi Network sign-in should go through the dedicated
       // 'pi-network' provider, authenticated with the real Pi access
       // token — not a fake credentials login.
-      addTrace(`/api/pi/auth HTTP ${res.status}`);
       step = 'creating session';
-      setPiStep('3/3');
+      setPiStep('2/2');
       const result = await withTimeout(
         signIn('pi-network', {
           accessToken: piUser.accessToken,
