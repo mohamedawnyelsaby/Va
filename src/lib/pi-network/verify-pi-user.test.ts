@@ -48,11 +48,11 @@ describe('verifyPiUser error classification', () => {
     expect(axiosMock).toHaveBeenCalledTimes(1);
   });
 
-  it('maps a Pi 5xx to "Pi service unavailable" after exactly one retry', async () => {
+  it('maps a Pi 5xx to "Pi service unavailable" after exactly two retries', async () => {
     axiosMock.mockRejectedValue(httpError(503));
     const r = await run(verifyPiUser('tok'));
     expect(!r.ok && r.e.message).toBe('Pi service unavailable');
-    expect(axiosMock).toHaveBeenCalledTimes(2);
+    expect(axiosMock).toHaveBeenCalledTimes(3);
   });
 
   it('maps a network failure / timeout to "Pi service unavailable"', async () => {
@@ -61,10 +61,19 @@ describe('verifyPiUser error classification', () => {
     expect(!r.ok && r.e.message).toBe('Pi service unavailable');
   });
 
-  it('uses a short timeout on /v2/me (8 s) so sign-in cannot hang for ~47 s', async () => {
+  it('uses a short timeout on /v2/me (3 s) so one stalled call costs seconds, not ~47 s', async () => {
     axiosMock.mockResolvedValue({ data: { uid: 'pi_1', username: 'a' } });
     await run(verifyPiUser('tok'));
-    expect(axiosMock.mock.calls[0][0].timeout).toBe(8000);
+    expect(axiosMock.mock.calls[0][0].timeout).toBe(3000);
+  });
+
+  it('recovers when the first call stalls and a retry answers (the production failure mode)', async () => {
+    axiosMock
+      .mockRejectedValueOnce(networkError())
+      .mockResolvedValueOnce({ data: { uid: 'pi_1', username: 'a' } });
+    const r = await run(verifyPiUser('tok'));
+    expect(r).toMatchObject({ ok: true, v: { uid: 'pi_1' } });
+    expect(axiosMock).toHaveBeenCalledTimes(2);
   });
 
   it('treats a response without a uid as a generic failure', async () => {

@@ -165,9 +165,11 @@ export const authOptions: NextAuthOptions = {
           // The client-supplied uid/username are never trusted on their own.
           const known = getVerifiedToken(credentials.accessToken, credentials.uid);
           if (known) {
+            logger.log('[auth] pi-network authorize: token cache hit');
             piUid = known.uid;
             piUsernameRaw = known.username;
           } else {
+            logger.log('[auth] pi-network authorize: cache miss, asking Pi');
             const piUser = await verifyPiUser(credentials.accessToken);
             piUid = piUser?.uid ?? '';
             piUsernameRaw = String(piUser?.username || piUser?.uid || '');
@@ -209,6 +211,7 @@ export const authOptions: NextAuthOptions = {
             throw new Error('AccountInactive');
           }
 
+          logger.log('[auth] pi-network authorize: ok');
           return { id: user.id, name: user.name ?? undefined, email: user.email };
         } catch (e) {
           if (e instanceof Error && e.message === 'AccountInactive') {throw e;}

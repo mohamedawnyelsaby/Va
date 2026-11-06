@@ -25,11 +25,15 @@ const PI_SECRET = process.env.PI_SECRET_KEY;
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 
-// /v2/me sits on the interactive sign-in path (the client gives signIn 20 s),
-// so it gets a tighter budget: 8 s timeout and a single retry (worst case
-// roughly 8 + 1 + 8 = 17 s) instead of 10 s x 4 attempts (~47 s).
-const VERIFY_TIMEOUT_MS = 8_000;
-const VERIFY_MAX_RETRIES = 1;
+// /v2/me sits on the interactive sign-in path (the client gives signIn 20 s).
+// Production logs showed the failure mode: the first attempt stalls with no
+// answer until the timeout, and an immediate retry succeeds in ~200 ms (a
+// normal /v2/me is ~250 ms). So fail FAST and retry more: 3 s per attempt,
+// up to 2 retries with a short backoff (worst case ~3 + 0.25 + 3 + 0.5 + 3
+// = 9.75 s, typical stall costs ~3.5 s instead of 9 s).
+const VERIFY_TIMEOUT_MS = 3_000;
+const VERIFY_MAX_RETRIES = 2;
+const VERIFY_RETRY_DELAY_MS = 250;
 
 /**
  * Error carrying the HTTP status of the failed Pi API call (undefined when
@@ -137,7 +141,8 @@ export function verifyPiSignature(
 async function makeRequest<T>(
   config: AxiosRequestConfig,
   retries: number = MAX_RETRIES,
-  maxRetries: number = retries
+  maxRetries: number = retries,
+  retryDelay: number = RETRY_DELAY
 ): Promise<T> {
   try {
     const response = await axios(config);
@@ -147,10 +152,10 @@ async function makeRequest<T>(
       logger.log(`⚠️ Request failed, retrying... (${maxRetries - retries + 1}/${maxRetries})`);
       
       // Exponential backoff
-      const delay = RETRY_DELAY * Math.pow(2, maxRetries - retries);
+      const delay = retryDelay * Math.pow(2, maxRetries - retries);
       await sleep(delay);
       
-      return makeRequest<T>(config, retries - 1, maxRetries);
+      return makeRequest<T>(config, retries - 1, maxRetries, retryDelay);
     }
     
     throw handleApiError(error);
@@ -232,7 +237,7 @@ export async function verifyPiUser(accessToken: string): Promise<PiUser> {
         'Authorization': `Bearer ${accessToken}`,
       },
       timeout: VERIFY_TIMEOUT_MS,
-    }, VERIFY_MAX_RETRIES);
+    }, VERIFY_MAX_RETRIES, VERIFY_MAX_RETRIES, VERIFY_RETRY_DELAY_MS);
 
     // Never trust a malformed response: a uid is mandatory.
     if (!user || typeof user.uid !== 'string' || user.uid.length === 0) {
