@@ -28,6 +28,8 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isPiLoading, setIsPiLoading] = useState(false);
   const [piStep, setPiStep] = useState('');
+  // Only filled when the page is opened with ?debug=1 (see handlePiNetworkLogin).
+  const [debugInfo, setDebugInfo] = useState('');
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
 
@@ -118,6 +120,11 @@ export default function SignInPage() {
       // Technical details stay in the console (not shown to users). Keep any
       // on-screen diagnostics behind an explicit flag such as ?debug=1.
       console.error(`[pi-login] ${step}:`, detail);
+      // Pi Browser has no DevTools: with ?debug=1 show where it failed on screen.
+      // Only the step name and the error message are shown (never tokens).
+      if (new URLSearchParams(window.location.search).get('debug') === '1') {
+        setDebugInfo(`${step}: ${detail}`);
+      }
       const transient = /PiServerError|timed out/i.test(detail);
       toast({
         title: 'Pi Network login failed',
@@ -377,6 +384,18 @@ export default function SignInPage() {
               <span style={{ fontSize: '1rem', lineHeight: 1 }}>π</span>
               {isPiLoading ? `Connecting... ${piStep}` : 'Continue with Pi Network'}
             </button>
+            {debugInfo && (
+              <p
+                dir="ltr"
+                style={{
+                  marginTop: '0.75rem', padding: '0.5rem 0.75rem', fontSize: '0.75rem',
+                  color: '#ffb4b4', border: '1px solid rgba(255,180,180,0.4)',
+                  wordBreak: 'break-word', textAlign: 'left',
+                }}
+              >
+                {debugInfo}
+              </p>
+            )}
           </div>
 
           {/* Bottom accent */}
