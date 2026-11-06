@@ -53,7 +53,6 @@ const SELF_AUTHENTICATED_PREFIXES = [
 
 const PUBLIC_ALWAYS_PREFIXES = [
   '/api/auth/', // NextAuth + signup / password reset / Pi verify
-  '/api/pi/auth',
   '/api/health',
 ];
 

@@ -32,8 +32,12 @@ import {
 // MAIN VERIFICATION HANDLER
 // ============================================
 
+// Pi's /v2/me can take up to ~17 s in the worst case (8 s timeout + 1 retry);
+// don't let the platform default cut the function off first.
+export const maxDuration = 30;
+
 export async function POST(request: NextRequest) {
-  const limited = await checkRateLimit(request, 'auth');
+  const limited = await checkRateLimit(request, 'piVerify');
   if (limited) {return limited;}
 
   const requestId = crypto.randomUUID();
@@ -114,6 +118,16 @@ export async function POST(request: NextRequest) {
     }
 
     logger.log(`[${requestId}] ✅ Pi Platform verification successful`);
+
+    // A deactivated account must not be touched or logged as a success.
+    const existing = await prisma.user.findUnique({
+      where: { piWalletId: piUser.uid },
+      select: { isActive: true },
+    });
+    if (existing && existing.isActive === false) {
+      logger.warn(`[${requestId}] ⛔ Verification refused: account is inactive`);
+      return NextResponse.json({ error: 'Account is not active' }, { status: 403 });
+    }
 
     // Database transaction for atomic user creation/update
     const user = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {

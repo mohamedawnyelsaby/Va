@@ -13,11 +13,14 @@ import { Redis } from '@upstash/redis';
 import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 
-export type RateLimitTier = 'auth' | 'payment' | 'ai' | 'search' | 'login' | 'loginEmail';
+export type RateLimitTier = 'auth' | 'piVerify' | 'payment' | 'ai' | 'search' | 'login' | 'loginEmail';
 
 // tier -> [max requests, window in seconds]
 const TIER_CONFIG: Record<RateLimitTier, [number, number]> = {
   auth: [10, 60],
+  // Pi sign-in verification: many Pi Browser users share mobile-carrier IPs,
+  // so this is higher than the password-flow `auth` tier.
+  piVerify: [30, 60],
   payment: [5, 60],
   ai: [10, 60],
   search: [30, 60],

@@ -167,7 +167,6 @@ export async function middleware(request: NextRequest) {
   // ✅ Security headers
   const response = NextResponse.next();
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
   // Allow framing from Pi Browser
   response.headers.set(
     'Content-Security-Policy',

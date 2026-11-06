@@ -54,7 +54,6 @@ describe('API access classification (deny by default)', () => {
     ['/api/reviews', 'GET'],
     ['/api/health', 'GET'],
     ['/api/auth/signin', 'POST'],
-    ['/api/pi/auth', 'POST'],
     ['/api/ai/travel', 'POST'],
   ])('%s %s is explicitly public', (path, method) => {
     expect(classifyApi(path, method)).toBe('public');

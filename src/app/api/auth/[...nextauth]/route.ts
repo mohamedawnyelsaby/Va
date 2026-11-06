@@ -15,6 +15,10 @@ import type { NextRequest } from 'next/server';
 import { authOptions } from '@/lib/auth/options';
 import { checkRateLimit } from '@/lib/rate-limit';
 
+// Pi's /v2/me can take up to ~17 s in the worst case (8 s timeout + 1 retry);
+// don't let the platform default cut the function off first.
+export const maxDuration = 30;
+
 const handler = NextAuth(authOptions);
 
 type RouteContext = { params: Promise<{ nextauth: string[] }> };

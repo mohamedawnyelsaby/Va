@@ -13,7 +13,6 @@ declare module 'next-auth' {
       tier?: string;
       piWalletId?: string;
       piUsername?: string;
-      piAccessToken?: string;
     } & DefaultSession['user'];
   }
 
@@ -27,7 +26,6 @@ declare module 'next-auth' {
     tier?: string;
     piWalletId?: string;
     piUsername?: string;
-    piAccessToken?: string;
   }
 }
 
@@ -39,7 +37,6 @@ declare module 'next-auth/jwt' {
     picture?: string;
     role?: string;
     tier?: string;
-    piAccessToken?: string;
     provider?: string;
     /** Fingerprint of the credentials this session was issued against. */
     sv?: string;

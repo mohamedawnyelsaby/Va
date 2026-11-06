@@ -1,5 +1,8 @@
-name: Deploy to Production
+name: CI
 
+# Deployments are done by Vercel's own Git integration (push to main =>
+# production deploy). This workflow only verifies the code; it used to also
+# run `vercel --prod` from here, which duplicated that and failed every time.
 on:
   push:
     branches: [main]
@@ -42,18 +45,3 @@ jobs:
           PI_API_KEY: 'ci-build-placeholder'
           PI_SECRET_KEY: 'ci-build-placeholder'
           NEXT_PUBLIC_PI_APP_ID: 'ci-build-placeholder'
-
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v20
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
