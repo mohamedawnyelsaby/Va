@@ -18,9 +18,8 @@ import { captureException, captureMessage } from '@/lib/monitoring/sentry';
 // ============================================
 
 import { logger } from '@/lib/logger';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit, getClientId } from '@/lib/rate-limit';
 import {
-  clearVerifiedTokens,
   getVerifiedToken,
   rememberVerifiedToken,
 } from '@/lib/pi-network/verified-token-cache';
@@ -39,7 +38,7 @@ export async function POST(request: NextRequest) {
 
   const requestId = crypto.randomUUID();
   const startTime = Date.now();
-  const clientIp = request.headers.get('x-forwarded-for') || 'unknown';
+  const clientIp = getClientId(request);
 
   try {
     logger.log(`[${requestId}] 🔐 Pi verification request from ${clientIp}`);
@@ -204,7 +203,14 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const duration = Date.now() - startTime;
     logger.error(`[${requestId}] ❌ Verification failed after ${duration}ms:`, error);
-    captureException(error instanceof Error ? error : new Error(String(error)), { requestId });
+    // A token Pi rejected (401) or Pi being down (503) are expected outcomes,
+    // not application bugs: don't page Sentry for them.
+    const isExpectedFailure =
+      error instanceof Error &&
+      (error.message === 'Invalid Pi access token' || error.message === 'Pi service unavailable');
+    if (!isExpectedFailure) {
+      captureException(error instanceof Error ? error : new Error(String(error)), { requestId });
+    }
 
     // Log error to security log
     try {
@@ -234,7 +240,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (error.message.includes('network') || error.message.includes('timeout')) {
+      if (error.message === 'Pi service unavailable') {
         return NextResponse.json(
           { error: 'Pi Network service temporarily unavailable', requestId },
           { status: 503 }
@@ -264,13 +270,3 @@ export async function GET() {
   return NextResponse.json({ service: 'Pi Verification', status: 'healthy' });
 }
 
-// ============================================
-// CLEANUP ON MODULE UNLOAD
-// ============================================
-
-if (typeof process !== 'undefined') {
-  process.on('SIGTERM', () => {
-    logger.log('🧹 Cleaning up verification cache...');
-    clearVerifiedTokens();
-  });
-}

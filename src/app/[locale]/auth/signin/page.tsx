@@ -1,9 +1,8 @@
 'use client';
 import { usePi } from '@/components/providers/pi-provider';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { isPiSandbox, readSandboxSignals } from '@/lib/pi-network/sandbox';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import Link from 'next/link';
@@ -28,28 +27,11 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isPiLoading, setIsPiLoading] = useState(false);
-  const [piError, setPiError] = useState('');
   const [piStep, setPiStep] = useState('');
-  const [piTrace, setPiTrace] = useState<string[]>([]);
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
 
   useEffect(() => { setMounted(true); }, []);
-
-  // Live trace of the Pi sign-in stages, printed under the button.
-  const traceStart = useRef(0);
-  const addTrace = (line: string) =>
-    setPiTrace((prev) => [...prev.slice(-14), `${((Date.now() - traceStart.current) / 1000).toFixed(1)}s ${line}`]);
-  useEffect(() => {
-    const onStage = (e: Event) => {
-      setPiTrace((prev) => [
-        ...prev.slice(-14),
-        `${((Date.now() - traceStart.current) / 1000).toFixed(1)}s ${String((e as CustomEvent).detail)}`,
-      ]);
-    };
-    window.addEventListener('pi-stage', onStage);
-    return () => window.removeEventListener('pi-stage', onStage);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,14 +66,9 @@ export default function SignInPage() {
         return;
       }
       setIsPiLoading(true);
-      setPiError('');
-      traceStart.current = Date.now();
-      setPiTrace([]);
-      addTrace(`start (sandbox: ${isPiSandbox() ? 'yes' : 'no'}, sdk available: ${isAvailable ? 'yes' : 'no'})`);
       step = 'Pi SDK authenticate';
       setPiStep('1/2');
       const piUser = await withTimeout(authenticate(['username', 'payments']), 40_000, step);
-      addTrace('authenticate() finished');
       // ✅ FIX: this used to sign in via the 'credentials' (email/password)
       // provider using the user's own database id AS the password —
       // exploiting the exact auth bypass that was closed in
@@ -113,7 +90,6 @@ export default function SignInPage() {
         20_000,
         step
       );
-      addTrace(`signIn result ok=${String(result?.ok)} error=${String(result?.error ?? '')}`);
       if (result?.ok) {
         // signIn() can report ok while the browser refused to keep the session
         // cookie (embedded / third-party context). Check before navigating,
@@ -124,7 +100,6 @@ export default function SignInPage() {
           10_000,
           step
         );
-        addTrace(`session cookie: ${check?.user ? 'present' : 'MISSING'}`);
         if (!check?.user) {
           throw new Error('Signed in, but the browser did not keep the session cookie');
         }
@@ -140,19 +115,17 @@ export default function SignInPage() {
         err instanceof Error ? err.message
         : typeof err === 'string' ? err
         : (() => { try { return JSON.stringify(err); } catch { return 'unknown error'; } })();
-      // The toast is clipped on phones, so the full details also go in a
-      // wrapping box under the button. The sandbox flag is inlined at BUILD
-      // time (NEXT_PUBLIC_*), so showing it reveals how THIS deployment was
-      // built — a mismatch with how Pi Browser opened the app is a common
-      // cause of Pi.authenticate failing.
-      setPiError(
-        `${step}: ${detail}\n` +
-        `sandbox flag (build): ${process.env.NEXT_PUBLIC_PI_SANDBOX === 'true' ? 'true' : 'not true'}\n` +
-        `sandbox (detected): ${isPiSandbox() ? 'true' : 'false'}\n` +
-        `opened from: ${(() => { const x = readSandboxSignals(); return x.ancestorOrigins[0] || x.referrer || 'direct'; })()}\n` +
-        `host: ${typeof window !== 'undefined' ? window.location.host : '?'}`
-      );
-      toast({ title: 'Pi Network login failed', description: `${step}: ${detail}`, variant: 'destructive' });
+      // Technical details stay in the console (not shown to users). Keep any
+      // on-screen diagnostics behind an explicit flag such as ?debug=1.
+      console.error(`[pi-login] ${step}:`, detail);
+      const transient = /PiServerError|timed out/i.test(detail);
+      toast({
+        title: 'Pi Network login failed',
+        description: transient
+          ? 'Pi Network is responding slowly. Please try again in a moment.'
+          : 'Could not sign you in with Pi Network. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setIsPiLoading(false);
       setPiStep('');
@@ -404,20 +377,6 @@ export default function SignInPage() {
               <span style={{ fontSize: '1rem', lineHeight: 1 }}>π</span>
               {isPiLoading ? `Connecting... ${piStep}` : 'Continue with Pi Network'}
             </button>
-            {piTrace.length > 0 && (
-              <pre style={{ marginTop: '0.75rem', fontSize: '0.7rem', whiteSpace: 'pre-wrap', color: '#9a9ab0' }}>
-                {piTrace.join('\n')}
-              </pre>
-            )}
-            {piError && (
-              <pre style={{
-                marginTop: '0.75rem', padding: '0.75rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.25)',
-                color: '#ef4444', fontFamily: 'var(--font-space-mono)', fontSize: '0.7rem', lineHeight: 1.5,
-              }}>
-                {piError}
-              </pre>
-            )}
           </div>
 
           {/* Bottom accent */}

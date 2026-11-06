@@ -22,12 +22,14 @@ afterEach(() => {
 describe('GET /api/health?pi=1', () => {
   it('reports a testnet host built for sandbox as consistent', async () => {
     process.env.NEXT_PUBLIC_PI_SANDBOX = 'true';
+    process.env.PI_SANDBOX = 'true';
     const { pi } = await (await call('va-pied.vercel.app')).json();
     expect(pi).toMatchObject({ hostExpects: 'testnet', clientNetwork: 'testnet (sandbox)', clientMatchesHost: true, warning: null });
   });
 
   it('warns when the MAINNET hostname is served by a sandbox build (the dual-domain trap)', async () => {
     process.env.NEXT_PUBLIC_PI_SANDBOX = 'true';
+    process.env.PI_SANDBOX = 'true';
     const { pi } = await (await call('va-mainnet.vercel.app')).json();
     expect(pi.hostExpects).toBe('mainnet');
     expect(pi.clientMatchesHost).toBe(false);
@@ -36,8 +38,19 @@ describe('GET /api/health?pi=1', () => {
 
   it('accepts a mainnet hostname served by a non-sandbox build', async () => {
     process.env.NEXT_PUBLIC_PI_SANDBOX = 'false';
+    process.env.PI_SANDBOX = 'false';
     const { pi } = await (await call('va-mainnet.vercel.app')).json();
     expect(pi.clientMatchesHost).toBe(true);
+  });
+
+  it('warns when the server (PI_SANDBOX) and browser (NEXT_PUBLIC_PI_SANDBOX) switches disagree', async () => {
+    process.env.NEXT_PUBLIC_PI_SANDBOX = 'false';
+    process.env.PI_SANDBOX = 'true';
+    const { pi } = await (await call('va-mainnet.vercel.app')).json();
+    expect(pi.clientNetwork).toBe('mainnet');
+    expect(pi.serverNetwork).toBe('testnet (sandbox)');
+    expect(pi.serverMatchesClient).toBe(false);
+    expect(pi.warning).toMatch(/PI_SANDBOX/);
   });
 
   it('does not judge hostnames it does not know', async () => {

@@ -78,6 +78,12 @@ export async function POST(request: NextRequest) {
     });
 
     const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || '';
+    if (!baseUrl) {
+      // Without a base URL the email would contain a relative, unusable link.
+      // Fail loudly in the logs; the response stays generic.
+      logger.error('[forgot-password] NEXTAUTH_URL / NEXT_PUBLIC_APP_URL not set: reset email not sent');
+      return genericResponse();
+    }
     const resetUrl = `${baseUrl}/auth/reset-password?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
 
     // Fire-and-forget: email delivery failure shouldn't leak into the

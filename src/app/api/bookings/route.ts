@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth/guards';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { parsePagination } from '@/lib/api-utils';
 import { logger } from '@/lib/logger';
 import { captureException } from '@/lib/monitoring/sentry';
@@ -36,6 +37,8 @@ const MAX_STAY_NIGHTS = 60;
 const REUSE_WINDOW_MS = 30 * 60 * 1000;
 // How long an unpaid pending booking keeps its rooms reserved.
 const PENDING_HOLD_MS = 60 * 60 * 1000;
+// Max simultaneous unpaid (pending) bookings per user.
+const MAX_OPEN_HOLDS_PER_USER = 10;
 
 class SoldOutError extends Error {
   constructor(public readonly left: number) {
@@ -70,6 +73,8 @@ export async function GET(request: NextRequest) {
     const guard = await requireUser();
     if ('response' in guard) {return guard.response;}
     const { userId } = guard;
+    const limited = await checkRateLimit(request, 'search', `bookings-get:${userId}`);
+    if (limited) {return limited;}
 
     const { searchParams } = new URL(request.url);
     const { page, limit, skip } = parsePagination(searchParams, 10, 50);
@@ -108,8 +113,26 @@ export async function POST(request: NextRequest) {
     const guard = await requireUser();
     if ('response' in guard) {return guard.response;}
     const { userId } = guard;
+    const limited = await checkRateLimit(request, 'payment', `bookings-post:${userId}`);
+    if (limited) {return limited;}
 
     const data = createBookingSchema.parse(await request.json());
+
+    // Unpaid bookings hold rooms for PENDING_HOLD_MS. Cap how many a single
+    // user can hold at once so one account can't lock a hotel's inventory.
+    const openHolds = await prisma.booking.count({
+      where: {
+        userId,
+        status: 'pending',
+        createdAt: { gt: new Date(Date.now() - PENDING_HOLD_MS) },
+      },
+    });
+    if (openHolds >= MAX_OPEN_HOLDS_PER_USER) {
+      return NextResponse.json(
+        { error: 'Too many unpaid bookings. Please complete or cancel one first.' },
+        { status: 429 }
+      );
+    }
 
     const startDate = new Date(data.checkInDate ?? data.startDate);
     const endDateRaw = data.checkOutDate ?? data.endDate;
@@ -333,6 +356,8 @@ export async function PATCH(request: NextRequest) {
     const guard = await requireUser();
     if ('response' in guard) {return guard.response;}
     const { userId } = guard;
+    const limited = await checkRateLimit(request, 'payment', `bookings-patch:${userId}`);
+    if (limited) {return limited;}
 
     const { bookingId, reason } = cancelSchema.parse(await request.json());
 

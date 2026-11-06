@@ -57,15 +57,24 @@ function piConfigReport(host: string) {
   const clientIsSandbox = process.env.NEXT_PUBLIC_PI_SANDBOX === 'true';
   const hostExpects = HOST_NETWORK[host.toLowerCase()] ?? null;
   const clientMatchesHost = hostExpects ? (hostExpects === 'testnet') === clientIsSandbox : null;
+  // PI_SANDBOX (server: A2U network, dev route) and NEXT_PUBLIC_PI_SANDBOX
+  // (browser SDK) are independent variables that must always agree.
+  const serverIsSandbox = process.env.PI_SANDBOX === 'true';
+  const serverMatchesClient = serverIsSandbox === clientIsSandbox;
   return {
     host,
     // What the browser SDK is told at build time (Pi.init({ sandbox })).
     clientNetwork: clientIsSandbox ? 'testnet (sandbox)' : 'mainnet',
+    // What the server uses for A2U / refunds (PI_SANDBOX).
+    serverNetwork: serverIsSandbox ? 'testnet (sandbox)' : 'mainnet',
     apiKeyConfigured: Boolean(process.env.PI_API_KEY),
     hostExpects,
     clientMatchesHost,
+    serverMatchesClient,
     warning:
-      clientMatchesHost === false
+      !serverMatchesClient
+        ? 'PI_SANDBOX (server) and NEXT_PUBLIC_PI_SANDBOX (browser) disagree: refunds/A2U would go to a different Pi network than the one users pay on.'
+        : clientMatchesHost === false
         ? 'This hostname is registered for a different Pi network than this deployment is built for. Payments here would be created on one network and verified on the other.'
         : null,
   };

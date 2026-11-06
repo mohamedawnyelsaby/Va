@@ -178,7 +178,11 @@ export const authOptions: NextAuthOptions = {
         } catch (e) {
           // Pi API failure/timeout: fail closed, never fall back to the client.
           logger.error('[auth] Pi verification failed:', e instanceof Error ? e.message : e);
-          throw new Error('PiVerifyFailed');
+          // Pi down / slow / rate limited is transient and not the user's
+          // fault: report it distinctly from a rejected token.
+          throw new Error(
+            e instanceof Error && e.message === 'Pi service unavailable' ? 'PiServerError' : 'PiVerifyFailed'
+          );
         }
 
         if (!piUid || piUid !== credentials.uid) {

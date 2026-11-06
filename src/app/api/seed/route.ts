@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   try {
     // --------------------------------------------------------------
     // SECURITY: this endpoint used to check the request body against
-    // a secret ('Va-Travel-Seed-2026-Secret') that was hardcoded in
+    // a secret that was hardcoded in
     // source and committed to a PUBLIC repo — anyone reading the repo
     // could call this route. It also unconditionally created an
     // admin@vatravel.com account with the password "password123",

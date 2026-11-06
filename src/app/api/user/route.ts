@@ -5,6 +5,16 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { z } from 'zod';
 
+// Must stay in sync with images.remotePatterns in next.config.mjs: next/image
+// throws at render time for any other host.
+const ALLOWED_IMAGE_HOSTS = new Set([
+  'images.unsplash.com',
+  'cf.bstatic.com',
+  'res.cloudinary.com',
+  'lh3.googleusercontent.com',
+  'app-cdn.minepi.com',
+]);
+
 const updateProfileSchema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
   image: z
@@ -12,6 +22,9 @@ const updateProfileSchema = z.object({
     .url()
     .max(2048)
     .refine((u) => u.startsWith('https://'), 'Image URL must use https')
+    .refine((u) => {
+      try { return ALLOWED_IMAGE_HOSTS.has(new URL(u).hostname); } catch { return false; }
+    }, 'Image host is not allowed')
     .optional(),
 });
 
@@ -107,6 +120,29 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         { error: 'Confirmation required: send { "confirm": "DELETE" }' },
         { status: 400 }
+      );
+    }
+
+    // The schema cascades user -> payments/bookings/payment events, so deleting
+    // a user with any money trail would erase the financial records and any
+    // pending refund. Refuse until the account has no payment history.
+    const paymentTrail = await prisma.payment.count({
+      where: {
+        userId: session.user.id,
+        OR: [
+          { status: { in: ['created', 'approved', 'completed', 'refunded'] } },
+          { piPaymentId: { not: null } },
+          { refundRequestedAt: { not: null } },
+        ],
+      },
+    });
+    if (paymentTrail > 0) {
+      return NextResponse.json(
+        {
+          error:
+            'This account has payment history and cannot be deleted automatically. Please contact support.',
+        },
+        { status: 409 }
       );
     }
 

@@ -3,10 +3,16 @@
 
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // Never seed known test accounts into production by accident.
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_SEED !== 'true') {
+    throw new Error('Refusing to seed: NODE_ENV=production (set ALLOW_PROD_SEED=true to override).');
+  }
+
   console.log('🌱 Starting database seeding...');
 
   // ========================================
@@ -118,7 +124,10 @@ async function main() {
   // ========================================
   console.log('👤 Creating users...');
 
-  const hashedPassword = await bcrypt.hash('password123', 12);
+  // Random per run (or SEED_PASSWORD); printed once at the end. Never a known
+  // default: these include an admin account.
+  const seedPassword = process.env.SEED_PASSWORD || crypto.randomBytes(12).toString('base64url');
+  const hashedPassword = await bcrypt.hash(seedPassword, 12);
 
   const users = await Promise.all([
     prisma.user.create({
@@ -382,13 +391,13 @@ async function main() {
     🔑 Test Accounts:
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     Email: admin@vatravel.com
-    Password: password123
+    Password: ${seedPassword}
     
     Email: user@vatravel.com
-    Password: password123
+    Password: ${seedPassword}
     
     Email: demo@vatravel.com
-    Password: password123
+    Password: ${seedPassword}
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   `);
 }

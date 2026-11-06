@@ -6,6 +6,7 @@ const m = vi.hoisted(() => ({
   hotelFindUnique: vi.fn(),
   bookingFindFirst: vi.fn(),
   bookingCreate: vi.fn(),
+  bookingCount: vi.fn(),
   tx: {
     $executeRaw: vi.fn(),
     booking: { updateMany: vi.fn(), aggregate: vi.fn(), create: vi.fn() },
@@ -18,6 +19,7 @@ const m = vi.hoisted(() => ({
 }));
 
 vi.mock('@/lib/auth/guards', () => ({ requireUser: vi.fn().mockResolvedValue({ userId: 'u1' }) }));
+vi.mock('@/lib/rate-limit', () => ({ checkRateLimit: vi.fn().mockResolvedValue(null) }));
 vi.mock('@/lib/monitoring/sentry', () => ({ captureException: vi.fn() }));
 vi.mock('@/lib/email/notifications', () => ({ sendRefundRequestEmail: vi.fn() }));
 vi.mock('@/lib/db', () => ({
@@ -27,6 +29,7 @@ vi.mock('@/lib/db', () => ({
       findUnique: m.bookingFindUnique,
       findFirst: m.bookingFindFirst,
       create: m.bookingCreate,
+      count: m.bookingCount,
     },
     hotel: { findUnique: m.hotelFindUnique },
     payment: { findFirst: m.paymentFindFirst },
@@ -47,6 +50,7 @@ const paidBooking = { id: 'b1', userId: 'u1', bookingCode: 'C1', itemName: 'Hote
 
 beforeEach(() => {
   vi.clearAllMocks();
+  m.bookingCount.mockResolvedValue(0);
   delete process.env.ADMIN_EMAIL;
   m.bookingFindUnique.mockResolvedValue(paidBooking);
   m.paymentFindFirst.mockResolvedValue({ piTxid: 'tx' });
@@ -220,5 +224,27 @@ describe('POST /api/bookings — overbooking protection', () => {
     expect(m.bookingCreate).toHaveBeenCalledTimes(1);
     expect(m.tx.$executeRaw).not.toHaveBeenCalled();
     expect(m.tx.booking.aggregate).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/bookings — unpaid hold cap', () => {
+  beforeEach(() => {
+    m.bookingFindFirst.mockResolvedValue(null);
+    m.hotelFindUnique.mockResolvedValue(hotelWith(undefined));
+    m.bookingCreate.mockImplementation(async ({ data }: { data: object }) => ({ id: 'plain', ...data }));
+  });
+
+  it('refuses with 429 once the user already holds 10 unpaid bookings, and creates nothing', async () => {
+    m.bookingCount.mockResolvedValue(10);
+    const res = await book();
+    expect(res.status).toBe(429);
+    expect(m.bookingCreate).not.toHaveBeenCalled();
+    expect(m.bookingCount.mock.calls[0][0].where).toMatchObject({ userId: 'u1', status: 'pending' });
+  });
+
+  it('still allows a booking below the cap', async () => {
+    m.bookingCount.mockResolvedValue(9);
+    const res = await book();
+    expect(res.status).toBe(201);
   });
 });

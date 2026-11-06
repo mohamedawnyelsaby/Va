@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 
 import { logger } from '@/lib/logger';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit, getClientId } from '@/lib/rate-limit';
 import { isUniqueViolation } from '@/lib/api-utils';
 const passwordSchema = z
   .string()
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   const limited = await checkRateLimit(request, 'auth');
   if (limited) {return limited;}
 
-  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+  const ip = getClientId(request);
   const userAgent = request.headers.get('user-agent') || 'unknown';
 
   try {
