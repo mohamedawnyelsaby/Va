@@ -70,7 +70,7 @@ export default function SignInPage() {
       setIsPiLoading(true);
       step = 'Pi SDK authenticate';
       setPiStep('1/2');
-      const piUser = await withTimeout(authenticate(['username', 'payments']), 40_000, step);
+      const piUser = await withTimeout(authenticate(['username', 'payments', 'wallet_address']), 40_000, step);
       // ✅ FIX: this used to sign in via the 'credentials' (email/password)
       // provider using the user's own database id AS the password —
       // exploiting the exact auth bypass that was closed in
