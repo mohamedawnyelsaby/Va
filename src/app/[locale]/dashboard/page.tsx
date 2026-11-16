@@ -241,6 +241,17 @@ export default function DashboardPage() {
               ))}
             </div>
 
+            {/* Testnet-only: link to the A2U test page (hidden on mainnet) */}
+            {process.env.NEXT_PUBLIC_PI_SANDBOX === 'true' && (
+              <Link
+                href={`/${locale}/dev/a2u-test`}
+                className="vg-btn-outline"
+                style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}
+              >
+                A2U Test (Testnet)
+              </Link>
+            )}
+
             {/* Pi Wallet */}
             <div style={{ background: 'var(--vg-gold-dim)', border: '1px solid var(--vg-gold-border)', padding: '1.2rem' }}>
               {/* FIX: 0.44rem → VG.font.micro */}
