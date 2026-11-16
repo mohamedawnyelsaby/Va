@@ -4,7 +4,7 @@
 // user. Implemented per Pi's official integration guide
 // (https://github.com/pi-apps/pi-sdk-integration-guide):
 //
-//   1. POST /v2/payments            -> { identifier, recipient }
+//   1. POST /v2/payments { payment: {...} } -> { identifier, to_address, ... }
 //   2. load the app wallet account  (fresh every time, never cached)
 //   3. build a payment tx, memo = payment identifier
 //   4. sign with the app wallet's secret seed
@@ -140,14 +140,18 @@ async function doSendA2UPayment(params: SendA2UParams): Promise<SendA2UResult> {
   let identifier: string;
   let recipient: string;
   try {
-    const res = await axios.post<{ identifier: string; recipient: string }>(
+    // Pi's API requires the fields wrapped in a top-level `payment` object
+    // (this is what the official pi-nodejs SDK sends). Without the wrapper Pi
+    // sees no uid and answers 404 user_not_found.
+    const res = await axios.post<{ identifier: string; to_address?: string; recipient?: string }>(
       `${PI_API_URL}/v2/payments`,
-      { amount: params.amount, memo: params.memo, metadata: params.metadata ?? {}, uid: params.uid },
+      { payment: { amount: params.amount, memo: params.memo, metadata: params.metadata ?? {}, uid: params.uid } },
       { headers: piHeaders(apiKey), timeout: REQUEST_TIMEOUT_MS }
     );
     identifier = res.data.identifier;
-    recipient = res.data.recipient;
-    if (!identifier || !recipient) {throw new Error('Pi did not return identifier/recipient');}
+    // The payment object Pi returns names the destination wallet `to_address`.
+    recipient = res.data.to_address ?? res.data.recipient ?? '';
+    if (!identifier || !recipient) {throw new Error('Pi did not return identifier/to_address');}
   } catch (err) {
     const detail = axios.isAxiosError(err)
       ? `${err.response?.status ?? ''} ${JSON.stringify(err.response?.data ?? err.message)}`
