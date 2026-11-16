@@ -530,7 +530,7 @@ export function PiProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const authenticate = useCallback(async (scopes: string[] = ['username', 'payments']): Promise<PiUser> => {
+  const authenticate = useCallback(async (scopes: string[] = ['username', 'payments', 'wallet_address']): Promise<PiUser> => {
     // Check rate limit
     if (!securityManager.current.checkRateLimit()) {
       throw new Error('Too many requests. Please wait a moment.');
