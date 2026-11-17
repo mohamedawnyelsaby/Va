@@ -16,7 +16,7 @@ export default function WalletPage() {
 
   const handleLogin = async () => {
     setLoading(true);
-    try { await authenticate(['username', 'payments']); }
+    try { await authenticate(['username', 'payments', 'wallet_address']); }
     catch {
       // ignore auth errors here; loading state is cleared in `finally`
     } finally { setLoading(false); }

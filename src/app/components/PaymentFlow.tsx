@@ -8,6 +8,24 @@ import { VG, monoLabel } from '@/lib/tokens';
 import { useParams, useRouter } from 'next/navigation';
 import type { Booking } from '@/types/booking';
 
+// When the Pi payment dialog is cancelled (or errors) AFTER the server approved
+// the payment, the booking sits in "processing" and can neither be cancelled
+// nor paid again. Telling the server right away lets it ask Pi for the real
+// state and release the booking, instead of waiting for the daily cron.
+// Best effort: the cron job remains the safety net if this call fails.
+async function reportUnfinishedPayment(piPaymentId?: string): Promise<void> {
+  if (!piPaymentId) {return;}
+  try {
+    await fetch('/api/payments/pi/recover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ piPaymentId }),
+    });
+  } catch {
+    // ignored on purpose: see note above
+  }
+}
+
 export default function PaymentFlow({ booking }: { booking: Booking }) {
   const { isAvailable, authenticate, createPayment, sdkStatus } = usePi();
   const params = useParams();
@@ -25,7 +43,7 @@ export default function PaymentFlow({ booking }: { booking: Booking }) {
     setLoading(true); setStatus('processing'); setError(''); setStep('Connecting to Pi Network…');
 
     try {
-      await authenticate(['username', 'payments']);
+      await authenticate(['username', 'payments', 'wallet_address']);
       setStep('Creating payment…');
 
       const createRes = await fetch('/api/payments/pi/create', {
@@ -77,8 +95,15 @@ export default function PaymentFlow({ booking }: { booking: Booking }) {
             router.push(`/${locale}/booking/success?${successParams.toString()}`);
           }, 2000);
         },
-        onCancel: () => { setError('Payment cancelled.'); setStatus('error'); setLoading(false); setStep(''); },
-        onError: (err: Error) => { setError(err?.message || 'Payment error'); setStatus('error'); setLoading(false); setStep(''); },
+        onCancel: (cancelledPiPaymentId: string) => {
+          void reportUnfinishedPayment(cancelledPiPaymentId);
+          setError('Payment cancelled. If this booking is no longer available, please start a new one.');
+          setStatus('error'); setLoading(false); setStep('');
+        },
+        onError: (err: Error, failedPayment?: { identifier?: string }) => {
+          void reportUnfinishedPayment(failedPayment?.identifier);
+          setError(err?.message || 'Payment error'); setStatus('error'); setLoading(false); setStep('');
+        },
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');

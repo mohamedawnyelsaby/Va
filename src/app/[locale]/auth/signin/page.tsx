@@ -130,7 +130,7 @@ export default function SignInPage() {
         title: 'Pi Network login failed',
         description: transient
           ? 'Pi Network is responding slowly. Please try again in a moment.'
-          : `Could not sign you in with Pi Network. [TEMP-DEBUG ${step}] ${String(detail).slice(0, 160)}`,
+          : 'Could not sign you in with Pi Network. Please try again.',
         variant: 'destructive',
       });
     } finally {
