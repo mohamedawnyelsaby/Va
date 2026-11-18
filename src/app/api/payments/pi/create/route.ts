@@ -34,6 +34,11 @@ function isUniqueViolation(error: unknown): boolean {
   return typeof error === 'object' && error !== null && (error as { code?: string }).code === 'P2002';
 }
 
+// Pi calls these during checkout and expects a quick answer, but Pi's own API
+// can be slow on the first request. Without this, Vercel's short default
+// limit can cut the request off mid-payment.
+export const maxDuration = 30;
+
 export async function POST(request: NextRequest) {
   const limited = await checkRateLimit(request, 'payment');
   if (limited) {return limited;}

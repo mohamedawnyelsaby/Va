@@ -15,6 +15,9 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { RefundError, markRefundedManually, processRefund } from '@/lib/payments/refund';
 
 export const dynamic = 'force-dynamic';
+// A refund sends Pi on-chain (create payment + submit + complete), which can
+// take well over Vercel's short default limit.
+export const maxDuration = 60;
 
 const querySchema = z.object({ state: z.enum(['requested', 'processing', 'refunded', 'all']).default('requested') });
 

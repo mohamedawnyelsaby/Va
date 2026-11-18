@@ -11,7 +11,7 @@
     "email": "mohamed.awny.00000@gmail.com"
   },
 
-  "scopes": ["username", "payments"],
+  "scopes": ["username", "payments", "wallet_address"],
   "sandbox": true,
 
   "appId": "va-70d9714fc5ede62a",
