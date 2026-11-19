@@ -26,6 +26,34 @@ async function reportUnfinishedPayment(piPaymentId?: string): Promise<void> {
   }
 }
 
+// approve and complete are idempotent on the server (a repeat of a step that
+// already succeeded returns success), so they are safe to retry when the
+// server is busy (429) or Pi/the network hiccups (502/503/504, network error).
+// Without this, one transient failure AFTER the user signed the transaction
+// left the booking half-paid until the user came back or the daily cron ran.
+const RETRY_DELAYS_MS = [800, 2000, 4500];
+const RETRYABLE_STATUSES = new Set([429, 502, 503, 504]);
+
+async function postJsonWithRetry(url: string, body: unknown): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    const isLastAttempt = attempt === RETRY_DELAYS_MS.length;
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!RETRYABLE_STATUSES.has(res.status) || isLastAttempt) {return res;}
+    } catch (err) {
+      lastError = err;
+      if (isLastAttempt) {throw err;}
+    }
+    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]));
+  }
+  throw lastError instanceof Error ? lastError : new Error('Network error');
+}
+
 export default function PaymentFlow({ booking }: { booking: Booking }) {
   const { isAvailable, authenticate, createPayment, sdkStatus } = usePi();
   const params = useParams();
@@ -59,18 +87,12 @@ export default function PaymentFlow({ booking }: { booking: Booking }) {
       await createPayment({ amount, memo, metadata: { bookingId: booking.id, paymentId } }, {
         onReadyForServerApproval: async (piPaymentId: string) => {
           setStep('Approving payment…');
-          const res = await fetch('/api/payments/pi/approve', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId, piPaymentId }),
-          });
+          const res = await postJsonWithRetry('/api/payments/pi/approve', { paymentId, piPaymentId });
           if (!res.ok) {throw new Error('Approval failed');}
         },
         onReadyForServerCompletion: async (piPaymentId: string, txid: string) => {
           setStep('Completing payment…');
-          const res = await fetch('/api/payments/pi/complete', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId, piPaymentId, txid }),
-          });
+          const res = await postJsonWithRetry('/api/payments/pi/complete', { paymentId, piPaymentId, txid });
           if (!res.ok) {throw new Error('Completion failed');}
           const result = await res.json();
           const cb = result.cashback || 0;
