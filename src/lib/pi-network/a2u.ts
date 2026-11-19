@@ -177,7 +177,9 @@ async function doSendA2UPayment(params: SendA2UParams): Promise<SendA2UResult> {
         StellarSdk.Operation.payment({
           destination: recipient,
           asset: StellarSdk.Asset.native(),
-          amount: params.amount.toString(),
+          // Stellar wants a plain decimal with at most 7 places. toString() can
+          // emit exponent form (1e-7) or float noise (0.30000000000000004).
+          amount: params.amount.toFixed(7),
         })
       )
       .addMemo(StellarSdk.Memo.text(identifier)) // Pi requires the payment id as memo
