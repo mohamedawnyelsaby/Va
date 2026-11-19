@@ -16,6 +16,7 @@
 //   that account (old links stop working).
 
 import { NextRequest, NextResponse } from 'next/server';
+import { runAfterResponse } from '@/lib/after-response';
 import { z } from 'zod';
 import crypto from 'crypto';
 import { prisma } from '@/lib/db';
@@ -86,11 +87,11 @@ export async function POST(request: NextRequest) {
     }
     const resetUrl = `${baseUrl}/auth/reset-password?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
 
-    // Fire-and-forget: email delivery failure shouldn't leak into the
-    // response (sendEmail already logs failures internally).
-    sendPasswordResetEmail(user.email, user.name || 'there', resetUrl).catch((err) => {
-      logger.error('[forgot-password] email send failed:', err);
-    });
+    // Sent after the response (so response timing doesn't reveal whether the
+    // account exists), but kept alive by the platform so it actually goes out.
+    runAfterResponse('forgot-password', () =>
+      sendPasswordResetEmail(user.email, user.name || 'there', resetUrl)
+    );
 
     return genericResponse();
   } catch (error) {

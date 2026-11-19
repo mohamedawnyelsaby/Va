@@ -15,6 +15,7 @@
 
 import type { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
+import { runAfterResponse } from '@/lib/after-response';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requireUser } from '@/lib/auth/guards';
@@ -486,17 +487,19 @@ export async function PATCH(request: NextRequest) {
 
     const adminEmail = process.env.ADMIN_EMAIL;
     if (adminEmail && withUser) {
-      sendRefundRequestEmail(adminEmail, {
-        bookingId: withUser.id,
-        bookingCode: withUser.bookingCode,
-        itemName: withUser.itemName,
-        userEmail: withUser.user.email,
-        userName: withUser.user.name || withUser.user.email,
-        userPiWalletId: withUser.user.piWalletId,
-        amount: withUser.totalPrice,
-        currency: withUser.currency,
-        piTxid: payment?.piTxid,
-      }).catch((err) => logger.error('[bookings PATCH] refund request email failed:', err));
+      runAfterResponse('bookings PATCH refund email', () =>
+        sendRefundRequestEmail(adminEmail, {
+          bookingId: withUser.id,
+          bookingCode: withUser.bookingCode,
+          itemName: withUser.itemName,
+          userEmail: withUser.user.email,
+          userName: withUser.user.name || withUser.user.email,
+          userPiWalletId: withUser.user.piWalletId,
+          amount: withUser.totalPrice,
+          currency: withUser.currency,
+          piTxid: payment?.piTxid,
+        })
+      );
     } else if (!adminEmail) {
       logger.warn('[bookings PATCH] ADMIN_EMAIL not configured — refund request for booking', bookingId, 'was not emailed to anyone.');
     }
