@@ -74,3 +74,18 @@ if (result.status !== 0) {
   giveUp('schema sync failed.', result.status ?? 1);
 }
 console.log('[sync-db] schema is in sync.');
+
+// `db push` knows nothing about the partial unique index that stops a booking
+// from having two active payments (Prisma cannot declare partial indexes), and
+// may drop it. Put it back. Idempotent; a failure is loud but never blocks a
+// deploy (set SYNC_DB_STRICT=1 to make it fatal).
+console.log('[sync-db] re-applying the one-active-payment-per-booking index...');
+const indexResult = spawnSync(
+  'npx',
+  ['prisma', 'db', 'execute', '--file', 'prisma/manual-migrations/005_reapply_payment_index.sql', '--schema', 'prisma/schema.prisma'],
+  { stdio: 'inherit', env }
+);
+if (indexResult.status !== 0) {
+  giveUp('could not (re)create Payment_one_active_per_booking. Duplicate active payments may already exist: see 004_payment_hardening.sql.', indexResult.status ?? 1);
+}
+console.log('[sync-db] payment index is in place.');
