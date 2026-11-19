@@ -40,7 +40,7 @@ const bodySchema = z.object({
 export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
-  const limited = await checkRateLimit(request, 'payment');
+  const limited = await checkRateLimit(request, 'paymentIp');
   if (limited) {return limited;}
 
   const requestId = crypto.randomUUID();
@@ -48,6 +48,8 @@ export async function POST(request: NextRequest) {
   const guard = await requireUser();
   if ('response' in guard) {return guard.response;}
   const { userId } = guard;
+  const userLimited = await checkRateLimit(request, 'payment', userId);
+  if (userLimited) {return userLimited;}
 
   let body: z.infer<typeof bodySchema>;
   try {

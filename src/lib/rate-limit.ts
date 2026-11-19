@@ -13,7 +13,7 @@ import { Redis } from '@upstash/redis';
 import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 
-export type RateLimitTier = 'auth' | 'piVerify' | 'payment' | 'ai' | 'search' | 'login' | 'loginEmail';
+export type RateLimitTier = 'auth' | 'piVerify' | 'paymentIp' | 'payment' | 'ai' | 'search' | 'login' | 'loginEmail';
 
 // tier -> [max requests, window in seconds]
 const TIER_CONFIG: Record<RateLimitTier, [number, number]> = {
@@ -21,7 +21,13 @@ const TIER_CONFIG: Record<RateLimitTier, [number, number]> = {
   // Pi sign-in verification: many Pi Browser users share mobile-carrier IPs,
   // so this is higher than the password-flow `auth` tier.
   piVerify: [30, 60],
-  payment: [5, 60],
+  // Payment endpoints are limited twice. `paymentIp` is a coarse abuse guard
+  // that runs BEFORE sign-in is checked; it is generous because many Pi
+  // Browser users share one mobile-carrier IP, and a 429 on /complete after
+  // the user already signed the transaction leaves the booking half-paid.
+  // `payment` is the real limit and is keyed by user id (see the routes).
+  paymentIp: [120, 60],
+  payment: [20, 60],
   ai: [10, 60],
   search: [30, 60],
   // Password sign-in. `login` is per client IP; `loginEmail` is per target
