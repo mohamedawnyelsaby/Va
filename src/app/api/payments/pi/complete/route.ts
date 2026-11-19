@@ -121,6 +121,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Payment verification failed', requestId }, { status: 400 });
     }
 
+    // Observability only. By now the user has already paid on-chain, so a
+    // mismatch here must never block completion; approve is where it is enforced.
+    if (piPayment.user_uid) {
+      const payer = await prisma.user.findUnique({ where: { id: userId }, select: { piWalletId: true } });
+      if (payer?.piWalletId && payer.piWalletId !== piPayment.user_uid) {
+        logger.warn(`[${requestId}] Completing a payment whose Pi account differs from the signed-in user (payment ${payment.id})`);
+      }
+    }
+
     // ---- Complete on Pi (skip if Pi already has it completed) ------------
     if (!piPayment.status.developer_completed) {
       try {

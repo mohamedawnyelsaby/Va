@@ -102,12 +102,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Could not verify payment with Pi Network', requestId }, { status: 502 });
     }
 
+    // Defence in depth: the Pi payment must come from the same Pi account
+    // that is signed in here. Enforced only when BOTH sides are known (users
+    // who signed in without Pi have no piWalletId), and only here, BEFORE
+    // approval, so a false mismatch can never strand money that already moved.
+    const payer = await prisma.user.findUnique({ where: { id: userId }, select: { piWalletId: true } });
     const referencedPaymentId = (piPayment.metadata as { paymentId?: string } | undefined)?.paymentId;
     const problems: string[] = [];
     if (Math.abs(piPayment.amount - payment.amount) > AMOUNT_TOLERANCE) {problems.push('amount mismatch');}
     if (referencedPaymentId !== payment.id) {problems.push('payment reference mismatch');}
     if (piPayment.direction && piPayment.direction !== 'user_to_app') {problems.push('wrong direction');}
     if (piPayment.status?.cancelled || piPayment.status?.user_cancelled) {problems.push('payment cancelled');}
+    if (piPayment.user_uid && payer?.piWalletId && piPayment.user_uid !== payer.piWalletId) {problems.push('payment belongs to a different Pi account');}
 
     if (problems.length > 0) {
       logger.warn(`[${requestId}] Pi payment rejected: ${problems.join(', ')}`);
