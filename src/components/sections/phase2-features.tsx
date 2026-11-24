@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import styles from '@/app/[locale]/page.module.css';
 import { t as getTranslations } from '@/lib/i18n/translations';
+import { formatCurrency } from '@/lib/utils';
 
 interface Props {
   locale: string;
@@ -308,7 +309,7 @@ export function Phase2Features({ locale }: Props) {
         </div>
         {selDay && (
           <div style={{ background: 'var(--gdim)', border: '1px solid var(--gglow)', borderRadius: 'var(--rM)', padding: 10, fontSize: '.78rem', color: 'var(--g)', fontWeight: 600 }}>
-            📅 {monthNames[calMonth]} {selDay}, {calYear} — ${prices[selDay - 1]}/night
+            📅 {monthNames[calMonth]} {selDay}, {calYear} — {formatCurrency(prices[selDay - 1], 'USD')}/night
           </div>
         )}
       </div>

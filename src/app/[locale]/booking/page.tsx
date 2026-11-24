@@ -182,7 +182,7 @@ export default function BookingPage() {
               <div style={{ height: '1px', background: 'var(--vg-gold-border)', margin: '0.75rem 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.5rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--vg-text-2)' }}>Total</span>
-                <span className="vg-stat-num" style={{ fontSize: '1.5rem' }}>{formatCurrency(booking.totalPrice ?? 0, booking.currency)} <span style={{ fontSize: '0.8rem' }}>≈ π {booking.amount ?? 0}</span></span>
+                <span className="vg-stat-num" style={{ fontSize: '1.5rem' }}>π {booking.amount ?? 0}</span>
               </div>
             </div>
 

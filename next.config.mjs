@@ -25,8 +25,23 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Display-only copy of the server's PI_PER_<CUR> conversion rates (how many Pi
+// equal 1 unit of that currency). It is built from the very same env vars that
+// src/lib/pricing.ts charges with, so the price a user SEES in Pi can never
+// drift from the Pi amount they are charged. Rates are public numbers, not secrets.
+const piRates = {};
+for (const [key, value] of Object.entries(process.env)) {
+  const m = /^PI_PER_([A-Z]{3})$/.exec(key);
+  const rate = Number(value);
+  if (m && Number.isFinite(rate) && rate > 0) {piRates[m[1]] = rate;}
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_PI_RATES: JSON.stringify(piRates),
+  },
+
   reactStrictMode: true,
   poweredByHeader: false,
   // Required for Docker/Railway: the Dockerfile copies .next/standalone and

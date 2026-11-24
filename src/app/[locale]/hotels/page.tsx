@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback, useRef, use } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { formatCurrency } from '@/lib/utils';
 
 interface ApiHotel {
   id: string;
@@ -34,7 +35,6 @@ const STAR_FILTERS = [
   { label: '4★', ar: '4★', stars: 4 },
 ];
 
-const CURRENCY_SYMBOL: Record<string, string> = { USD: '$', EUR: '€', AED: 'د.إ', GBP: '£' };
 
 export default function HotelsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = use(params);
@@ -262,7 +262,7 @@ export default function HotelsPage({ params }: { params: Promise<{ locale: strin
                 <div className={styles.hotelFooter}>
                   <div className={styles.hotelPrice}>
                     <span className={styles.priceNum}>
-                      {CURRENCY_SYMBOL[hotel.currency] ?? hotel.currency}{hotel.pricePerNight}
+                      {formatCurrency(hotel.pricePerNight, hotel.currency)}
                     </span>
                     <span className="text-small muted"> / {isAr ? 'ليلة' : 'night'}</span>
                   </div>

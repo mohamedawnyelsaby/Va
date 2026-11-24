@@ -17,6 +17,7 @@ import { use, useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import styles from './page.module.css';
 import { t } from '@/lib/i18n/translations';
+import { formatCurrency } from '@/lib/utils';
 
 interface Props {
   params: Promise<{ locale: string }>;
@@ -151,7 +152,7 @@ export default function FavoritesPage({ params }: Props) {
                   <div className={styles.dp}>{item.priceRange}</div>
                 ) : item.price !== null && item.price !== undefined ? (
                   <div className={styles.dp}>
-                    {item.currency === 'USD' ? '$' : item.currency === 'EUR' ? '€' : (item.currency || '')}{item.price}
+                    {formatCurrency(item.price, item.currency || 'USD')}
                     {item.itemType === 'hotel' ? tr.home.perNight : ''}
                   </div>
                 ) : null}
