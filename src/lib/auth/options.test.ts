@@ -31,7 +31,7 @@ describe('jwt callback — session revocation (token reads after sign-in)', () =
     );
   });
 
-  it('revokes when a password was REMOVED (e.g. Google pre-hijack cleanup)', async () => {
+  it('revokes when a password was REMOVED ', async () => {
     m.findUnique.mockResolvedValue(activeUser({ password: null }));
     await expect(jwt({ token: { id: 'u1', sv: sessionVersion(HASH) } })).rejects.toThrow(
       'SESSION_REVOKED'
@@ -61,7 +61,7 @@ describe('jwt callback — session revocation (token reads after sign-in)', () =
     await expect(jwt({ token: { id: 'u1' } })).rejects.toThrow('SESSION_REVOKED');
   });
 
-  it('passwordless accounts (Pi/Google) stay valid and are not revoked spuriously', async () => {
+  it('passwordless accounts (Pi) stay valid and are not revoked spuriously', async () => {
     m.findUnique.mockResolvedValue(activeUser({ password: null }));
     const token = { id: 'pi1', sv: sessionVersion(null) };
     await expect(jwt({ token })).resolves.toMatchObject({ id: 'pi1' });
@@ -85,12 +85,5 @@ describe('jwt callback — sign-in', () => {
 
     m.findUnique.mockResolvedValue(activeUser());
     await expect(jwt({ token: issued })).resolves.toMatchObject({ id: 'u1' });
-  });
-
-  it('fails closed when the Google-linked user cannot be found', async () => {
-    m.findUnique.mockResolvedValue(null);
-    await expect(
-      jwt({ token: { email: 'a@b.c' }, user: { id: 'g1' }, account: { provider: 'google' } })
-    ).rejects.toThrow('Google-linked user not found');
   });
 });

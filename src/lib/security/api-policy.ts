@@ -52,7 +52,7 @@ const SELF_AUTHENTICATED_PREFIXES = [
 ];
 
 const PUBLIC_ALWAYS_PREFIXES = [
-  '/api/auth/', // NextAuth + signup / password reset / Pi verify
+  '/api/auth/', // NextAuth (Pi Network sign-in only) + Pi verify
   '/api/health',
 ];
 
