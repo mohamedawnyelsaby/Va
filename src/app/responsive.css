@@ -1,0 +1,133 @@
+/* ============================================================
+   PATH: src/app/responsive.css
+   Loaded LAST from src/app/layout.tsx so it can refine globals.css / vg.css
+   without editing them. Goals: one layout that adapts to any phone, tablet,
+   laptop or TV, the way large global apps do.
+
+   1. Safe areas   - notches, rounded corners and system bars (Pi Browser draws
+                     the page UNDER the Android back/home buttons, which hid the
+                     bottom navigation).
+   2. Bottom nav   - correct height, 6 tabs fit on 320px, centred on desktop.
+   3. Touch feel   - instant taps (no 300ms delay), pressed states, focus ring.
+   4. Viewport     - dynamic viewport height (mobile address bar), no sideways scroll.
+   5. Big screens  - gently scale type up on 1920px+ monitors / TVs.
+   ============================================================ */
+
+/* 1 ── Safe areas ─────────────────────────────────────────── */
+:root {
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --bnav-total: calc(var(--bnavH) + var(--safe-b));
+  /* header height now includes the top inset (0 on most devices) */
+  --navH: calc(64px + var(--safe-t));
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  padding-top: var(--safe-t);
+  padding-bottom: var(--bnav-total);
+  padding-left: var(--safe-l);
+  padding-right: var(--safe-r);
+  min-height: 100vh;
+  overscroll-behavior-x: none;
+}
+
+.hdr {
+  padding-top: var(--safe-t);
+  padding-left: max(16px, var(--safe-l));
+  padding-right: max(16px, var(--safe-r));
+}
+
+/* 4 ── Dynamic viewport height (mobile browser bars) ──────── */
+@supports (min-height: 100dvh) {
+  body { min-height: 100dvh; }
+  [style*="min-height: 100vh"] { min-height: 100dvh !important; }
+}
+
+img, video { max-width: 100%; }
+
+/* 2 ── Bottom navigation ──────────────────────────────────── */
+.bnav {
+  height: var(--bnav-total);
+  padding-bottom: var(--safe-b);
+  padding-left: var(--safe-l);
+  padding-right: var(--safe-r);
+  align-items: flex-start;
+}
+.bnav .bni {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 110px;
+  min-height: var(--bnavH);
+  padding: 8px 2px;
+  justify-content: center;
+}
+.bnav .bni > span:not(.bico) {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Landscape phones: short screens need a slimmer bar */
+@media (orientation: landscape) and (max-height: 480px) {
+  :root { --bnavH: 54px; }
+  .bnav .bni { padding: 4px 2px; }
+}
+
+/* Tablets / laptops / desktops: a centred floating bar instead of icons
+   stretched across 1440px of screen. (The desktop header has no menu links,
+   so the bar is still the main navigation there.) */
+@media (min-width: 900px) {
+  .bnav {
+    inset-inline: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(560px, 100%);
+    border: 1px solid var(--bd);
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+  }
+}
+
+/* 3 ── Touch + keyboard feel ──────────────────────────────── */
+a, button, [role="button"], [role="radio"], summary, label, select, input {
+  touch-action: manipulation; /* no 300ms tap delay, no double-tap zoom */
+}
+.bni, .vg-btn-primary, .vg-btn-outline, button {
+  -webkit-user-select: none;
+  user-select: none;
+}
+.bni:active { transform: scale(0.92); }
+.vg-btn-primary:active, .vg-btn-outline:active { transform: scale(0.97); }
+button:disabled { cursor: not-allowed; }
+
+:focus-visible {
+  outline: 2px solid var(--g, #C9A227);
+  outline-offset: 2px;
+}
+:focus:not(:focus-visible) { outline: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* 5 ── Very small and very large screens ─────────────────── */
+@media (max-width: 340px) {
+  html { font-size: 15px; }
+}
+@media (min-width: 1920px) {
+  html { font-size: 17px; }
+}
+@media (min-width: 2560px) {
+  html { font-size: 19px; }
+}
