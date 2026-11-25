@@ -10,6 +10,7 @@ import './vg.css';
 import './responsive.css';
 import { Providers } from '@/components/providers';
 import GoldenCursorTrail from '@/components/ui/GoldenCursorTrail';
+import SafeAreaFix from '@/components/layout/SafeAreaFix';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -78,6 +79,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <body suppressHydrationWarning>
+        <SafeAreaFix />
         <GoldenCursorTrail />
         <Providers>{children}</Providers>
         <Script src="https://sdk.minepi.com/pi-sdk.js" strategy="afterInteractive" />

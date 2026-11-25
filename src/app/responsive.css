@@ -16,7 +16,8 @@
 /* 1 ── Safe areas ─────────────────────────────────────────── */
 :root {
   --safe-t: env(safe-area-inset-top, 0px);
-  --safe-b: env(safe-area-inset-bottom, 0px);
+  /* real inset, or the Pi Browser fallback set by SafeAreaFix.tsx (0 elsewhere) */
+  --safe-b: max(env(safe-area-inset-bottom, 0px), var(--safe-b-fallback, 0px));
   --safe-l: env(safe-area-inset-left, 0px);
   --safe-r: env(safe-area-inset-right, 0px);
   --bnav-total: calc(var(--bnavH) + var(--safe-b));

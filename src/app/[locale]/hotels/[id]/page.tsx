@@ -365,7 +365,7 @@ export default function HotelDetailPage() {
       {/* Main content */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: '2rem', padding: `2.5rem ${VG.section.x}`, maxWidth: '1400px', margin: '0 auto' }}
         className="hotel-detail-grid">
-        <style>{'.hotel-mobile-cta{display:none}@media(max-width:900px){.hotel-detail-grid{grid-template-columns:1fr!important}.hotel-mobile-cta{display:flex}.hotel-detail-page{padding-bottom:76px}}'}</style>
+        <style>{'.hotel-mobile-cta{display:none}@media(max-width:900px){.hotel-detail-grid{grid-template-columns:1fr!important}.hotel-mobile-cta{display:flex}.hotel-detail-page{padding-bottom:calc(76px + var(--safe-b, 0px))}}'}</style>
 
         {/* Left */}
         <div>
@@ -538,7 +538,7 @@ export default function HotelDetailPage() {
       {/* Mobile: the booking card is the LAST block on small screens, so keep a
           sticky call-to-action above the bottom nav until the card is in view. */}
       {!bookingCardVisible && (
-        <div className="hotel-mobile-cta" style={{ position: 'fixed', insetInline: 0, bottom: 'calc(var(--bnavH, 70px) + env(safe-area-inset-bottom, 0px))', zIndex: 150, alignItems: 'center', justifyContent: 'space-between', gap: '1rem', padding: '0.75rem 1rem', background: 'var(--vg-bg-card)', borderTop: '1px solid var(--vg-gold-border)' }}>
+        <div className="hotel-mobile-cta" style={{ position: 'fixed', insetInline: 0, bottom: 'calc(var(--bnavH, 70px) + var(--safe-b, 0px))', zIndex: 150, alignItems: 'center', justifyContent: 'space-between', gap: '1rem', padding: '0.75rem 1rem', background: 'var(--vg-bg-card)', borderTop: '1px solid var(--vg-gold-border)' }}>
           <div>
             <div style={{ ...monoLabel, marginBottom: '0.15rem' }}>{nights > 0 ? `${nights} ${nights === 1 ? 'night' : 'nights'}` : 'From'}</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
