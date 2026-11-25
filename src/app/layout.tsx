@@ -7,6 +7,7 @@ import Script from 'next/script';
 import './globals.css';
 import './legacy-tokens.css';
 import './vg.css';
+import './responsive.css';
 import { Providers } from '@/components/providers';
 import GoldenCursorTrail from '@/components/ui/GoldenCursorTrail';
 
@@ -36,10 +37,17 @@ const cairo = Cairo({
   display: 'swap',
 });
 
+// Never let a malformed env value (e.g. a missing https://) break the build.
+function siteUrl(): URL {
+  const raw = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || '';
+  try { return new URL(raw); } catch { return new URL('https://va-pied.vercel.app'); }
+}
+
 export const metadata: Metadata = {
   title: { default: 'Va Travel — Beyond Every Horizon', template: '%s | Va Travel' },
   description: 'AI-powered luxury travel platform with Pi Network payments.',
-  metadataBase: new URL('https://va-pied.vercel.app'),
+  // Each deployment (Testnet / Mainnet) advertises its own address in link previews.
+  metadataBase: siteUrl(),
   other: {
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
@@ -52,6 +60,9 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
+  // Lets the page use the full screen and read the safe-area insets (notches, and the
+  // Android buttons that Pi Browser draws over the page) so the bottom bar is never hidden.
+  viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#C9A227' },
     { media: '(prefers-color-scheme: dark)', color: '#C9A227' },
