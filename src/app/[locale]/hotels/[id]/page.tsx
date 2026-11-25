@@ -1,4 +1,9 @@
 // PATH: src/app/[locale]/hotels/[id]/page.tsx
+// FIX: Guests / Rooms were <input type=number> with `parseInt(v) || 1`, so clearing the
+//      field snapped it back to 1 and typing appended digits ("1" + "3" = 13). They are now
+//      +/- steppers, clamped, and tied to the selected room's capacity.
+// FIX: Room cards are now a keyboard-accessible radio group showing beds / size / capacity.
+// FIX: "today" used toISOString() (UTC) -> wrong date after midnight in UTC+ timezones.
 // FIX: Hero image filter now uses CSS variable --vg-hero-filter
 //      → brightness(0.58) in light mode, brightness(0.50) in dark mode (via globals.css)
 // FIX: Thumbnail strip image filter also uses CSS variable
@@ -51,6 +56,51 @@ interface RoomType {
   type: string;
   description?: string;
   price: number;
+  beds?: number;
+  size?: string;
+  guests?: number; // max guests per room
+}
+
+const MAX_GUESTS = 20; // same limits the bookings API enforces
+const MAX_ROOMS  = 10;
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+
+/** Local calendar date as YYYY-MM-DD (toISOString() is UTC and can be a day off). */
+function localISO(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function addDays(iso: string, n: number): string {
+  const d = new Date(`${iso}T00:00:00`);
+  d.setDate(d.getDate() + n);
+  return localISO(d);
+}
+
+/** +/- counter: big tap targets, no typing, always inside [min, max]. */
+function Stepper({ label, icon, value, min, max, onChange }: {
+  label: string; icon: React.ReactNode; value: number; min: number; max: number; onChange: (n: number) => void;
+}) {
+  const btn: React.CSSProperties = {
+    width: '44px', height: '44px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+    background: 'var(--vg-bg-surface)', border: 'none', color: 'var(--vg-gold)', fontSize: '1.3rem', lineHeight: 1, cursor: 'pointer',
+  };
+  return (
+    <div style={{ minWidth: 0 }}>
+      <div style={{ ...monoLabel, display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
+        {icon} {label}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'stretch', border: '1px solid var(--vg-border)', background: 'var(--vg-bg-surface)' }}>
+        <button type="button" aria-label={`Decrease ${label}`} disabled={value <= min}
+          onClick={() => onChange(value - 1)} style={{ ...btn, opacity: value <= min ? 0.35 : 1, cursor: value <= min ? 'not-allowed' : 'pointer' }}>−</button>
+        <div aria-live="polite" aria-label={`${label}: ${value}`}
+          style={{ flex: 1, minWidth: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-dm-sans)', fontSize: '1rem', color: 'var(--vg-text)' }}>
+          {value}
+        </div>
+        <button type="button" aria-label={`Increase ${label}`} disabled={value >= max}
+          onClick={() => onChange(value + 1)} style={{ ...btn, opacity: value >= max ? 0.35 : 1, cursor: value >= max ? 'not-allowed' : 'pointer' }}>+</button>
+      </div>
+    </div>
+  );
 }
 
 interface HotelReview {
@@ -94,6 +144,34 @@ export default function HotelDetailPage() {
   const [reviewsKey, setReviewsKey] = useState(0);
   const { isFavorited: isFav, toggle: toggleFavorite, pending: favPending } = useFavorite(hotel?.id, 'hotel');
   const [bookingData,  setBookingData]  = useState({ checkIn: '', checkOut: '', guests: 1, rooms: 1 });
+
+  // Capacity rules: every room holds `capacity` guests, so guests <= capacity x rooms.
+  const capacity   = Math.max(1, selectedRoom?.guests ?? 2);
+  const minRooms   = clamp(Math.ceil(bookingData.guests / capacity), 1, MAX_ROOMS);
+  const maxGuests  = Math.min(MAX_GUESTS, capacity * MAX_ROOMS);
+
+  const setGuests = (g: number) =>
+    setBookingData(b => {
+      const guests = clamp(g, 1, maxGuests);
+      const rooms  = clamp(Math.max(b.rooms, Math.ceil(guests / capacity)), 1, MAX_ROOMS); // add a room when needed
+      return { ...b, guests, rooms };
+    });
+  const setRooms = (r: number) =>
+    setBookingData(b => {
+      const rooms  = clamp(r, clamp(Math.ceil(b.guests / capacity), 1, MAX_ROOMS), MAX_ROOMS);
+      return { ...b, rooms };
+    });
+  const chooseRoom = (room: RoomType) => {
+    const cap = Math.max(1, room.guests ?? 2);
+    setSelectedRoom(room);
+    setBookingData(b => {
+      const guests = Math.min(b.guests, Math.min(MAX_GUESTS, cap * MAX_ROOMS));
+      const rooms  = clamp(Math.max(b.rooms, Math.ceil(guests / cap)), 1, MAX_ROOMS);
+      return { ...b, guests, rooms };
+    });
+  };
+  const setCheckIn = (v: string) =>
+    setBookingData(b => ({ ...b, checkIn: v, checkOut: b.checkOut && v && b.checkOut <= v ? '' : b.checkOut }));
 
   const lightbox = useImageLightbox([]);
 
@@ -164,7 +242,7 @@ export default function HotelDetailPage() {
     router.push(`/${locale}/booking?${q}`);
   };
 
-  const today  = new Date().toISOString().split('T')[0];
+  const today  = localISO(new Date());
   const nights = bookingData.checkIn && bookingData.checkOut
     ? Math.max(1, Math.ceil((new Date(bookingData.checkOut).getTime() - new Date(bookingData.checkIn).getTime()) / 86400000))
     : 0;
@@ -307,30 +385,39 @@ export default function HotelDetailPage() {
             </div>
           )}
 
-          {/* Room types */}
+          {/* Room types: keyboard-accessible radio group */}
           {(hotel.roomTypes?.length ?? 0) > 0 && (
-            <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', borderTop: 'none', padding: '2rem', marginBottom: '1px' }}>
+            <div style={{ background: 'var(--vg-bg-card)', border: '1px solid var(--vg-border)', borderTop: 'none', padding: 'clamp(1rem,4vw,2rem)', marginBottom: '1px' }}>
               <div className="vg-overline" style={{ marginBottom: '1.2rem' }}>Select Room Type</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--vg-border)' }}>
-                {hotel.roomTypes?.map((room: RoomType) => (
-                  <div key={room.type} onClick={() => setSelectedRoom(room)}
-                    style={{
-                      background: selectedRoom?.type === room.type ? 'var(--vg-gold-dim)' : 'var(--vg-bg-card)',
-                      borderLeft: `3px solid ${selectedRoom?.type === room.type ? 'var(--vg-gold)' : 'transparent'}`,
-                      padding: '1.2rem 1.4rem', cursor: 'pointer',
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      transition: VG.transition.normal,
-                    }}>
-                    <div>
-                      <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.15rem', fontWeight: 300, color: selectedRoom?.type === room.type ? 'var(--vg-gold)' : 'var(--vg-text)', marginBottom: '0.3rem' }}>{room.type}</div>
-                      <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-3)' }}>{room.description}</div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div className="vg-stat-num" style={{ fontSize: '1.3rem' }}>{formatCurrency(room.price, hotel.currency)}</div>
-                      <div style={{ ...monoLabel, color: 'var(--vg-text-3)' }}>PER NIGHT</div>
-                    </div>
-                  </div>
-                ))}
+              <div role="radiogroup" aria-label="Room type" style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--vg-border)' }}>
+                {hotel.roomTypes?.map((room: RoomType) => {
+                  const active = selectedRoom?.type === room.type;
+                  const details = [
+                    room.beds ? `${room.beds} ${room.beds === 1 ? 'bed' : 'beds'}` : '',
+                    room.size || '',
+                    room.guests ? `up to ${room.guests} guests` : '',
+                  ].filter(Boolean).join(' · ');
+                  return (
+                    <button key={room.type} type="button" role="radio" aria-checked={active} onClick={() => chooseRoom(room)}
+                      style={{
+                        width: '100%', font: 'inherit', textAlign: 'start', border: 'none',
+                        background: active ? 'var(--vg-gold-dim)' : 'var(--vg-bg-card)',
+                        borderInlineStart: `3px solid ${active ? 'var(--vg-gold)' : 'transparent'}`,
+                        padding: '1.2rem 1.4rem', cursor: 'pointer', minHeight: '64px',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem 1rem',
+                        transition: VG.transition.normal,
+                      }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.15rem', fontWeight: 300, color: active ? 'var(--vg-gold)' : 'var(--vg-text)', marginBottom: '0.3rem' }}>{room.type}</div>
+                        <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-3)' }}>{room.description || details}</div>
+                      </div>
+                      <div style={{ textAlign: 'end', flexShrink: 0 }}>
+                        <div className="vg-stat-num" style={{ fontSize: '1.3rem' }}>{formatCurrency(room.price, hotel.currency)}</div>
+                        <div style={{ ...monoLabel, color: 'var(--vg-text-3)' }}>PER NIGHT</div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -370,7 +457,7 @@ export default function HotelDetailPage() {
                   <Calendar size={14} aria-hidden /> Check-in
                 </label>
                 <input type="date" lang={locale} min={today} value={bookingData.checkIn}
-                  onChange={e => setBookingData({ ...bookingData, checkIn: e.target.value })}
+                  onChange={e => setCheckIn(e.target.value)}
                   style={inputBase}
                   onFocus={e => Object.assign(e.target.style, inputFocus)}
                   onBlur={e => Object.assign(e.target.style, inputBlur)} />
@@ -381,35 +468,22 @@ export default function HotelDetailPage() {
                 <label style={{ ...monoLabel, display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
                   <Calendar size={14} aria-hidden /> Check-out
                 </label>
-                <input type="date" lang={locale} min={bookingData.checkIn || today} value={bookingData.checkOut}
-                  onChange={e => setBookingData({ ...bookingData, checkOut: e.target.value })}
+                <input type="date" lang={locale} min={bookingData.checkIn ? addDays(bookingData.checkIn, 1) : addDays(today, 1)} value={bookingData.checkOut}
+                  onChange={e => setBookingData(b => ({ ...b, checkOut: e.target.value }))}
                   style={inputBase}
                   onFocus={e => Object.assign(e.target.style, inputFocus)}
                   onBlur={e => Object.assign(e.target.style, inputBlur)} />
               </div>
 
-              {/* Guests + Rooms */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                <div>
-                  <label style={{ ...monoLabel, display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
-                    <Users size={14} aria-hidden /> Guests
-                  </label>
-                  <input type="number" min={1} max={20} value={bookingData.guests}
-                    onChange={e => setBookingData({ ...bookingData, guests: parseInt(e.target.value) || 1 })}
-                    style={inputBase}
-                    onFocus={e => Object.assign(e.target.style, inputFocus)}
-                    onBlur={e => Object.assign(e.target.style, inputBlur)} />
-                </div>
-                <div>
-                  <label style={{ ...monoLabel, display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
-                    <BedDouble size={14} aria-hidden /> Rooms
-                  </label>
-                  <input type="number" min={1} max={10} value={bookingData.rooms}
-                    onChange={e => setBookingData({ ...bookingData, rooms: parseInt(e.target.value) || 1 })}
-                    style={inputBase}
-                    onFocus={e => Object.assign(e.target.style, inputFocus)}
-                    onBlur={e => Object.assign(e.target.style, inputBlur)} />
-                </div>
+              {/* Guests + Rooms (steppers, capacity-aware) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem', marginBottom: '0.6rem' }}>
+                <Stepper label="Guests" icon={<Users size={14} aria-hidden />} value={bookingData.guests}
+                  min={1} max={maxGuests} onChange={setGuests} />
+                <Stepper label="Rooms" icon={<BedDouble size={14} aria-hidden />} value={bookingData.rooms}
+                  min={minRooms} max={MAX_ROOMS} onChange={setRooms} />
+              </div>
+              <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: VG.font.small, color: 'var(--vg-text-3)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                {selectedRoom?.type ? `${selectedRoom.type}: ` : ''}up to {capacity} {capacity === 1 ? 'guest' : 'guests'} per room.
               </div>
 
               {/* Stay summary */}
