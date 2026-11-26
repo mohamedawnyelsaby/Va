@@ -11,7 +11,7 @@
   flex-direction: column;
   position: fixed;
   top: var(--navH);
-  bottom: var(--bnavH, 70px);
+  bottom: var(--bnav-total, var(--bnavH, 70px)); /* nav height + system-button inset */
   inset-inline: 0;
   width: 100%;
   max-width: 900px;

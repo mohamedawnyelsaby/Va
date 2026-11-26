@@ -61,28 +61,37 @@ async function getJson<T>(url: string, signal: AbortSignal): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+function fmtDate(iso: string, locale: string): string {
+  try {
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${iso}T00:00:00`));
+  } catch { return iso; }
+}
+const openPicker = (e: React.MouseEvent<HTMLInputElement>) => {
+  try { e.currentTarget.showPicker?.(); } catch { /* picker already open or unsupported */ }
+};
+
 /* Small words the search box needs in every language, plus the question that the
  * "Search with AI" button sends to the assistant. */
 interface SearchWords {
-  checkIn: string; checkOut: string; adults: string; rooms: string; done: string;
+  checkIn: string; checkOut: string; pick: string; adults: string; rooms: string; done: string;
   ai: (dest: string, dates: string, guests: number, rooms: number) => string;
 }
 const SEARCH_WORDS: Record<string, SearchWords> = {
-  en: { checkIn: 'Check-in', checkOut: 'Check-out', adults: 'Adults', rooms: 'Rooms', done: 'Done',
+  en: { checkIn: 'Check-in', checkOut: 'Check-out', pick: 'Select date', adults: 'Adults', rooms: 'Rooms', done: 'Done',
     ai: (d, dt, g, r) => d ? `Plan a trip to ${d}${dt} for ${g} guests, ${r} room(s). Suggest the best hotels and activities.` : `Suggest the best destinations and hotels${dt} for ${g} guests, ${r} room(s).` },
-  ar: { checkIn: 'الوصول', checkOut: 'المغادرة', adults: 'بالغين', rooms: 'غرف', done: 'تم',
+  ar: { checkIn: 'الوصول', checkOut: 'المغادرة', pick: 'اختر التاريخ', adults: 'بالغين', rooms: 'غرف', done: 'تم',
     ai: (d, dt, g, r) => d ? `خطط لي رحلة إلى ${d}${dt} لعدد ${g} أفراد و${r} غرفة. اقترح أفضل الفنادق والأنشطة.` : `اقترح لي أفضل الوجهات والفنادق${dt} لعدد ${g} أفراد و${r} غرفة.` },
-  fr: { checkIn: 'Arrivée', checkOut: 'Départ', adults: 'Adultes', rooms: 'Chambres', done: 'OK',
+  fr: { checkIn: 'Arrivée', checkOut: 'Départ', pick: 'Choisir la date', adults: 'Adultes', rooms: 'Chambres', done: 'OK',
     ai: (d, dt, g, r) => d ? `Planifie un voyage à ${d}${dt} pour ${g} personnes, ${r} chambre(s). Propose les meilleurs hôtels et activités.` : `Propose les meilleures destinations et hôtels${dt} pour ${g} personnes, ${r} chambre(s).` },
-  es: { checkIn: 'Entrada', checkOut: 'Salida', adults: 'Adultos', rooms: 'Habitaciones', done: 'Listo',
+  es: { checkIn: 'Entrada', checkOut: 'Salida', pick: 'Elegir fecha', adults: 'Adultos', rooms: 'Habitaciones', done: 'Listo',
     ai: (d, dt, g, r) => d ? `Planifica un viaje a ${d}${dt} para ${g} personas, ${r} habitación(es). Sugiere los mejores hoteles y actividades.` : `Sugiere los mejores destinos y hoteles${dt} para ${g} personas, ${r} habitación(es).` },
-  de: { checkIn: 'Anreise', checkOut: 'Abreise', adults: 'Erwachsene', rooms: 'Zimmer', done: 'Fertig',
+  de: { checkIn: 'Anreise', checkOut: 'Abreise', pick: 'Datum wählen', adults: 'Erwachsene', rooms: 'Zimmer', done: 'Fertig',
     ai: (d, dt, g, r) => d ? `Plane eine Reise nach ${d}${dt} für ${g} Personen, ${r} Zimmer. Empfiehl die besten Hotels und Aktivitäten.` : `Empfiehl die besten Reiseziele und Hotels${dt} für ${g} Personen, ${r} Zimmer.` },
-  ru: { checkIn: 'Заезд', checkOut: 'Выезд', adults: 'Взрослые', rooms: 'Номера', done: 'Готово',
+  ru: { checkIn: 'Заезд', checkOut: 'Выезд', pick: 'Выберите дату', adults: 'Взрослые', rooms: 'Номера', done: 'Готово',
     ai: (d, dt, g, r) => d ? `Спланируй поездку в ${d}${dt} для ${g} гостей, номеров: ${r}. Предложи лучшие отели и занятия.` : `Предложи лучшие направления и отели${dt} для ${g} гостей, номеров: ${r}.` },
-  zh: { checkIn: '入住', checkOut: '退房', adults: '成人', rooms: '客房', done: '完成',
+  zh: { checkIn: '入住', checkOut: '退房', pick: '选择日期', adults: '成人', rooms: '客房', done: '完成',
     ai: (d, dt, g, r) => d ? `为${g}位客人、${r}间客房规划前往${d}的旅行${dt}。推荐最好的酒店和活动。` : `为${g}位客人、${r}间客房推荐最佳目的地和酒店${dt}。` },
-  ja: { checkIn: 'チェックイン', checkOut: 'チェックアウト', adults: '大人', rooms: '客室', done: '完了',
+  ja: { checkIn: 'チェックイン', checkOut: 'チェックアウト', pick: '日付を選択', adults: '大人', rooms: '客室', done: '完了',
     ai: (d, dt, g, r) => d ? `${g}名・${r}部屋で${d}への旅行${dt}を計画してください。おすすめのホテルとアクティビティを教えてください。` : `${g}名・${r}部屋におすすめの目的地とホテル${dt}を教えてください。` },
 };
 
@@ -189,9 +198,13 @@ export default function HomePage({ params }: Props) {
                   disabled={tItem.soon}
                   aria-disabled={tItem.soon}
                   className={`${styles.stab} ${!tItem.soon ? styles.on : ''}`}
-                  style={tItem.soon ? { opacity: 0.55, cursor: 'not-allowed' } : undefined}
+                  style={{
+                    flex: '1 1 0', minWidth: 0, minHeight: '54px', padding: '8px 4px',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '3px',
+                    ...(tItem.soon ? { opacity: 0.55, cursor: 'not-allowed' } : {}),
+                  }}
                 >
-                  {tItem.icon} {tItem.label}
+                  <span>{tItem.icon} {tItem.label}</span>
                   {tItem.soon && <span className={styles.soonBadge}>{h.soon}</span>}
                 </button>
               ))}
@@ -212,20 +225,28 @@ export default function HomePage({ params }: Props) {
                   />
                 </div>
               </label>
-              <div className={styles.sgrid2}>
-                <label className={styles.sfield}>
+              <div className={styles.sgrid2} style={{ gridTemplateColumns: '1fr 1fr' }}>
+                <label className={styles.sfield} style={{ position: 'relative', minWidth: 0 }}>
                   <span aria-hidden>📅</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className={styles.sfieldLbl}>{w.checkIn}</div>
-                    <input type="date" lang={locale} min={today} value={checkIn} onChange={(e) => onCheckIn(e.target.value)} aria-label={w.checkIn} />
+                    <div style={{ fontSize: '.85rem', color: checkIn ? 'var(--t)' : 'var(--tm)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {checkIn ? fmtDate(checkIn, locale) : w.pick}
+                    </div>
                   </div>
+                  <input type="date" lang={locale} min={today} value={checkIn} onChange={(e) => onCheckIn(e.target.value)} onClick={openPicker}
+                    aria-label={w.checkIn} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} />
                 </label>
-                <label className={styles.sfield}>
+                <label className={styles.sfield} style={{ position: 'relative', minWidth: 0 }}>
                   <span aria-hidden>📅</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className={styles.sfieldLbl}>{w.checkOut}</div>
-                    <input type="date" lang={locale} min={addDays(checkIn || today, 1)} value={checkOut} onChange={(e) => setCheckOut(e.target.value)} aria-label={w.checkOut} />
+                    <div style={{ fontSize: '.85rem', color: checkOut ? 'var(--t)' : 'var(--tm)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {checkOut ? fmtDate(checkOut, locale) : w.pick}
+                    </div>
                   </div>
+                  <input type="date" lang={locale} min={addDays(checkIn || today, 1)} value={checkOut} onChange={(e) => setCheckOut(e.target.value)} onClick={openPicker}
+                    aria-label={w.checkOut} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} />
                 </label>
               </div>
               <button
@@ -255,19 +276,17 @@ export default function HomePage({ params }: Props) {
                   </button>
                 </div>
               )}
-              <div style={{ display: 'flex', gap: '9px', flexWrap: 'wrap' }}>
-                <button type="button" className={styles.sbtn} onClick={goHotels} style={{ flex: '1 1 150px', width: 'auto' }}>
-                  🔍 {tr.hero.search}
-                </button>
-                <button
-                  type="button"
-                  className={styles.sbtn}
-                  onClick={goAI}
-                  style={{ flex: '1 1 150px', width: 'auto', background: 'transparent', color: 'var(--g)', border: '1px solid var(--g)' }}
-                >
-                  ✨ {h.searchBtn}
-                </button>
-              </div>
+              <button type="button" className={styles.sbtn} onClick={goHotels}>
+                🔍 {tr.hero.search}
+              </button>
+              <button
+                type="button"
+                className={styles.sbtn}
+                onClick={goAI}
+                style={{ background: 'transparent', color: 'var(--g)', border: '1px solid var(--g)' }}
+              >
+                ✨ {h.searchBtn}
+              </button>
             </div>
           </div>
         </div>
