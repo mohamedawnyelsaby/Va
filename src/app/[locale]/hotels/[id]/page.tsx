@@ -9,6 +9,7 @@
 // FIX: Thumbnail strip image filter also uses CSS variable
 'use client';
 import { useEffect, useState, useCallback } from 'react';
+import { MAX_GUESTS, MAX_ROOMS, clamp, localISO, addDays, parseStayParams } from '@/lib/stay';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 import { MapPin, Star, Heart, Share2, Calendar, CalendarCheck, CalendarDays, Users, BedDouble, Lock, ShieldCheck } from 'lucide-react';
@@ -59,21 +60,6 @@ interface RoomType {
   beds?: number;
   size?: string;
   guests?: number; // max guests per room
-}
-
-const MAX_GUESTS = 20; // same limits the bookings API enforces
-const MAX_ROOMS  = 10;
-const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
-
-/** Local calendar date as YYYY-MM-DD (toISOString() is UTC and can be a day off). */
-function localISO(d: Date): string {
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
-function addDays(iso: string, n: number): string {
-  const d = new Date(`${iso}T00:00:00`);
-  d.setDate(d.getDate() + n);
-  return localISO(d);
 }
 
 /** +/- counter: big tap targets, no typing, always inside [min, max]. */
@@ -195,6 +181,14 @@ export default function HotelDetailPage() {
       const data = await res.json();
       setHotel(data);
       if (data.roomTypes?.length > 0) {setSelectedRoom(data.roomTypes[0]);}
+      // Dates / guests / rooms chosen on the home page or hotel list arrive in the URL.
+      const stay = parseStayParams(window.location.search);
+      const cap = Math.max(1, data.roomTypes?.[0]?.guests ?? 2);
+      setBookingData(b => {
+        const guests = clamp(stay.guests ?? b.guests, 1, Math.min(MAX_GUESTS, cap * MAX_ROOMS));
+        const rooms = clamp(Math.max(stay.rooms ?? b.rooms, Math.ceil(guests / cap)), 1, MAX_ROOMS);
+        return { ...b, checkIn: stay.checkIn || b.checkIn, checkOut: stay.checkOut || b.checkOut, guests, rooms };
+      });
       addToRecentlyViewed({
         id: data.id, type: 'hotel', name: data.name, thumbnail: data.thumbnail,
         price: data.pricePerNight, currency: data.currency, rating: data.rating,

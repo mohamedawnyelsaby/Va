@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback, useRef, use } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import { formatCurrency } from '@/lib/utils';
+import { parseStayParams, stayQuery } from '@/lib/stay';
 
 interface ApiHotel {
   id: string;
@@ -53,6 +54,7 @@ export default function HotelsPage({ params }: { params: Promise<{ locale: strin
   const [sortBy, setSortBy] = useState<'rating' | 'price'>('rating');
   const [errorDetail, setErrorDetail] = useState('');
   const [ready, setReady] = useState(false);
+  const [stayQs, setStayQs] = useState(''); // dates/guests carried over to the hotel page
 
   // Other pages link here as /hotels?city=Dubai or /hotels?q=Dubai (cities page,
   // search page, home search box, hotel breadcrumb). This page used to ignore
@@ -65,6 +67,8 @@ export default function HotelsPage({ params }: { params: Promise<{ locale: strin
       setSearchInput(initial);
       setSearch(initial);
     }
+    const stay = stayQuery(parseStayParams(window.location.search));
+    if (stay) { setStayQs(`?${stay}`); }
     setReady(true);
   }, []);
 
@@ -213,7 +217,7 @@ export default function HotelsPage({ params }: { params: Promise<{ locale: strin
           {hotels.map((hotel, i) => (
             <Link
               key={hotel.id}
-              href={`/${locale}/hotels/${hotel.id}`}
+              href={`/${locale}/hotels/${hotel.id}${stayQs}`}
               className={styles.hotelCard}
               style={{ animationDelay: `${i * 60}ms`, textDecoration: 'none', color: 'inherit' }}
             >

@@ -7,11 +7,14 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import { AIFeatureCards } from '@/components/sections/ai-feature-cards';
 import { Phase2Features } from '@/components/sections/phase2-features';
 import { formatCurrency } from '@/lib/utils';
 import { t } from '@/lib/i18n/translations';
+import CounterRow from '@/components/ui/CounterRow';
+import { MAX_GUESTS, MAX_ROOMS, clamp, localISO, addDays, stayQuery } from '@/lib/stay';
 
 interface Props {
   params: Promise<{ locale: string }>;
@@ -58,12 +61,38 @@ async function getJson<T>(url: string, signal: AbortSignal): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/* Small words the search box needs in every language, plus the question that the
+ * "Search with AI" button sends to the assistant. */
+interface SearchWords {
+  checkIn: string; checkOut: string; adults: string; rooms: string; done: string;
+  ai: (dest: string, dates: string, guests: number, rooms: number) => string;
+}
+const SEARCH_WORDS: Record<string, SearchWords> = {
+  en: { checkIn: 'Check-in', checkOut: 'Check-out', adults: 'Adults', rooms: 'Rooms', done: 'Done',
+    ai: (d, dt, g, r) => d ? `Plan a trip to ${d}${dt} for ${g} guests, ${r} room(s). Suggest the best hotels and activities.` : `Suggest the best destinations and hotels${dt} for ${g} guests, ${r} room(s).` },
+  ar: { checkIn: 'الوصول', checkOut: 'المغادرة', adults: 'بالغين', rooms: 'غرف', done: 'تم',
+    ai: (d, dt, g, r) => d ? `خطط لي رحلة إلى ${d}${dt} لعدد ${g} أفراد و${r} غرفة. اقترح أفضل الفنادق والأنشطة.` : `اقترح لي أفضل الوجهات والفنادق${dt} لعدد ${g} أفراد و${r} غرفة.` },
+  fr: { checkIn: 'Arrivée', checkOut: 'Départ', adults: 'Adultes', rooms: 'Chambres', done: 'OK',
+    ai: (d, dt, g, r) => d ? `Planifie un voyage à ${d}${dt} pour ${g} personnes, ${r} chambre(s). Propose les meilleurs hôtels et activités.` : `Propose les meilleures destinations et hôtels${dt} pour ${g} personnes, ${r} chambre(s).` },
+  es: { checkIn: 'Entrada', checkOut: 'Salida', adults: 'Adultos', rooms: 'Habitaciones', done: 'Listo',
+    ai: (d, dt, g, r) => d ? `Planifica un viaje a ${d}${dt} para ${g} personas, ${r} habitación(es). Sugiere los mejores hoteles y actividades.` : `Sugiere los mejores destinos y hoteles${dt} para ${g} personas, ${r} habitación(es).` },
+  de: { checkIn: 'Anreise', checkOut: 'Abreise', adults: 'Erwachsene', rooms: 'Zimmer', done: 'Fertig',
+    ai: (d, dt, g, r) => d ? `Plane eine Reise nach ${d}${dt} für ${g} Personen, ${r} Zimmer. Empfiehl die besten Hotels und Aktivitäten.` : `Empfiehl die besten Reiseziele und Hotels${dt} für ${g} Personen, ${r} Zimmer.` },
+  ru: { checkIn: 'Заезд', checkOut: 'Выезд', adults: 'Взрослые', rooms: 'Номера', done: 'Готово',
+    ai: (d, dt, g, r) => d ? `Спланируй поездку в ${d}${dt} для ${g} гостей, номеров: ${r}. Предложи лучшие отели и занятия.` : `Предложи лучшие направления и отели${dt} для ${g} гостей, номеров: ${r}.` },
+  zh: { checkIn: '入住', checkOut: '退房', adults: '成人', rooms: '客房', done: '完成',
+    ai: (d, dt, g, r) => d ? `为${g}位客人、${r}间客房规划前往${d}的旅行${dt}。推荐最好的酒店和活动。` : `为${g}位客人、${r}间客房推荐最佳目的地和酒店${dt}。` },
+  ja: { checkIn: 'チェックイン', checkOut: 'チェックアウト', adults: '大人', rooms: '客室', done: '完了',
+    ai: (d, dt, g, r) => d ? `${g}名・${r}部屋で${d}への旅行${dt}を計画してください。おすすめのホテルとアクティビティを教えてください。` : `${g}名・${r}部屋におすすめの目的地とホテル${dt}を教えてください。` },
+};
+
 export default function HomePage({ params }: Props) {
   const { locale } = use(params);
   const ar = isAr(locale);
   const tr = t(locale);
   const h = tr.home;
-  const [tab, setTab] = useState('hotels');
+  const router = useRouter();
+  const w = SEARCH_WORDS[locale] ?? SEARCH_WORDS.en;
   const [data, setData] = useState<HomeData | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -87,12 +116,40 @@ export default function HomePage({ params }: Props) {
     return () => controller.abort();
   }, []);
   const [query, setQuery] = useState('');
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [guests, setGuests] = useState(2);
+  const [rooms, setRooms] = useState(1);
+  const [guestsOpen, setGuestsOpen] = useState(false);
+  const today = localISO(new Date());
 
+  const onCheckIn = (v: string) => {
+    setCheckIn(v);
+    if (checkOut && v && checkOut <= v) { setCheckOut(''); }
+  };
+  const onGuests = (g: number) => {
+    const next = clamp(g, 1, MAX_GUESTS);
+    setGuests(next);
+    if (rooms > next) { setRooms(next); } // never more rooms than guests
+  };
+  const onRooms = (r: number) => setRooms(clamp(r, 1, Math.min(MAX_ROOMS, guests)));
+
+  const goHotels = () => {
+    const sp = new URLSearchParams(stayQuery({ checkIn, checkOut, guests, rooms }));
+    if (query.trim()) { sp.set('q', query.trim()); }
+    router.push(`/${locale}/hotels?${sp.toString()}`);
+  };
+  const goAI = () => {
+    const dates = checkIn && checkOut ? ` (${checkIn} → ${checkOut})` : '';
+    router.push(`/${locale}/ai?q=${encodeURIComponent(w.ai(query.trim(), dates, guests, rooms))}`);
+  };
+
+  // Only Hotels exists today; the other tabs are announced, not clickable.
   const TABS = [
-    { id: 'hotels', icon: '🏨', label: h.tabHotels, href: `/${locale}/hotels` },
+    { id: 'hotels', icon: '🏨', label: h.tabHotels, soon: false },
     { id: 'flights', icon: '✈️', label: h.tabFlights, soon: true },
-    { id: 'pkgs', icon: '🎁', label: h.tabPackages },
-    { id: 'visa', icon: '🛂', label: h.tabVisa },
+    { id: 'pkgs', icon: '🎁', label: h.tabPackages, soon: true },
+    { id: 'visa', icon: '🛂', label: h.tabVisa, soon: true },
   ];
 
   return (
@@ -122,65 +179,95 @@ export default function HomePage({ params }: Props) {
 
           {/* Search widget */}
           <div className={styles.sw}>
-            <div className={styles.stabs}>
-              {TABS.map((tItem) => {
-                const content = (
-                  <>
-                    {tItem.icon} {tItem.label}
-                    {tItem.soon && <span className={styles.soonBadge}>{h.soon}</span>}
-                  </>
-                );
-                return tItem.href ? (
-                  <Link
-                    key={tItem.id}
-                    href={tItem.href}
-                    className={`${styles.stab} ${tab === tItem.id ? styles.on : ''}`}
-                    onClick={() => setTab(tItem.id)}
-                  >
-                    {content}
-                  </Link>
-                ) : (
-                  <button
-                    key={tItem.id}
-                    className={`${styles.stab} ${tab === tItem.id ? styles.on : ''}`}
-                    onClick={() => setTab(tItem.id)}
-                  >
-                    {content}
-                  </button>
-                );
-              })}
+            <div className={styles.stabs} role="tablist">
+              {TABS.map((tItem) => (
+                <button
+                  key={tItem.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={!tItem.soon}
+                  disabled={tItem.soon}
+                  aria-disabled={tItem.soon}
+                  className={`${styles.stab} ${!tItem.soon ? styles.on : ''}`}
+                  style={tItem.soon ? { opacity: 0.55, cursor: 'not-allowed' } : undefined}
+                >
+                  {tItem.icon} {tItem.label}
+                  {tItem.soon && <span className={styles.soonBadge}>{h.soon}</span>}
+                </button>
+              ))}
             </div>
             <div className={styles.sbody}>
-              <div className={styles.sfield}>
-                <span>📍</span>
-                <div style={{ flex: 1 }}>
+              <label className={styles.sfield}>
+                <span aria-hidden>📍</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div className={styles.sfieldLbl}>{h.destinationLabel}</div>
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); goHotels(); } }}
                     placeholder={h.destinationPlaceholder}
+                    enterKeyHint="search"
+                    autoComplete="off"
+                    maxLength={100}
                   />
                 </div>
-              </div>
+              </label>
               <div className={styles.sgrid2}>
-                <div className={styles.sfield}>
-                  <span>📅</span>
-                  <div>
-                    <div className={styles.sfieldLbl}>{h.datesLabel}</div>
-                    <div style={{ fontSize: '.85rem', color: 'var(--tm)' }}>{h.selectDates}</div>
+                <label className={styles.sfield}>
+                  <span aria-hidden>📅</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className={styles.sfieldLbl}>{w.checkIn}</div>
+                    <input type="date" lang={locale} min={today} value={checkIn} onChange={(e) => onCheckIn(e.target.value)} aria-label={w.checkIn} />
                   </div>
-                </div>
-                <div className={styles.sfield}>
-                  <span>👥</span>
-                  <div>
-                    <div className={styles.sfieldLbl}>{h.guestsLabel}</div>
-                    <div style={{ fontSize: '.85rem', color: 'var(--tm)' }}>{h.guestsValue}</div>
+                </label>
+                <label className={styles.sfield}>
+                  <span aria-hidden>📅</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className={styles.sfieldLbl}>{w.checkOut}</div>
+                    <input type="date" lang={locale} min={addDays(checkIn || today, 1)} value={checkOut} onChange={(e) => setCheckOut(e.target.value)} aria-label={w.checkOut} />
                   </div>
-                </div>
+                </label>
               </div>
-              <Link href={`/${locale}/hotels${query ? `?q=${encodeURIComponent(query)}` : ''}`} className={styles.sbtn}>
-                🔍 {h.searchBtn}
-              </Link>
+              <button
+                type="button"
+                className={styles.sfield}
+                onClick={() => setGuestsOpen((o) => !o)}
+                aria-expanded={guestsOpen}
+                style={{ width: '100%', textAlign: 'start', font: 'inherit', color: 'inherit' }}
+              >
+                <span aria-hidden>👥</span>
+                <div style={{ flex: 1 }}>
+                  <div className={styles.sfieldLbl}>{h.guestsLabel}</div>
+                  <div style={{ fontSize: '.85rem', color: 'var(--t)' }}>{guests} {w.adults} · {rooms} {w.rooms}</div>
+                </div>
+                <span aria-hidden style={{ color: 'var(--tm)', transition: '.18s', transform: guestsOpen ? 'rotate(180deg)' : 'none' }}>▾</span>
+              </button>
+              {guestsOpen && (
+                <div style={{ background: 'var(--s2)', borderRadius: 'var(--rM)', padding: '6px 14px 10px' }}>
+                  <CounterRow label={w.adults} value={guests} min={1} max={MAX_GUESTS} onChange={onGuests} />
+                  <CounterRow label={w.rooms} value={rooms} min={1} max={Math.min(MAX_ROOMS, guests)} onChange={onRooms} />
+                  <button
+                    type="button"
+                    onClick={() => setGuestsOpen(false)}
+                    style={{ marginTop: '6px', width: '100%', minHeight: '44px', borderRadius: 'var(--rM)', border: '1px solid var(--bd)', background: 'transparent', color: 'var(--g)', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}
+                  >
+                    {w.done}
+                  </button>
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: '9px', flexWrap: 'wrap' }}>
+                <button type="button" className={styles.sbtn} onClick={goHotels} style={{ flex: '1 1 150px', width: 'auto' }}>
+                  🔍 {tr.hero.search}
+                </button>
+                <button
+                  type="button"
+                  className={styles.sbtn}
+                  onClick={goAI}
+                  style={{ flex: '1 1 150px', width: 'auto', background: 'transparent', color: 'var(--g)', border: '1px solid var(--g)' }}
+                >
+                  ✨ {h.searchBtn}
+                </button>
+              </div>
             </div>
           </div>
         </div>

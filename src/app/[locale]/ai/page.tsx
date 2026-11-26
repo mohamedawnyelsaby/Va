@@ -94,6 +94,16 @@ export default function AIPage({ params }: { params: Promise<{ locale: string }>
     }
   };
 
+  // /ai?q=... (from the home search box) asks the question straight away, once.
+  const autoAsked = useRef(false);
+  useEffect(() => {
+    if (autoAsked.current) { return; }
+    autoAsked.current = true;
+    const q = new URLSearchParams(window.location.search).get('q')?.trim().slice(0, 500);
+    if (q) { void send(q); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
