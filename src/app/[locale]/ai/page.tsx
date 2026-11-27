@@ -315,7 +315,10 @@ export default function AIPage({ params }: Props) {
 
   useEffect(() => {
     const el = scrollerRef.current;
-    if (el) { el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); }
+    if (!el) { return; }
+    // empty state: keep the top (logo + title) visible; otherwise follow the newest message
+    if (messages.length === 0 && !loading) { el.scrollTo({ top: 0 }); return; }
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [messages, loading]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
