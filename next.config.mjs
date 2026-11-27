@@ -114,6 +114,17 @@ const nextConfig = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname, './src'),
     };
+
+    // Known, harmless build noise (the app behaves the same with or without it):
+    //  - stellar-sdk -> sodium-native -> require-addon use a dynamic require() for an
+    //    OPTIONAL native speed-up; when it is missing they fall back to pure JS.
+    //  - src/lib/monitoring/sentry.ts imports @sentry/nextjs on purpose only when
+    //    NEXT_PUBLIC_SENTRY_DSN is set. REMOVE this entry when @sentry/nextjs is installed.
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      { module: /node_modules[\\/](require-addon|sodium-native)[\\/]/ },
+      { module: /src[\\/]lib[\\/]monitoring[\\/]sentry\.ts/, message: /Can't resolve '@sentry\/nextjs'/ },
+    ];
     return config;
   },
 };
