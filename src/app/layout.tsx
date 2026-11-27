@@ -2,7 +2,7 @@
 // Theme is now fully automatic via CSS (prefers-color-scheme) — no inline
 // theme script, no localStorage, no manual .dark class toggling needed.
 import type { Metadata, Viewport } from 'next';
-import { Cormorant_Garamond, DM_Sans, Space_Mono, Cairo } from 'next/font/google';
+import localFont from 'next/font/local';
 import Script from 'next/script';
 import './globals.css';
 import './legacy-tokens.css';
@@ -12,30 +12,63 @@ import { Providers } from '@/components/providers';
 import GoldenCursorTrail from '@/components/ui/GoldenCursorTrail';
 import SafeAreaFix from '@/components/layout/SafeAreaFix';
 
-const cormorant = Cormorant_Garamond({
-  subsets: ['latin'],
-  weight: ['300', '400', '600'],
-  style: ['normal', 'italic'],
+// Fonts ship WITH the app (src/fonts, from the open-source @fontsource packages: SIL OFL)
+// instead of being downloaded from Google while building. Vercel's builds were failing
+// at random with "next/font ... Cannot read properties of null" whenever Google's font
+// service answered badly. Same families, weights and CSS variables as before.
+const cormorant = localFont({
+  src: [
+    { path: '../fonts/cormorant-garamond-latin-300-normal.woff2', weight: '300', style: 'normal' },
+    { path: '../fonts/cormorant-garamond-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/cormorant-garamond-latin-600-normal.woff2', weight: '600', style: 'normal' },
+    { path: '../fonts/cormorant-garamond-latin-300-italic.woff2', weight: '300', style: 'italic' },
+    { path: '../fonts/cormorant-garamond-latin-400-italic.woff2', weight: '400', style: 'italic' },
+    { path: '../fonts/cormorant-garamond-latin-600-italic.woff2', weight: '600', style: 'italic' },
+  ],
   variable: '--font-cormorant',
   display: 'swap',
 });
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  weight: ['300', '400', '500'],
+const dmSans = localFont({
+  src: [
+    { path: '../fonts/dm-sans-latin-300-normal.woff2', weight: '300', style: 'normal' },
+    { path: '../fonts/dm-sans-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/dm-sans-latin-500-normal.woff2', weight: '500', style: 'normal' },
+  ],
   variable: '--font-dm-sans',
   display: 'swap',
 });
-const spaceMono = Space_Mono({
-  subsets: ['latin'],
-  weight: ['400', '700'],
+const spaceMono = localFont({
+  src: [
+    { path: '../fonts/space-mono-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/space-mono-latin-700-normal.woff2', weight: '700', style: 'normal' },
+  ],
   variable: '--font-space-mono',
   display: 'swap',
+  preload: false,
 });
-const cairo = Cairo({
-  subsets: ['arabic', 'latin'],
-  weight: ['300', '400', '500', '600'],
-  variable: '--font-cairo',
+// Cairo: one family per script; responsive.css chains them into --font-cairo
+// (the browser picks the file that actually has the glyph).
+const cairoLatin = localFont({
+  src: [
+    { path: '../fonts/cairo-latin-300-normal.woff2', weight: '300', style: 'normal' },
+    { path: '../fonts/cairo-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/cairo-latin-500-normal.woff2', weight: '500', style: 'normal' },
+    { path: '../fonts/cairo-latin-600-normal.woff2', weight: '600', style: 'normal' },
+  ],
+  variable: '--font-cairo-latin',
   display: 'swap',
+  preload: false,
+});
+const cairoArabic = localFont({
+  src: [
+    { path: '../fonts/cairo-arabic-300-normal.woff2', weight: '300', style: 'normal' },
+    { path: '../fonts/cairo-arabic-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/cairo-arabic-500-normal.woff2', weight: '500', style: 'normal' },
+    { path: '../fonts/cairo-arabic-600-normal.woff2', weight: '600', style: 'normal' },
+  ],
+  variable: '--font-cairo-arabic',
+  display: 'swap',
+  preload: false,
 });
 
 // Never let a malformed env value (e.g. a missing https://) break the build.
@@ -75,7 +108,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       dir="ltr"
-      className={`${cormorant.variable} ${dmSans.variable} ${spaceMono.variable} ${cairo.variable}`}
+      className={`${cormorant.variable} ${dmSans.variable} ${spaceMono.variable} ${cairoLatin.variable} ${cairoArabic.variable}`}
       suppressHydrationWarning
     >
       <body suppressHydrationWarning>

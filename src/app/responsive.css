@@ -25,6 +25,11 @@
   --navH: calc(64px + var(--safe-t));
 }
 
+/* Cairo = Latin file + Arabic file (see src/app/layout.tsx); globals.css reads --font-cairo */
+html {
+  --font-cairo: var(--font-cairo-latin), var(--font-cairo-arabic);
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
