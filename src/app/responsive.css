@@ -78,6 +78,9 @@ img, video { max-width: 100%; }
   line-height: 1.2;
 }
 
+/* Typing on a phone (AI chat): the keyboard replaces the nav bar, like chat apps do */
+html[data-kb="open"] .bnav { display: none; }
+
 /* Landscape phones: short screens need a slimmer bar */
 @media (orientation: landscape) and (max-height: 480px) {
   :root { --bnavH: 54px; }
